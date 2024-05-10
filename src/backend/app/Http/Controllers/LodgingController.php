@@ -6,7 +6,7 @@ use App\Models\Lodging;
 use Illuminate\Http\Request;
 use App\Utils\JsonResponses;
 
-class LodgingController extends Controller
+class LodgingController
 {
     public function index()
     {
@@ -23,22 +23,24 @@ class LodgingController extends Controller
         if ($data_input) {
             $data = json_decode($data_input, true);
             $rules = [
-                'lessor_id' => 'required|exists:lessor',
+                'owner_id' => 'required|exists:person',
                 'name' => 'required|alpha',
+                'lodging_type' => [
+                    Lodging::LODGING_TYPE_APARTMENT,
+                    Lodging::LODGING_TYPE_CABIN,
+                    Lodging::LODGING_TYPE_HOTEL,
+                    Lodging::LODGING_TYPE_SUMMER_HOUSE,
+                ],
                 'description' => 'required',
                 'address' => 'required',
-                'per_night_price' => 'required|numeric',
-                'available_rooms' => 'required|numeric'
             ];
             $isValid = \validator($data, $rules);
             if (!$isValid->fails()) {
                 $lodging = new Lodging();
-                $lodging->lessor_id = $data['lessor_id'];
+                $lodging->ownerPersonId= $data['owner_id'];
                 $lodging->name = $data['name'];
                 $lodging->description = $data['description'];
                 $lodging->address = $data['address'];
-                $lodging->per_night_price = $data['per_night_price'];
-                $lodging->available_rooms = $data['available_rooms'];
                 $lodging->save();
                 $response = JsonResponses::created(
                     'Alojamiento creado',
@@ -62,7 +64,7 @@ class LodgingController extends Controller
     {
         $data = Lodging::find($id);
         if (is_object($data)) {
-            $data = $data->load('lessor');
+            $data = $data->load('person');
 
             $response = JsonResponses::ok(
                 'Datos del alojamiento',
@@ -80,7 +82,7 @@ class LodgingController extends Controller
     public function destroy($id = null)
     {
         if (isset($id)) {
-            $deleted = Lodging::where('lodging_id', $id)->delete();
+            $deleted = Lodging::where('lodgingId', $id)->delete();
             if ($deleted) {
                 $response = JsonResponses::ok('Alojamiento eliminado');
             } else {

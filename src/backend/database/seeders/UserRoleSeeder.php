@@ -11,20 +11,20 @@ class UserRoleSeeder extends Seeder
     {
         if(!UserRole::where('roleId', 1)->exists()){
             UserRole::create([
-                'roleId' => 1,
+                'roleId' => UserRole::ADMINISTRATOR_USER_ROLE_ID,
                 'type'=> 'Administrator',
             ]);
         }
         if (!UserRole::where('roleId', 2)->exists()) {
             UserRole::create([
-                'roleId' => 2,
+                'roleId' => UserRole::CUSTOMER_USER_ROLE_ID,
                 'type' => 'Customer',
             ]);
         }
 
         if (!UserRole::where('roleId', 3)->exists()) {
             UserRole::create([
-                'roleId' => 3,
+                'roleId' => UserRole::LESSOR_USER_ROLE_ID,
                 'type' => 'Lessor',
             ]);
         }

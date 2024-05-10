@@ -6,7 +6,7 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use App\Utils\JsonResponses;
 
-class BookingController extends Controller
+class BookingController
 {
     public function index()
     {
@@ -24,8 +24,8 @@ class BookingController extends Controller
             $data = json_decode($data_input, true);
             $rules = [
                 'lodging_id' => 'required|exists:lodging',
-                'customer_id' => 'required|exists:customer',
-                'status_id' => 'required|alpha|exists:booking_status,booking_status_id',
+                'customer_id' => 'required|exists:person',
+                'status_id' => ['Created', 'Confirmed', 'Cancelled', 'Finished'],
                 'start_date' => 'required|date_format:Y-m-d H:i',
                 'end_date' => 'required|date_format:Y-m-d H:i'
             ];
@@ -33,11 +33,11 @@ class BookingController extends Controller
             $isValid = \validator($data, $rules);
             if (!$isValid->fails()) {
                 $booking = new Booking();
-                $booking->lodging_id = $data['lodging_id'];
-                $booking->customer_id = $data['customer_id'];
-                $booking->status_id = $data['status_id'];
-                $booking->start_date = $data['start_date'];
-                $booking->end_date = $data['end_date'];
+                $booking->lodgingId = $data['lodging_id'];
+                $booking->customerPersonId = $data['customer_id'];
+                $booking->statusId = $data['status_id'];
+                $booking->startDate = $data['start_date'];
+                $booking->endDate = $data['end_date'];
                 $booking->save();
                 $response = JsonResponses::created(
                     'Reserva creada',
@@ -62,7 +62,7 @@ class BookingController extends Controller
         $data = Booking::find($id);
         if (is_object($data)) {
             $data = $data->load('lodging');
-            $data = $data->load('customer');
+            $data = $data->load('person');
             $response = JsonResponses::ok(
                 'Datos de la reserva',
                 $data,
@@ -78,7 +78,7 @@ class BookingController extends Controller
     public function destroy($id = null)
     {
         if (isset($id)) {
-            $deleted = Booking::where('booking_id', $id)->delete();
+            $deleted = Booking::where('bookingId', $id)->delete();
             if ($deleted) {
                 $response = JsonResponses::ok('Reserva eliminada');
             } else {

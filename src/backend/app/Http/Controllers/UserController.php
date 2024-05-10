@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Administrator;
 use App\Models\Customer;
 use App\Models\Lessor;
+use App\Models\Person;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class UserController extends Controller
+class UserController
 {
     public function index()
     {
@@ -30,37 +31,20 @@ class UserController extends Controller
                 'role_id' => 'numeric|between:0,3',
                 'email_address' => 'required|email|unique:user'
             ];
-            $isValid = \Validator::make($data, $rules);
+            $isValid = Validator::make($data, $rules);
             if (!$isValid->fails()) {
                 $user = new User();
-                $user->name = $data['name'];
+                $user->userName = $data['name'];
                 $user->password = hash('sha256', $data['password']);
-                $user->role_id = $data['role_id'];
-                $user->email_address = $data['email_address'];
+                $user->roleId = $data['role_id'];
                 $user->save();
 
-                if ($data['role_id'] == 1) {
-                    $administrator = new Administrator();
-                    $administrator->user_name = $data['name'];
-                    $administrator->first_name = $data['first_name'];
-                    $administrator->last_name = $data['last_name'];
-                    $administrator->phone_number = $data['phone_number'];
-                    $administrator->save();
-                } elseif ($data['role_id'] == 2) {
-                    $customer = new Customer();
-                    $customer->user_name = $data['name'];
-                    $customer->first_name = $data['first_name'];
-                    $customer->last_name = $data['last_name'];
-                    $customer->phone_number = $data['phone_number'];
-                    $customer->save();
-                } elseif ($data['role_id'] == 3) {
-                    $lessor = new Lessor();
-                    $lessor->user_name = $data['name'];
-                    $lessor->first_name = $data['first_name'];
-                    $lessor->last_name = $data['last_name'];
-                    $lessor->phone_number = $data['phone_number'];
-                    $lessor->save();
-                }
+                $person = new Person();
+                $person->userName = $data['name'];
+                $person->firstName = $data['first_name'];
+                $person->lastName = $data['last_name'];
+                $person->emailddress = $data['email_address'];
+                $person->save();
 
                 $response = [
                     'message' => 'El usuario se ha agregado correctamente.',
@@ -91,20 +75,8 @@ class UserController extends Controller
                 'status' => 404
             ];
         } else {
-            switch ($user->role_id) {
-                case 1:
-                    $model = Administrator::where('user_name', $user->name)->first();
-                    break;
-                case 2:
-                    $model = Customer::where('user_name', $user->name)->first();
-                    break;
-                case 3:
-                    $model = Lessor::where('user_name', $user->name)->first();
-                    break;
-                default:
-                    $model = null;
-                    break;
-            }
+            $model = Person::where('userName', $user->userName)->first();
+
             if (!$model) {
                 $response = [
                     'message' => 'No se pudo encontrar el modelo asociado al usuario.',
@@ -125,7 +97,7 @@ class UserController extends Controller
     }
     public function updatePartial(Request $request, $name) {
 
-        $user = User::where('name', $name)->first();
+        $user = User::where('userName', $name)->first();
     
         if (!$user) {
             $response = [
@@ -133,20 +105,7 @@ class UserController extends Controller
                 'status' => 404
             ];
         } else {
-            switch ($user->role_id) {
-                case 1:
-                    $model = Administrator::where('user_name', $user->name)->first();
-                    break;
-                case 2:
-                    $model = Customer::where('user_name', $user->name)->first();
-                    break;
-                case 3:
-                    $model = Lessor::where('user_name', $user->name)->first();
-                    break;
-                default:
-                    $model = null;
-                    break;
-            }
+            $model = Person::where('userName', $user->userName)->first();
 
             if (!$model) {
                 $response = [
@@ -174,7 +133,4 @@ class UserController extends Controller
         }
         return response()->json($response, $response['status']);
     }
-    
-    
-    
 }

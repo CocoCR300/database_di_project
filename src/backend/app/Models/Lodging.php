@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Lodging extends Model
 {
+    const LODGING_TYPE_APARTMENT = 'Apartment';
+    const LODGING_TYPE_CABIN = 'Cabin';
+    const LODGING_TYPE_HOTEL = 'Hotel';
+    const LODGING_TYPE_SUMMER_HOUSE = 'Summer house';
+
     protected $table = 'lodging';
 
     protected $primaryKey = 'lodgingId';

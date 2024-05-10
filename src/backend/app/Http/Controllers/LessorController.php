@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Lessor;
+use App\Models\Person;
+use App\Models\UserRole;
 use Illuminate\Http\Request;
 use App\Utils\JsonResponses;
 
-class LessorController extends Controller
+class LessorController
 {
     /**
      * Metodo GET
      */
     public function index()
     {
-        $data = Lessor::all();
+        $data = Person::where('roleId', UserRole::LESSOR_USER_ROLE_ID);
         return JsonResponses::ok(
             "Todos los registros de arrendadores",
             $data
@@ -38,12 +39,12 @@ class LessorController extends Controller
             ];
             $isValid = \validator($data, $rules);
             if (!$isValid->fails()) {
-                $lessor = new Lessor();
-                $lessor->user_name = $data('user_name');
-                $lessor->first_name = $data('fist_name');
-                $lessor->last_name = $data('last_name');
-                $lessor->phone_number = $data('phone_number');
-                $lessor->email_address = $data('email_address');
+                $lessor = new Person();
+                $lessor->userName = $data('user_name');
+                $lessor->firstName = $data('first_name');
+                $lessor->lastName = $data('last_name');
+                $lessor->phoneNumber = $data('phone_number');
+                $lessor->emailAddress = $data('email_address');
                 $lessor->save();
                 $response = JsonResponses::created(
                     'Arrendador creado',
@@ -66,7 +67,7 @@ class LessorController extends Controller
 
     public function show($id)
     {
-        $data = Lessor::find($id);
+        $data = Person::find($id);
         if (is_object($data)) {
             $data = $data->load('user');
             $response = JsonResponses::ok(
@@ -83,9 +84,9 @@ class LessorController extends Controller
     public function destroy($id = null)
     {
         if (isset($id)) {
-            $deleted = Lessor::where('booking_id', $id)->delete();
+            $deleted = Person::where('personId', $id)->delete();
             if ($deleted) {
-                $response = JsonResponses::ok('Reserva eliminada');
+                $response = JsonResponses::ok('Arrendante eliminado');
             } else {
                 $response = JsonResponses::badRequest(
                     'No se pudo eliminar el recurso, compruebe que exista'
