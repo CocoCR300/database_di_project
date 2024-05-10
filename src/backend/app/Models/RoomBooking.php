@@ -4,16 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Payment extends Model
+class RoomBooking extends Model
 {
-    protected $table = 'payment';
+    protected $table = 'roomBooking';
+
+    protected $primaryKey = 'roomBookingId';
     
     public $timestamps = false;
 
     protected $fillable = [
+        'roomNumber',
         'bookingId',
-        'dateAndTime',
-        'total_amount'
+        'cost',
+        'fees'
     ];
 
     public function booking()
@@ -21,4 +24,8 @@ class Payment extends Model
         return $this->belongsTo(Booking::class);
     }
 
+    public function Room()
+    {
+        return $this->belongsTo(Room::class);
+    }
 }

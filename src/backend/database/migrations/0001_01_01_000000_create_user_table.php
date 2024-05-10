@@ -13,9 +13,7 @@ return new class extends Migration
     {
         // Do not attempt to create the table, only update the existing one, adding the new columns
         Schema::table('user', function (Blueprint $table) {
-            $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
-            $table->timestamps();
         });
 
         Schema::create('password_reset_token', function (Blueprint $table) {

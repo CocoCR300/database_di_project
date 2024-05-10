@@ -8,20 +8,19 @@ class Lodging extends Model
 {
     protected $table = 'lodging';
 
-    protected $primaryKey = 'lodging_id';
+    protected $primaryKey = 'lodgingId';
 
     public $timestamps = false;
 
     protected $fillable = [
-        'lessor_id',
+        'lessorId',
         'name',
         'description',
+        'lodgingType',
         'address',
-        'per_night_price',
-        'available_rooms'
     ];
 
-    public function lessor(){
-        return $this->belongsTo(Lessor::class);
+    public function lessor() {
+        return $this->belongsTo(Person::class);
     }
 }

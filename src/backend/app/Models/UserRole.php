@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserRole extends Model
 {
-    protected $table = 'user_role';
+    protected $table = 'userRole';
     
-    public $timestamps=false;
+    public $timestamps = false;
     
     protected $fillable = [
-        'role_id',
+        'roleId',
         'type'
     ];
     

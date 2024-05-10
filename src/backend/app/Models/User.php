@@ -9,15 +9,14 @@ class User extends Authenticatable
 {
     protected $table = 'user';
 
-    protected $primaryKey = 'name';
+    protected $primaryKey = 'userName';
     
     public $timestamps = false;
 
     protected $fillable = [
-        'name',
-        'role_id',
-        'password',
-        'email_address'
+        'userName',
+        'roleId',
+        'password'
     ];
 
     protected $hidden = [
@@ -26,7 +25,6 @@ class User extends Authenticatable
 
     public function userRole(): HasOne
     {
-    return $this->hasOne(UserRole::class, 'role_id', 'role_id');
+        return $this->hasOne(UserRole::class, 'roleId', 'roleId');
     }
-
 }
