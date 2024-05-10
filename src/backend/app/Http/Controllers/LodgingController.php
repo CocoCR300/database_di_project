@@ -12,7 +12,7 @@ class LodgingController
     {
         $data = Lodging::all();
         return JsonResponses::ok(
-            "Todos los registros de las reservas",
+            "Todos los registros de los alojamientos",
             $data,
         );
     }

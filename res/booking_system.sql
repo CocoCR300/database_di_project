@@ -2,8 +2,8 @@ CREATE DATABASE IF NOT EXISTS booking_system;
 
 -- Tabla "Rol de usuario"
 CREATE TABLE IF NOT EXISTS UserRole (
-  userRoleId	INT 		UNSIGNED	NOT NULL,
-  type			VARCHAR(50)				NOT NULL,
+  userRoleId	INT 		UNSIGNED	NOT NULL AUTO_INCREMENT,
+  type			VARCHAR(50)				  NOT NULL,
   
   PRIMARY KEY (userRoleId),
   
@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS User (
   PRIMARY KEY (userName),
   
   UNIQUE INDEX UNIQUE_userName (userName),
-  UNIQUE INDEX UNIQUE_userRoleId (userRoleId),
   
   CONSTRAINT FK_USER_USER_ROLE FOREIGN KEY (userRoleId) REFERENCES UserRole (userRoleId)
 );
@@ -27,7 +26,7 @@ CREATE TABLE IF NOT EXISTS User (
 
 -- Tabla "Persona"
 CREATE TABLE IF NOT EXISTS Person (
-  personId		INT 			UNSIGNED	NOT NULL,
+  personId		INT 			UNSIGNED	NOT NULL    AUTO_INCREMENT,
   userName 		VARCHAR(50) 				NOT NULL,
   firstName 	VARCHAR(50) 				NOT NULL,
   lastName 		VARCHAR(100) 				NOT NULL,
@@ -52,7 +51,7 @@ CREATE TABLE IF NOT EXISTS PhoneNumber (
 
 -- Tabla "Alojamiento"
 CREATE TABLE IF NOT EXISTS Lodging (
-  lodgingId 	INT 			UNSIGNED 	NOT NULL,
+  lodgingId 	INT 			UNSIGNED 	NOT NULL      AUTO_INCREMENT,
   ownerPersonId INT 			UNSIGNED 	NOT NULL,
   lodgingType 	VARCHAR(50) 				NOT NULL,
   name 			VARCHAR(100) 				NOT NULL,
@@ -68,7 +67,7 @@ CREATE TABLE IF NOT EXISTS Lodging (
 
 -- Tabla "Reservación"
 CREATE TABLE IF NOT EXISTS Booking (
-  bookingId 		INT 		UNSIGNED 	NOT NULL,
+  bookingId 		INT 		UNSIGNED 	NOT NULL      AUTO_INCREMENT,
   customerPersonId 	INT 		UNSIGNED 	NOT NULL,
   lodgingId 		INT 		UNSIGNED 	NOT NULL,
   status 			VARCHAR(50) 			NOT NULL,
@@ -88,7 +87,7 @@ CREATE TABLE IF NOT EXISTS Booking (
 
 -- Tabla "Pago"
 CREATE TABLE IF NOT EXISTS Payment (
-  paymentId 	INT 		UNSIGNED 	NOT NULL,
+  paymentId 	INT 		UNSIGNED 	NOT NULL  AUTO_INCREMENT,
   bookingId 	INT 		UNSIGNED 	NOT NULL,
   dateAndTime 	DATETIME 				NOT NULL,
   
@@ -101,11 +100,11 @@ CREATE TABLE IF NOT EXISTS Payment (
 
 -- Tabla "Habitación"
 CREATE TABLE IF NOT EXISTS Room (
-  roomNumber 	INT 	UNSIGNED 	NOT NULL,
-  lodgingId 	INT 	UNSIGNED 	NOT NULL,
-  occupied 		TINYINT 			NOT NULL,
-  pricePerNight DECIMAL UNSIGNED 	NOT NULL,
-  capacity 		INT 	UNSIGNED	NOT NULL,
+  roomNumber   	INT 	UNSIGNED 	NOT NULL,
+  lodgingId   	INT 	UNSIGNED 	NOT NULL,
+  occupied 	  	TINYINT 			NOT NULL,
+  perNightPrice DECIMAL UNSIGNED 	NOT NULL,
+  capacity 		  INT 	UNSIGNED	NOT NULL,
   
   PRIMARY KEY (roomNumber, lodgingId),
   
@@ -116,7 +115,7 @@ CREATE TABLE IF NOT EXISTS Room (
 
 -- Tabla "HabitaciónReservación"
 CREATE TABLE IF NOT EXISTS RoomBooking (
-  roomBookingId INT 	UNSIGNED NOT NULL,
+  roomBookingId INT 	UNSIGNED NOT NULL AUTO_INCREMENT,
   bookingId 	INT 	UNSIGNED NOT NULL,
   roomNumber 	INT 	UNSIGNED NOT NULL,
   cost			DECIMAL UNSIGNED NOT NULL,

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5c9c27d2575654c8b7584600f5e1bc2e",
+    "content-hash": "420cf01de3201d38a3d66dfe83bebdb5",
     "packages": [
         {
             "name": "brick/math",
@@ -5549,6 +5549,53 @@
                 }
             ],
             "time": "2024-04-18T09:29:19+00:00"
+        },
+        {
+            "name": "thiagoprz/eloquent-composite-key",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thiagoprz/eloquent-composite-key.git",
+                "reference": "43012fa195db8517a5344355aa83cd39aaa466aa"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thiagoprz/eloquent-composite-key/zipball/43012fa195db8517a5344355aa83cd39aaa466aa",
+                "reference": "43012fa195db8517a5344355aa83cd39aaa466aa",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1 || ^8.0 || ^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "6",
+                "squizlabs/php_codesniffer": "4.0.x-dev"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Thiagoprz\\CompositeKey\\": "src"
+                },
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Thiago Przyczynski",
+                    "email": "przyczynski@gmail.com"
+                }
+            ],
+            "description": "Eloquent Composite Key Support Package",
+            "support": {
+                "issues": "https://github.com/thiagoprz/eloquent-composite-key/issues",
+                "source": "https://github.com/thiagoprz/eloquent-composite-key/tree/1.0.1"
+            },
+            "time": "2022-04-20T19:12:31+00:00"
         },
         {
             "name": "tijsverkoyen/css-to-inline-styles",

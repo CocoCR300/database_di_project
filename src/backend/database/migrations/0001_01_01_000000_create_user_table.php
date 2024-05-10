@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         // Do not attempt to create the table, only update the existing one, adding the new columns
@@ -32,12 +29,9 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        // Schema::dropIfExists('user');
+        Schema::dropColumns('user', ['remember_token']);
         Schema::dropIfExists('password_reset_token');
         Schema::dropIfExists('session');
     }

@@ -15,7 +15,7 @@ class UserRole extends Model
     public $timestamps = false;
     
     protected $fillable = [
-        'roleId',
+        'userRoleId',
         'type'
     ];
     

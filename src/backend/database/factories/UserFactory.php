@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\UserRole;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -17,8 +18,12 @@ class UserFactory extends Factory
     {
         return [
             'userName' => fake()->name(),
-            'password' => static::$password ??= Hash::make('password'),
-            'roleId' => fake()->rand(1, 3),
+            'password' => 'password',
+            'userRoleId' => fake()->randomElement([
+                UserRole::ADMINISTRATOR_USER_ROLE_ID,
+                UserRole::CUSTOMER_USER_ROLE_ID,
+                UserRole::LESSOR_USER_ROLE_ID
+            ]),
             'remember_token' => Str::random(10)
         ];
     }
