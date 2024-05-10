@@ -16,7 +16,7 @@ class RoomController
             return JsonResponses::notFound("No se encontró el alojamiento");
         }
 
-        $data = Room::where('lodgingId', $lodgingId);
+        $data = Room::where('lodgingId', $lodgingId)->get();
         return JsonResponses::ok(
             "Todos los registros de las habitaciones del alojamiento",
             $data,
