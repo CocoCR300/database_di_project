@@ -13,7 +13,7 @@ class RoomController
     {
         $lodging = Lodging::find($lodgingId);
         if (!$lodging) {
-            return JsonResponses::notFound("No se encontró el alojamiento");
+            return JsonResponses::notFound("No existe un alojamiento con el identificador especificado");
         }
 
         $data = Room::where('lodgingId', $lodgingId)->get();
@@ -39,13 +39,13 @@ class RoomController
             ];
             $validation= \validator($data, $rules);
             if (Lodging::find($lodgingId) && !$validation->fails()) {
-                $occupied = false;
-                $room = new Room();
 
+                $occupied = false;
                 if (array_key_exists('occupied', $data)) {
                     $occupied = $data['occupied'];
                 }
 
+                $room = new Room();
                 $room->lodgingId = $lodgingId;
                 $room->roomNumber = $data['roomnumber'];
                 $room->occupied = $occupied;
@@ -65,17 +65,14 @@ class RoomController
                 );
             }
         } else {
-            $response = JsonResponses::badRequest('No se encontró el objeto data');
+            $response = JsonResponses::badRequest('No se especificó el objeto "data" en la solicitud');
         }
         return $response;
     }
 
     public function show($lodgingId, $roomNumber)
     {
-        $data = Room::find([
-            'lodgingId' => $lodgingId,
-            'roomNumber' => $roomNumber
-            ]);
+        $data = Room::find([ $lodgingId, $roomNumber ]);
         if (is_object($data)) {
             $data = $data->load('lodging');
 
@@ -86,29 +83,27 @@ class RoomController
             );
         } else {
             $response = JsonResponses::notFound(
-                'Recurso no encontrado'
+                'No existe una habitación con el número especificado'
             );
         }
         return $response;
     }
 
-    public function destroy($lodgingId = null, $roomNumber = null)
+    public function destroy($lodgingId, $roomNumber = null)
     {
-        if (isset($id)) {
-            $deleted = Room::find([
-                'lodgingId' => $lodgingId,
-                'roomNumber' => $roomNumber
-            ])->delete();
+        if (isset($roomNumber)) {
+            $deleted = Room::find([ $lodgingId, $roomNumber ])->delete();
+
             if ($deleted) {
                 $response = JsonResponses::ok('Habitación eliminada');
             } else {
                 $response = JsonResponses::badRequest(
-                    'No se pudo eliminar el recurso, compruebe que exista'
+                    'No existe una habitación con el número especificado'
                 );
             }
         } else {
             $response = JsonResponses::notAcceptable(
-                'Falta el identificador del recurso a eliminar'
+                'No se especificó el número de habitación a eliminar'
             );
         }
         return $response;

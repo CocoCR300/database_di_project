@@ -22,6 +22,7 @@ Route::prefix('v1')->group(
         Route::delete('/booking', [BookingController::class, 'destroy']);
         Route::delete('/lessor', [LessorController::class, 'destroy']);
         Route::delete('/lodging', [LodgingController::class, 'destroy']);
+        Route::delete('/lodging/{lodging_id}/room', [RoomController::class, 'destroy']);
         Route::delete('/user/{name}', [UserController::class,'destroy']);
 
         Route::patch('/user/{name}', [UserController::class,'updatePartial']);
