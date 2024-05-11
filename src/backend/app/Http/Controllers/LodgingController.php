@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\Lodging;
 use Illuminate\Http\Request;
 use App\Utils\JsonResponses;
@@ -14,6 +15,21 @@ class LodgingController
         return JsonResponses::ok(
             "Todos los registros de los alojamientos",
             $data,
+        );
+    }
+
+    public function indexBooking($lodgingId)
+    {
+        $lodging= Lodging::where('lodgingId', $lodgingId)->first();
+
+        if (!$lodging) {
+            return JsonResponses::notFound('No existe un alojamiento con el identificador especificado');
+        }
+
+        $data = Booking::where('lodgingId', $lodging->lodgingId);
+        return JsonResponses::ok(
+            'Todos los registros de las reservas asociadas al alojamiento especificado',
+            $data
         );
     }
 

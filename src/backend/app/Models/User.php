@@ -10,6 +10,9 @@ class User extends Authenticatable
 {
     use HasFactory;
 
+    // https://stackoverflow.com/a/34715309/21037183 
+    public $incrementing = false;
+
     protected $table = 'user';
 
     protected $primaryKey = 'userName';
@@ -26,8 +29,13 @@ class User extends Authenticatable
         'password'
     ];
 
+    public function person(): HasOne
+    {
+        return $this->hasOne(Person::class, 'userName', 'userName');
+    }
+
     public function userRole(): HasOne
     {
-        return $this->hasOne(UserRole::class, 'roleId', 'roleId');
+        return $this->hasOne(UserRole::class, 'userRoleId', 'userRoleId');
     }
 }

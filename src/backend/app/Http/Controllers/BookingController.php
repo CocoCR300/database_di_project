@@ -61,8 +61,7 @@ class BookingController
     {
         $data = Booking::find($id);
         if (is_object($data)) {
-            $data = $data->load('lodging');
-            $data = $data->load('person');
+            $data = $data->load(['lodging', 'person']);
             $response = JsonResponses::ok(
                 'Datos de la reserva',
                 $data,

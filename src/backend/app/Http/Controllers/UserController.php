@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Administrator;
-use App\Models\Customer;
-use App\Models\Lessor;
+use App\Models\Booking;
 use App\Models\Person;
 use App\Models\User;
+use App\Utils\JsonResponses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -14,12 +13,27 @@ class UserController
 {
     public function index()
     {
-        $users = User::with('userRole')->get();
+        $users = User::with(['userRole', 'person', 'person.phoneNumbers'])->get();
         return $users;
     }
+
+    public function indexBooking($userName)
+    {
+        $person = Person::where('userName', $userName)->first();
+
+        if (!$person) {
+            return JsonResponses::notFound('No existe un usuario con el identificador especificado');
+        }
+
+        $data = Booking::where('customerPersonId', $person->personId);
+        return JsonResponses::ok(
+            'Todos los registros de las reservas asociadas al usuario especificado',
+            $data
+        );
+    }
+
     public function store(Request $request)
     {
-
         $data_input = $request->input('data', null);
 
         if ($data_input) {
@@ -46,55 +60,75 @@ class UserController
                 $person->emailddress = $data['email_address'];
                 $person->save();
 
-                $response = [
-                    'message' => 'El usuario se ha agregado correctamente.',
-                    'status' => 200
-                ];
+                $response = JsonResponses::ok('El usuario ha sido creado con éxito');
             } else {
-                $response = [
-                    'message' => 'Error al ingresar los datos.',
-                    'status' => 400
-                ];
+                $response = JsonResponses::notAcceptable(
+                    'Error al ingresar los datos',
+                    'errors',
+                    $isValid->errors()
+                );
             }
         } else {
-            $response = [
-                'message' => 'Error al ingresar los datos.',
-                'status' => 400
-            ];
+            $response = JsonResponses::badRequest('No se especificó el objeto "data" en la solicitud');
         }
 
-        return response()->json($response, $response['status']);
+        return $response;
     }
-    public function destroy(Request $request, $id)
+
+    public function show($userName)
     {
-        $user = User::find($id);
+        $data = User::find($userName);
+
+        if (is_object($data)) {
+            $data = $data->load(['person', 'userRole', 'person.phoneNumbers']);
+
+            $response = JsonResponses::ok(
+                'Datos del usuario',
+                $data,
+                'user'
+            );
+        } else {
+            $response = JsonResponses::notFound(
+                'No existe una usuario con el identificador especificado'
+            );
+        }
+        return $response;
+    }
+
+    public function destroy($userName = null)
+    {
+        if (!isset($userName)) {
+            return JsonResponses::notAcceptable(
+                'No se especificó el identificador del usuario a eliminar'
+            );
+        }
+
+        $user = User::find($userName);
 
         if (!$user) {
-            $response = [
-                'message' => 'El usuario no existe.',
-                'status' => 404
-            ];
+            $response = JsonResponses::notFound(
+                'No existe un usuario con el identificador especificado'
+            );
         } else {
-            $model = Person::where('userName', $user->userName)->first();
+            $person = Person::where('userName', $user->userName)->first();
 
-            if (!$model) {
-                $response = [
-                    'message' => 'No se pudo encontrar el modelo asociado al usuario.',
-                    'status' => 404
-                ];
+            if (!$person) {
+                $response = JsonResponses::notFound(
+                    'No se encuentra la información de la persona asociada al usuario',
+                );
             } else {
-                $model->delete();
+                $person ->delete();
                 $user->delete();
 
-                $response = [
-                    'message' => 'Usuario y modelo asociado eliminados exitosamente.',
-                    'status' => 200
-                ];
+                $response = JsonResponses::ok(
+                    'El usuario y la información de la persona asociada han asociado eliminados con éxito.',
+                );
             }
         }
 
-        return response()->json($response, $response['status']);
+        return $response;
     }
+
     public function updatePartial(Request $request, $name) {
 
         $user = User::where('userName', $name)->first();
