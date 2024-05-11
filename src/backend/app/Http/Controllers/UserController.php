@@ -40,24 +40,26 @@ class UserController
             $data = json_decode($data_input, true);
             $data = array_map('trim', $data);
             $rules = [
-                'name' => 'required',
-                'password' => 'required',
-                'role_id' => 'numeric|between:0,3',
-                'email_address' => 'required|email|unique:user'
+                'username' => 'required|alpha_num|max:50',
+                'firstname' => 'required|string|max:50',
+                'lastname' => 'required|string|max:50',
+                'password' => 'required|alpha_num|max:50',
+                'roleid' => 'numeric|between:0,3',
+                'emailaddress' => 'required|email|unique:person|max:200'
             ];
-            $isValid = Validator::make($data, $rules);
-            if (!$isValid->fails()) {
+            $validation = Validator::make($data, $rules);
+            if (!$validation->fails()) {
                 $user = new User();
                 $user->userName = $data['name'];
-                $user->password = hash('sha256', $data['password']);
-                $user->roleId = $data['role_id'];
+                $user->password = hash('SHA256', $data['password']);
+                $user->roleId = $data['roleid'];
                 $user->save();
 
                 $person = new Person();
                 $person->userName = $data['name'];
-                $person->firstName = $data['first_name'];
-                $person->lastName = $data['last_name'];
-                $person->emailddress = $data['email_address'];
+                $person->firstName = $data['firstname'];
+                $person->lastName = $data['lastname'];
+                $person->emailaddress = $data['emailaddress'];
                 $person->save();
 
                 $response = JsonResponses::ok('El usuario ha sido creado con éxito');
@@ -65,7 +67,7 @@ class UserController
                 $response = JsonResponses::notAcceptable(
                     'Error al ingresar los datos',
                     'errors',
-                    $isValid->errors()
+                    $validation->errors()
                 );
             }
         } else {
@@ -129,42 +131,33 @@ class UserController
         return $response;
     }
 
-    public function updatePartial(Request $request, $name) {
+    public function updatePartial(Request $request, $userName) {
 
-        $user = User::where('userName', $name)->first();
+        $user = User::find($userName);
     
         if (!$user) {
-            $response = [
-                'message' => 'El usuario no existe.',
-                'status' => 404
-            ];
-        } else {
-            $model = Person::where('userName', $user->userName)->first();
+            $response = JsonResponses::notFound('No existe un usuario con el identificador especificado');
+        }
+        else {
+            $person = Person::where('userName', $userName)->first();
 
-            if (!$model) {
-                $response = [
-                    'message' => 'No se pudo encontrar el modelo asociado al usuario.',
-                    'status' => 404
-                ];
-            } else {
-                $data = $request->only(['user_name', 'first_name', 'last_name', 'phone_number', 'email_address']);
+            if (!$person) {
+                $response = JsonResponses::notFound('No se pudo encontrar la persona asociada al usuario.');
+            }
+            else {
+                $data = $request->only(['username', 'firstname', 'lastname', 'emailaddress']);
     
                 if (empty($data)) {
-                    $response = [
-                        'message' => 'No se proporcionaron datos para actualizar.',
-                        'status' => 400
-                    ];
-                } else {
-                    $model->fill($data);
-                    $model->save();
+                    $response = JsonResponses::badRequest('No se proporcionaron datos para actualizar.');
+                }
+                else {
+                    $person->fill($data);
+                    $person->save();
 
-                    $response = [
-                        'message' => 'Usuario y modelo asociado actualizados correctamente.',
-                        'status' => 200
-                    ];
+                    $response = JsonResponses::ok('Datos del usuario y persona asociada actualizados correctamente.');
                 }
             }
         }
-        return response()->json($response, $response['status']);
+        return $response;
     }
 }

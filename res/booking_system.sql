@@ -12,9 +12,9 @@ CREATE TABLE IF NOT EXISTS UserRole (
 
 -- Tabla "Usuario"
 CREATE TABLE IF NOT EXISTS User (
-  userName		VARCHAR(45) 			NOT NULL,
+  userName		VARCHAR(50) 			NOT NULL,
   userRoleId	INT 		UNSIGNED 	NOT NULL,
-  password 		VARCHAR(45) 			NOT NULL,
+  password 		VARCHAR(100) 			NOT NULL,
   
   PRIMARY KEY (userName),
   
@@ -74,7 +74,6 @@ CREATE TABLE IF NOT EXISTS Booking (
   fees 				DECIMAL 	UNSIGNED 	NOT NULL,
   startDate 		DATE 					NOT NULL,
   endDate 			DATE 					NOT NULL,
-  totalCost 		DECIMAL 	UNSIGNED	NOT NULL,
   
   PRIMARY KEY (bookingId),
   

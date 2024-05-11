@@ -8,17 +8,17 @@ class Payment extends Model
 {
     protected $table = 'payment';
     
+    protected $primaryKey = 'paymentId';
+    
     public $timestamps = false;
 
     protected $fillable = [
         'bookingId',
-        'dateAndTime',
-        'total_amount'
+        'dateAndTime'
     ];
 
     public function booking()
     {
         return $this->belongsTo(Booking::class);
     }
-
 }

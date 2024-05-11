@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(
     function () {
+        Route::post('/booking/{booking_id}/payment', [BookingController::class, 'storePayment']);
         Route::get('/lodging/{lodging_id}/booking', [LodgingController::class, 'indexBooking']);
         Route::get('/user/{name}/booking', [UserController::class, 'indexBooking']);
 

@@ -40,15 +40,15 @@ class LodgingController
             $data = json_decode($data_input, true);
             $rules = [
                 'owner_id' => 'required|exists:person',
-                'name' => 'required|alpha',
-                'lodging_type' => [
+                'name' => 'required|string|max:100',
+                'lodgingtype' => [
                     Lodging::LODGING_TYPE_APARTMENT,
                     Lodging::LODGING_TYPE_CABIN,
                     Lodging::LODGING_TYPE_HOTEL,
                     Lodging::LODGING_TYPE_SUMMER_HOUSE,
                 ],
-                'description' => 'required',
-                'address' => 'required',
+                'description' => 'required|string:1000',
+                'address' => 'required|string|max:300',
             ];
             $isValid = \validator($data, $rules);
             if (!$isValid->fails()) {
