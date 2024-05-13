@@ -8,13 +8,11 @@ class PhoneNumber extends Model
 {
     protected $table = 'phoneNumber';
 
-    protected $primaryKey = 'phoneNumberId';
-    
     public $timestamps = false;
 
     protected $fillable = [
         'personId',
-        'number'
+        'phoneNumber'
     ];
 
     public function person()

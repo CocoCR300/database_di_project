@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Person;
+use App\Models\PhoneNumber;
 use App\Models\User;
 use App\Utils\JsonResponses;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 
 class UserController
@@ -38,29 +40,47 @@ class UserController
 
         if ($data_input) {
             $data = json_decode($data_input, true);
-            $data = array_map('trim', $data);
+            $data = Arr::map($data, function ($value, string $key) {
+                // Arrays can't be trimmed, so exclude the "phonenumbers" one
+                if (is_array($value)) {
+                    return $value;
+                }
+
+                return trim($value);
+            });
+
             $rules = [
                 'username' => 'required|alpha_num|max:50',
                 'firstname' => 'required|string|max:50',
                 'lastname' => 'required|string|max:50',
                 'password' => 'required|alpha_num|max:50',
-                'roleid' => 'numeric|between:0,3',
-                'emailaddress' => 'required|email|unique:person|max:200'
+                'roleid' => 'numeric|exists:userrole,userRoleId',
+                'emailaddress' => 'required|email|unique:person|max:200',
+                'phonenumbers' => 'array'
             ];
             $validation = Validator::make($data, $rules);
             if (!$validation->fails()) {
                 $user = new User();
-                $user->userName = $data['name'];
+                $user->userName = $data['username'];
                 $user->password = hash('SHA256', $data['password']);
-                $user->roleId = $data['roleid'];
+                $user->userRoleId = $data['roleid'];
                 $user->save();
 
                 $person = new Person();
-                $person->userName = $data['name'];
+                $person->userName = $data['username'];
                 $person->firstName = $data['firstname'];
                 $person->lastName = $data['lastname'];
                 $person->emailaddress = $data['emailaddress'];
                 $person->save();
+
+                $phoneNumbers = [];
+                foreach ($data['phonenumbers'] as $number) {
+                    array_push($phoneNumbers, array(
+                        'personId'  => $person->personId,
+                        'phoneNumber'    => $number
+                    ));
+                }
+                PhoneNumber::insert($phoneNumbers);
 
                 $response = JsonResponses::ok('El usuario ha sido creado con éxito');
             } else {
@@ -119,11 +139,16 @@ class UserController
                     'No se encuentra la información de la persona asociada al usuario',
                 );
             } else {
+                $phoneNumbers = PhoneNumber::where('personId', $person->personId);
+                foreach ($phoneNumbers as $phoneNumber) {
+                    $phoneNumber->delete();
+                }
+
                 $person ->delete();
                 $user->delete();
 
                 $response = JsonResponses::ok(
-                    'El usuario y la información de la persona asociada han asociado eliminados con éxito.',
+                    'El usuario y la información de la persona asociada han sido eliminados con éxito.',
                 );
             }
         }
