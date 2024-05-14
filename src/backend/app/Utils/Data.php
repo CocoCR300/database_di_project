@@ -6,6 +6,12 @@ use Illuminate\Support\Arr;
 
 class Data
 {
+    const HASHING_ALGO = 'SHA256';
+    public static function hash(string $data)
+    {
+        return hash(self::HASHING_ALGO, $data);
+    }
+
     public static function trimValues(array $array)
     {
         $newArray = Arr::map($array, function ($value, string $key) {

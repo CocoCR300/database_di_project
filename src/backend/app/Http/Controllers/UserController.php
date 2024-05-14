@@ -56,7 +56,7 @@ class UserController
             if (!$validation->fails()) {
                 $user = new User();
                 $user->userName = $data['username'];
-                $user->password = hash('SHA256', $data['password']);
+                $user->password = Data::hash($data['password']);
                 $user->userRoleId = $data['roleid'];
                 $user->save();
 
@@ -83,6 +83,63 @@ class UserController
                     'errors',
                     $validation->errors()
                 );
+            }
+        } else {
+            $response = JsonResponses::badRequest('No se especificó el objeto "data" en la solicitud');
+        }
+
+        return $response;
+    }
+
+    public function storePassword(Request $request)
+    {
+        $userName = $request->route('name');
+        $dataInput = $request->input('data');
+
+        if ($dataInput) {
+            $user = User::find($userName);
+
+            if ($user) {
+                $data = json_decode($dataInput, true);
+                $data = Data::trimValues($data);
+
+                $rules = [
+                    'currentpassword' => 'required|alpha_num|max:50',
+                    'newpassword' => 'required|alpha_num|max:50',
+                    'newpasswordconfirmation' => 'required|alpha_num|max:50',
+                ];
+                $validation = Validator::make($data, $rules);
+                if ($validation->fails()) {
+                    $response = JsonResponses::notAcceptable(
+                        'Error al ingresar los datos',
+                        'errors',
+                        $validation->errors()
+                    );
+                }
+                else if (strcasecmp($user->password, Data::hash($data['currentpassword'])) != 0) {
+                    $response = JsonResponses::notAcceptable(
+                        'Contraseña incorrecta'
+                    );
+                }
+                else if (strcmp($data['newpassword'], $data['newpasswordconfirmation']) != 0) {
+                    $response = JsonResponses::notAcceptable(
+                        'Las contraseñas no coinciden'
+                    );
+                }
+                else if (strcasecmp($user->password, ($newPassword = Data::hash($data['newpassword']))) == 0) {
+                    $response = JsonResponses::notAcceptable(
+                        'La nueva contraseña no puede ser igual a la anterior'
+                    );
+                }
+                else {
+                    $user->password = $newPassword;
+                    $user->save();
+
+                    $response = JsonResponses::ok('La contraseña ha sido cambiada con éxito');
+                }
+            }
+            else {
+                $response = JsonResponses::notFound('No existe un usuario con el nombre especificado');
             }
         } else {
             $response = JsonResponses::badRequest('No se especificó el objeto "data" en la solicitud');
