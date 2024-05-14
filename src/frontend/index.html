@@ -1,11 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
-</head>
-<body>
-    
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <link href="css/main.css" rel="stylesheet">
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+        <title>UNA - Programming 4 - 2nd Laboratory</title>
+    </head>
+    <body>
+        <div id="topbar">
+            <p class="title">2nd laboratory</p>
+            <div id="menu_items_container">
+                <a class="menu_item" href="#"route="users">
+                    <i class='bx bx-user menu_item_icon'></i>
+                    Usuarios
+                </a>
+                <a class="menu_item" href="#" route="lodgings">
+                    <i class='bx bx-user menu_item_icon'></i>
+                   Alojamientos
+                </a>
+                <a class="menu_item" href="#" route="lessors" onloadaction="initializeLocalStorageModule();">
+                    <i class='bx bx-user menu_item_icon'></i>
+                    Arrendadores
+                </a>
+            </div>
+        </div>
+        <main id="main_container">
+
+        </main>
+    <script src="js/main.js"></script>
+    </body>
 </html>
