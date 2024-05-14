@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS booking_system;
+CREATE DATABASE IF NOT EXISTS restify;
 
 -- Tabla "Rol de usuario"
 CREATE TABLE IF NOT EXISTS UserRole (
