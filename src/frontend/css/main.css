@@ -32,6 +32,7 @@ input {
 }
 
 #menu_items_container {
+	align-items: center;
     display: flex;
 	column-gap: 0.5em;
 }
@@ -90,6 +91,14 @@ input {
     display: grid;
     height: 2em;
     grid-template-columns: min-content max-content;
+    padding: 0.5em 0.75em;
+    text-decoration: none;
+}
+
+.menu_item_flat {
+    align-items: center;
+    color: white;
+    display: grid;
     padding: 0.5em 0.75em;
     text-decoration: none;
 }
