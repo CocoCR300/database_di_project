@@ -1,0 +1,33 @@
+<div class="header-create">
+    <h2 class="title">Ingresar datos del usuario</h2>
+</div>
+<div class="container-inputs">
+        <div class="contenido-inputs">
+            <div class="campo">
+                <label>Nombre de usuario</label>
+                <input required id="userName" type="text">
+            </div>
+            <div class="campo">
+                <label>Contrasena</label>
+                <input required id="password" type="password">
+            </div>
+            <div class="campo">
+                <label>Primer Apellido</label>
+                <input required id="firstName" type="text">
+            </div>
+            <div class="campo">
+                <label>Segundo Apellido</label>
+                <input required type="text" id="lastName">
+            </div>
+            <div class="campo">
+                <label>Correo</label>
+                <input required type="text" id="email">
+            </div>
+            <div class="campo">
+                <label>Numero de telefono</label>
+                <input required type="text" id="phoneNumber">
+            </div>
+        </div>
+        <input type="submit" id="create-user-button" onclick="userPOST()">
+</div>
+<script src="../components/createComponent.js"></script>

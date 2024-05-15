@@ -11,6 +11,7 @@ Route::prefix('v1')->group(
         Route::post('/booking/{booking_id}/payment', [BookingController::class, 'storePayment']);
         Route::post('/user/{name}/password', [UserController::class, 'storePassword']);
         Route::post('/user/{name}/phone_number', [UserController::class, 'storePhoneNumber']);
+        Route::post('/user', [UserController::class, 'store']);
 
         Route::get('/lodging/{lodging_id}/booking', [LodgingController::class, 'indexBooking']);
         Route::get('/user/{name}/booking', [UserController::class, 'indexBooking']);

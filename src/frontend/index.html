@@ -3,32 +3,36 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        
-        <link href="css/main.css" rel="stylesheet">
-        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-        <title>UNA - Programming 4 - 2nd Laboratory</title>
+        <link rel="icon" type="image/x-icon" href="assets/img/logo-booking-system.png">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="assets/css/styles.css">
+        <title>Administracion de usuarios</title>
     </head>
     <body>
-        <div id="topbar">
-            <div id="menu_items_container">
-                <a class="menu_item_flat title" href="#" route="home">Booking System</a>
-                <a class="menu_item" href="#" route="users">
-                    <i class='bx bx-user menu_item_icon'></i>
-                    Usuarios
-                </a>
-                <a class="menu_item" href="#" route="lodgings">
-                    <i class='bx bx-user menu_item_icon'></i>
-                   Alojamientos
-                </a>
-                <a class="menu_item" href="#" route="lessors" onloadaction="initializeLocalStorageModule();">
-                    <i class='bx bx-user menu_item_icon'></i>
-                    Arrendadores
-                </a>
+        <div class="container texto">
+            <div class="header">
+                <h1 id="home-button">Booking System</h1>
+                <h2>Administracion de usuarios</h2>
+            </div>
+            <div class="content">
+                <div class="upbar">
+                    <ul class="list">
+                        <li id="create-user">
+                            <a>Ingresar Usuario</a>
+                        </li>
+                        <li id="show-users">
+                            <a>Mostrar usuarios</a>
+                        </li>
+                    </ul>
+                </div>
+                <div id="main-container">
+
+                </div>
             </div>
         </div>
-        <main id="main_container">
-
-        </main>
-    <script src="js/main.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="assets/js/script.js"></script>
+        <script src="router.js"></script>
+        <script src="components/createComponent.js"></script>
     </body>
 </html>
