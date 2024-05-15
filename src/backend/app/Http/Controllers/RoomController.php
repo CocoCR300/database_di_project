@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Lodging;
 use Illuminate\Http\Request;
 use App\Models\Room;
+use App\Utils\Data;
 use App\Utils\JsonResponses;
 
 class RoomController
@@ -29,7 +30,7 @@ class RoomController
         $lodgingId = $request->route('lodging_id');
 
         if ($data_input) {
-            $data = json_decode($data_input, true);
+            $data = Data::decodeJson($data_input);
 
             $rules = [
                 'roomnumber' => 'required|integer',

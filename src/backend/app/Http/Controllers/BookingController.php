@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Utils\Data;
 use Illuminate\Http\Request;
 use App\Utils\JsonResponses;
 
@@ -22,7 +23,7 @@ class BookingController
     {
         $data_input = $request->input('data', null);
         if ($data_input) {
-            $data = json_decode($data_input, true);
+            $data = Data::decodeJson($data_input);
             $rules = [
                 'lodgingid' => 'required|exists:lodging',
                 'customerid' => 'required|exists:person',
@@ -82,7 +83,7 @@ class BookingController
         }
 
         if ($data_input) {
-            $data = json_decode($data_input, true);
+            $data = Data::decodeJson($data_input);
             $rules = [
                 'dateandtime' => 'required|date_format:Y-m-d H:i|after_or_equal:today',
             ];

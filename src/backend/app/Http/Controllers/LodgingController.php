@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Lodging;
+use App\Utils\Data;
 use Illuminate\Http\Request;
 use App\Utils\JsonResponses;
 
@@ -37,7 +38,7 @@ class LodgingController
     {
         $data_input = $request->input('data', null);
         if ($data_input) {
-            $data = json_decode($data_input, true);
+            $data = Data::decodeJson($data_input);
             $rules = [
                 'owner_id' => 'required|exists:person',
                 'name' => 'required|string|max:100',

@@ -40,7 +40,7 @@ class UserController
         $data_input = $request->input('data', null);
 
         if ($data_input) {
-            $data = json_decode($data_input, true);
+            $data = Data::decodeJson($data_input);
             $data = Data::trimValues($data);
 
             $rules = [
@@ -67,14 +67,16 @@ class UserController
                 $person->emailaddress = $data['emailaddress'];
                 $person->save();
 
-                $phoneNumbers = [];
-                foreach ($data['phonenumbers'] as $number) {
-                    array_push($phoneNumbers, array(
-                        'personId'  => $person->personId,
-                        'phoneNumber'    => $number
-                    ));
+                if (array_key_exists('phonenumbers', $data)) {
+                    $phoneNumbers = [];
+                    foreach ($data['phonenumbers'] as $number) {
+                        array_push($phoneNumbers, array(
+                            'personId'  => $person->personId,
+                            'phoneNumber'    => $number
+                        ));
+                    }
+                    PhoneNumber::insert($phoneNumbers);
                 }
-                PhoneNumber::insert($phoneNumbers);
 
                 $response = JsonResponses::ok('El usuario ha sido creado con éxito');
             } else {
@@ -94,13 +96,13 @@ class UserController
     public function storePassword(Request $request)
     {
         $userName = $request->route('name');
-        $dataInput = $request->input('data');
+        $dataInput = $request->input('data', null);
 
         if ($dataInput) {
             $user = User::find($userName);
 
             if ($user) {
-                $data = json_decode($dataInput, true);
+                $data = Data::decodeJson($dataInput);
                 $data = Data::trimValues($data);
 
                 $rules = [
@@ -154,7 +156,7 @@ class UserController
         $phoneNumbersAsJson = $request->input('phone_numbers');
 
         if ($phoneNumbersAsJson) {
-            $phoneNumbers = json_decode($phoneNumbersAsJson);
+            $phoneNumbers = Data::decodeJson($phoneNumbersAsJson);
             $person = Person::where('userName', $userName)->with('phoneNumbers')->first();
 
             if ($person) {
@@ -263,7 +265,7 @@ class UserController
                 $response = JsonResponses::badRequest('El objeto "phone_numbers" está vacío');
             }
             else {
-                $phoneNumbers = json_decode($phoneNumbersAsJson);
+                $phoneNumbers = Data::decodeJson($phoneNumbersAsJson);
                 $person = Person::where('userName', $userName)->first();
 
                 if ($person) {

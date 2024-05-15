@@ -6,6 +6,15 @@ use Illuminate\Support\Arr;
 
 class Data
 {
+    public static function decodeJson($data)
+    {
+        if (is_array($data)) {
+            return $data;
+        }
+
+        return json_decode($data, null);
+    }
+
     const HASHING_ALGO = 'SHA256';
     public static function hash(string $data)
     {
