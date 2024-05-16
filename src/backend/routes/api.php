@@ -19,7 +19,7 @@ Route::prefix('v1')->group(
         Route::apiResource('/booking', BookingController::class, ['except' => ['create', 'edit']]);
         Route::apiResource('/lodging', LodgingController::class, ['except' => ['create', 'edit']]);
         Route::apiResource('/lodging/{lodging_id}/room', RoomController::class, ['except' => ['create', 'edit']]);
-        Route::apiResource('/user', UserController::class, ['except' => ['create', 'edit']]);
+        Route::apiResource('/user', UserController::class, ['except' => ['create', 'edit', 'update']]);
 
         Route::delete('/booking', [BookingController::class, 'destroy']);
         Route::delete('/lodging', [LodgingController::class, 'destroy']);
@@ -27,6 +27,6 @@ Route::prefix('v1')->group(
         Route::delete('/user/{name}', [UserController::class, 'destroy']);
         Route::delete('/user/{name}/phone_number', [UserController::class, 'destroyPhoneNumber']);
 
-        Route::patch('/user/{name}', [UserController::class,'updatePartial']);
+        Route::patch('/user/{name}', [UserController::class, 'updatePartial']);
     }
 );

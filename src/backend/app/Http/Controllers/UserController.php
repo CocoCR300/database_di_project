@@ -238,10 +238,7 @@ class UserController
                     'No se encuentra la información de la persona asociada al usuario',
                 );
             } else {
-                $phoneNumbers = PhoneNumber::where('personId', $person->personId);
-                foreach ($phoneNumbers as $phoneNumber) {
-                    $phoneNumber->delete();
-                }
+                PhoneNumber::where('personId', $person->personId)->delete();
 
                 $person ->delete();
                 $user->delete();
