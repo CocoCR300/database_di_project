@@ -1,0 +1,23 @@
+<script src="/frontend/components/updateComponent.js"></script>
+<div class="header-update">
+    <h2 class="title">Modificar usuario existente</h2>
+</div>
+<div class="container-update">
+    <div class="campo">
+        <label>Nombre de usuario</label>
+        <input required id="userNameUpdate" type="text" disabled>
+    </div>
+    <div class="campo">
+        <label>Primer Apellido</label>
+        <input required id="firstNameUpdate" type="text">
+    </div>
+    <div class="campo">
+        <label>Segundo Apellido</label>
+        <input required type="text" id="lastNameUpdate">
+    </div>
+    <div class="campo">
+        <label>Correo</label>
+        <input required type="text" id="emailUpdate">
+    </div>
+    <input type="submit" id="update-user-button" onclick="userPUT()">
+</div>

@@ -1,5 +1,5 @@
-$(document).ready(loadHome());
+//$(document).ready(loadHome());
 
-function loadHome(){
-    $("#main-container").load("views/home.html");
-}
+// function loadHome(){
+//     $("#main-container").load("views/home.html");
+// }

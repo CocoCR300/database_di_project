@@ -3,12 +3,37 @@
     margin: 0;
     padding: 0;
 }
+.container-table {
+    margin: 20px auto;
+    width: 80%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+tr{
+    background-color: #9e9e9e;
+}
+th, td {
+    padding: 10px;
+    border: 1px solid #dddddd;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+#btn-update{
+    width: 70%;
+    height: 80%;
+}
 .header{
     gap: 15px;
     padding-top: 20px;
     padding-bottom: 20px;
     width: 100%;
-    color: #FED8F5;
+    color: #ffffff;
     background-color: #223d53;
     display: flex;
     flex-direction: column;
@@ -31,7 +56,7 @@ ul{
 
 ul li{
     padding: 15px 20px;
-    color: #FED8F5;
+    color: #ffffff;
 }
 
 ul li:hover{
@@ -51,53 +76,108 @@ ul li:hover{
     color: #F9DEBD;
 }
 
+
+
 .title{
     padding: 20px 0;
     text-align: center;
-    color: #FED8F5;
+    color: #ffffff;
 }
-
-.container-inputs{
-    color: #FED8F5;
+.container-inputs {
+    color: #ffffff;
     margin: 10px auto;
-    width: 50vh;
-    height: 40vh;
+    width: 90%; 
+    max-width: 600px; 
+    height: auto; 
     background-color: #4a84b4;
     border-radius: 20px;
+    padding: 20px;
 }
-.contenido-inputs label{
+
+.contenido-inputs label {
     text-align: start;
     display: block;
     font-size: 13px;
-    margin-bottom: 1px;
+    margin-bottom: 5px;
 }
-.contenido-inputs input{
+
+.contenido-inputs input {
+    
     height: 30px;
     border-radius: 10px;
+    width: 100%; 
+    box-sizing: border-box; 
+
 }
 
-.contenido-inputs{
-    padding: 20px 20px;
+.contenido-inputs {
+    padding: 20px 0;
     display: grid;
-    grid-template-columns: 50% 50%;
-    grid-template-rows: auto auto;
-    column-gap: 10px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto; 
+    row-gap: 10px; 
 }
 
-.campo{
+.campo {
+    width: 200px;
     padding-bottom: 20px;
 }
 
-#create-user-button{
+#create-user-button {
     padding: 9px 15px;
-    display: flex;
+    display: block; 
     margin: 0 auto;
     border-radius: 10px;
 }
 
-#create-user-button:hover{
+#create-user-button:hover {
     background-color: #4a83b4;
-    color: #FED8F5;
+    color: #fed8f5;
     cursor: pointer;
 }
 
+
+@media screen and (min-width: 768px) {
+    .contenido-inputs {
+        grid-template-columns: repeat(2,1fr);
+    }
+}
+
+#btn-update{
+    width: 35px;
+    height: 30px;
+}
+
+#btn-delete{
+    width: 35px;
+    height: 30px;
+}
+
+.button:hover{
+    cursor: pointer;
+}
+
+.container-update {
+    width: 200px;
+    color: #ffffff;
+    margin: 10px auto;
+    max-width: 600px; 
+    height: auto;
+    background-color: #4a84b4;
+    border-radius: 20px;
+    padding: 20px;
+}
+
+.container-update input{
+    height: 30px;
+    border-radius: 10px;
+    width: 100%; 
+    box-sizing: border-box; 
+}
+
+.container-update label{
+    text-align: start;
+    display: block;
+    font-size: 13px;
+    margin-bottom: 5px;
+}

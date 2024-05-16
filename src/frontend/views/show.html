@@ -1,5 +1,5 @@
-<script src="components/showComponent.js"></script>
-
+<script src="/frontend/components/updateComponent.js"></script>
+<script src="/frontend/components/deleteComponent.js"></script>
 <div class="header-create">
     <h2 class="title">Usuarios en el sistema</h2>
 </div>
@@ -12,7 +12,7 @@
             <th>Correo</th>
             <th>Números de teléfono</th>
             <th>Rol de usuario</th>
-            <th>Acciones</th>
+            <th colspan="2">Acciones</th>
         </tr>
     </table>
 </div>
@@ -34,9 +34,10 @@
                     <td>${user.person.firstName}</td>
                     <td>${user.person.lastName}</td>
                     <td>${user.person.emailAddress}</td>
-                    <td>${user.person.phone_numbers.join(', ')}</td>
+                    <td>${user.person.phone_numbers[0].phoneNumber}</td>
                     <td>${user.user_role.type}</td>
-                    <td><button id= "btn-update" onclick="modificarUsuario(${user.person.personId})">Modificar</button></td>
+                    <td><button class="fas fa-edit button" id= "btn-update" onclick="modificarUsuario('${user.userName}')"></button></td>
+                    <td><button class="fas fa-trash button" id= "btn-delete" onclick="eliminarUsuario('${user.userName}')"></button></td>
                 `;
             });
         } catch (error) {
@@ -45,3 +46,4 @@
     }
     getAndPopulateData();
 </script>
+<script src="/frontend/components/showComponent.js"></script>

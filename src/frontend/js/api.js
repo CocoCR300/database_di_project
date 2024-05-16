@@ -30,12 +30,45 @@ async function post(route, data)
     });
     try {
         const response = await promise;
-        const responseData = await response.json();
-        return responseData;
+        return await response.json();
     }
     catch (error) {
         console.log(error);
     }
 
     return null;
+}
+
+async function patch(route, data) 
+{
+        const promise = fetch(`${API_URL}/${route}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+        try{
+            const response = await promise;
+            return await response;
+        }
+        catch (error) {
+            console.error(error);
+            throw error;
+        }
+}
+
+async function destroy(route)
+{
+    const promise = fetch(`${API_URL}/${route}`, {
+        method: "DELETE",
+        body: JSON.stringify(null)
+    });
+    try{
+        const response = await promise;
+        return await response;
+    }catch(error){
+        console.error(error);
+        throw error;
+    }
 }

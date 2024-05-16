@@ -294,7 +294,7 @@ class UserController
     public function updatePartial(Request $request, $userName) {
 
         $user = User::find($userName);
-    
+        
         if (!$user) {
             $response = JsonResponses::notFound('No existe un usuario con el identificador especificado');
         }
