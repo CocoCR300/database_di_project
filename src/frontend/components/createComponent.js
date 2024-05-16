@@ -1,3 +1,5 @@
+import * as api from '../js/api.js';
+
 function userPOST(){
     let data = {
         data: {
@@ -11,12 +13,7 @@ function userPOST(){
         }
     };
 
-    const options = {
-        method: 'POST',
-        body: JSON.stringify(data),
-    };
-
-    fetch('http://127.0.0.1:8000/api/v1/user', options)
+    api.post('user', data)
         .then(result => {
             console.log('Probando');
             if(!result.ok){
@@ -31,3 +28,5 @@ function userPOST(){
             console.error('Error:', error);
         });
 }
+
+$('#create-user-button').on('click', userPOST);
