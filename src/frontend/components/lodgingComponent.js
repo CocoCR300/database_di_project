@@ -11,8 +11,8 @@ async function refreshLodgings() {
             <td>${lodging.name}</td>
             <td>${lodging.address}</td>
             <td>${lodging.description}</td>
-            <td>${lodging.lodgingType.type}</td>
-            <td>${lodging.ownerPersonId}</td>
+            <td>${lodging.lodgingType}</td>
+            <td>${lodging.owner_person.firstName + " " + lodging.owner_person.lastName}</td>
         </tr>
         `;
 

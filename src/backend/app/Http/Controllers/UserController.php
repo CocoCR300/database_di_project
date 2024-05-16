@@ -327,7 +327,9 @@ class UserController
                     $response = JsonResponses::notAcceptable('Ya existe un usuario con el nombre especificado');
                 }
                 else {
-                    $person->fill($data);
+                    $person->firstName = $data['firstname'];
+                    $person->lastName = $data['lastname'];
+                    $person->emailAddress = $data['emailaddress'];
                     $person->save();
 
                     $response = JsonResponses::ok('Datos del usuario y persona asociada actualizados correctamente');

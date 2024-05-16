@@ -15,7 +15,7 @@ async function modificarUsuario(id){
     }
 }
 
-async function userPUT(){
+async function userPUT() {
     let usernameToModify = document.getElementById('userNameUpdate').value;
     let data = {
         username: document.getElementById('userNameUpdate').value,
@@ -26,7 +26,7 @@ async function userPUT(){
 
     try{
         let response = await patch(`user/${usernameToModify}`,data);
-        return await response;
+        console.log(response);
     }catch(error){
         console.log(error);
     }
