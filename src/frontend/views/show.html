@@ -1,0 +1,49 @@
+<script src="components/showComponent.js"></script>
+
+<div class="header-create">
+    <h2 class="title">Usuarios en el sistema</h2>
+</div>
+<div class="container-table">
+    <table id="userDataTable">
+        <tr>
+            <th>Nombre de usuario</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Correo</th>
+            <th>Números de teléfono</th>
+            <th>Rol de usuario</th>
+            <th>Acciones</th>
+        </tr>
+    </table>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8000/api/v1/user";
+
+    async function getAndPopulateData() {
+        try {
+            const data = await getUserData();
+            const table = document.getElementById("userDataTable");
+
+            while (table.rows.length > 1) {
+                table.deleteRow(1);
+            }
+
+            data.forEach(user => {
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td>${user.userName}</td>
+                    <td>${user.person.firstName}</td>
+                    <td>${user.person.lastName}</td>
+                    <td>${user.person.emailAddress}</td>
+                    <td>${user.person.phone_numbers.join(', ')}</td>
+                    <td>${user.user_role.type}</td>
+                    <td><button id= "btn-update" onclick="modificarUsuario(${user.person.personId})">Modificar</button></td>
+                `;
+            });
+        } catch (error) {
+            console.error('Se produjo un error:', error);
+        }
+    }
+    getAndPopulateData();
+</script>
