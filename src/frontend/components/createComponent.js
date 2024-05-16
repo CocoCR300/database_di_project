@@ -1,5 +1,3 @@
-import * as api from '../js/api.js';
-
 function userPOST(){
     let data = {
         data: {
@@ -13,7 +11,7 @@ function userPOST(){
         }
     };
 
-    api.post('user', data)
+    post('user', data)
         .then(result => {
             console.log('Probando');
             if(!result.ok){

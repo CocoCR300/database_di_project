@@ -1,5 +1,6 @@
-const API_URL = "http://localhost:8000/api/v1"
-export async function get(route, token = "")
+const API_URL = "http://localhost:8000/api/v1";
+
+async function get(route)
 {
     const promise = fetch(`${API_URL}/${route}`, {
         headers: {
@@ -17,7 +18,7 @@ export async function get(route, token = "")
     return null;
 }
 
-export async function post(route, data)
+async function post(route, data)
 {
     const promise = fetch(`${API_URL}/${route}`, {
         method: "POST",
