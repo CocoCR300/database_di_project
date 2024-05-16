@@ -12,7 +12,7 @@ class Data
             return $data;
         }
 
-        return json_decode($data, null);
+        return json_decode($data, true);
     }
 
     const HASHING_ALGO = 'SHA256';

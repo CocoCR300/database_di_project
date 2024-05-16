@@ -21,14 +21,14 @@ class Lodging extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'lessorId',
+        'ownerPersonId',
         'name',
         'description',
         'lodgingType',
         'address',
     ];
 
-    public function lessor() {
-        return $this->belongsTo(Person::class);
+    public function ownerPerson() {
+        return $this->belongsTo(Person::class, 'ownerPersonId');
     }
 }

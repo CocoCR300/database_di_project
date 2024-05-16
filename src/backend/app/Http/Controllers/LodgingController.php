@@ -12,7 +12,7 @@ class LodgingController
 {
     public function index()
     {
-        $data = Lodging::all();
+        $data = Lodging::with('ownerPerson')->get();
         return JsonResponses::ok(
             "Todos los registros de los alojamientos",
             $data,
@@ -40,7 +40,7 @@ class LodgingController
         if ($data_input) {
             $data = Data::decodeJson($data_input);
             $rules = [
-                'owner_id' => 'required|exists:person',
+                'ownerpersonid' => 'required|exists:person,personId',
                 'name' => 'required|string|max:100',
                 'lodgingtype' => [
                     Lodging::LODGING_TYPE_APARTMENT,
@@ -54,7 +54,7 @@ class LodgingController
             $isValid = \validator($data, $rules);
             if (!$isValid->fails()) {
                 $lodging = new Lodging();
-                $lodging->ownerPersonId= $data['owner_id'];
+                $lodging->ownerPersonId= $data['ownerpersonid'];
                 $lodging->name = $data['name'];
                 $lodging->description = $data['description'];
                 $lodging->address = $data['address'];
@@ -81,7 +81,7 @@ class LodgingController
     {
         $data = Lodging::find($id);
         if (is_object($data)) {
-            $data = $data->load('person');
+            $data = $data->load('ownerPerson');
 
             $response = JsonResponses::ok(
                 'Datos del alojamiento',
