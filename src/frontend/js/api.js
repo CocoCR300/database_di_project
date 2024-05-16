@@ -44,13 +44,14 @@ async function patch(route, data)
         const promise = fetch(`${API_URL}/${route}`, {
             method: "PATCH",
             headers: {
+                "Accept": "application/json",
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(data)
         });
         try{
             const response = await promise;
-            return await response;
+            return await response.json();
         }
         catch (error) {
             console.error(error);
@@ -62,11 +63,14 @@ async function destroy(route)
 {
     const promise = fetch(`${API_URL}/${route}`, {
         method: "DELETE",
+        headers: {
+            "Accept": "application/json"
+        },
         body: JSON.stringify(null)
     });
     try{
         const response = await promise;
-        return await response;
+        return await response.json();
     }catch(error){
         console.error(error);
         throw error;

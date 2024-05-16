@@ -1,8 +1,9 @@
-async function eliminarUsuario(id){
-    try{
-        let response = await destroy(`user/${id}`);
-        return await response;
-    }catch(error){
+async function eliminarUsuario(id)
+{
+    try {
+        const response = await destroy(`user/${id}`);
+        console.log(response);
+    } catch (error) {
         console.log(error);
     }
 }
