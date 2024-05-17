@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{618365F6-C9B8-449A-B7E3-A29F7BF810BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restify.API", "src\api\Restify.API.csproj", "{2D5C4CB6-23DB-425A-8E4F-E4B2E4149AD0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restify.Web", "src\webapp\Restify.Web.csproj", "{5DB6B30F-B292-486B-80C6-20CD47595E59}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2D5C4CB6-23DB-425A-8E4F-E4B2E4149AD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D5C4CB6-23DB-425A-8E4F-E4B2E4149AD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D5C4CB6-23DB-425A-8E4F-E4B2E4149AD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D5C4CB6-23DB-425A-8E4F-E4B2E4149AD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DB6B30F-B292-486B-80C6-20CD47595E59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DB6B30F-B292-486B-80C6-20CD47595E59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DB6B30F-B292-486B-80C6-20CD47595E59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DB6B30F-B292-486B-80C6-20CD47595E59}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2D5C4CB6-23DB-425A-8E4F-E4B2E4149AD0} = {618365F6-C9B8-449A-B7E3-A29F7BF810BA}
+		{5DB6B30F-B292-486B-80C6-20CD47595E59} = {618365F6-C9B8-449A-B7E3-A29F7BF810BA}
+	EndGlobalSection
+EndGlobal
