@@ -71,7 +71,6 @@ CREATE TABLE IF NOT EXISTS Booking (
   customerPersonId 	INT 		UNSIGNED 	NOT NULL,
   lodgingId 		INT 		UNSIGNED 	NOT NULL,
   status 			VARCHAR(50) 			NOT NULL,
-  fees 				DECIMAL 	UNSIGNED 	NOT NULL,
   startDate 		DATE 					NOT NULL,
   endDate 			DATE 					NOT NULL,
   
