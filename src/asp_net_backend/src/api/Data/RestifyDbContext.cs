@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 using Restify.API.Models;
 
@@ -7,6 +6,13 @@ namespace Restify.API.Data
 {
 	public class RestifyDbContext : DbContext
 	{
+		public DbSet<Booking> Booking { get; set; }
+		public DbSet<Lodging> Lodging { get; set; }
+		public DbSet<PhoneNumber> PhoneNumber { get; set; }
+		public DbSet<Room> Room { get; set; }
+		public DbSet<RoomBooking> RoomBooking { get; set; }
+		public DbSet<User> User { get; set; }
+		
 		public RestifyDbContext() { }
 		public RestifyDbContext(DbContextOptions<RestifyDbContext> options) : base(options) { }
 
@@ -58,14 +64,15 @@ namespace Restify.API.Data
 
 			modelBuilder.Entity<PhoneNumber>(phoneNumber =>
 			{
-				phoneNumber.HasNoKey();
+				phoneNumber.HasKey(p => new { p.PersonId, p.Number });
 
 				phoneNumber.Property(p => p.PersonId)
 					.IsRequired();
 
 				phoneNumber.Property(p => p.Number)
 					.IsRequired()
-					.HasColumnType("CHAR(30)");
+					.HasColumnType("CHAR(30)")
+					.HasColumnName("phoneNumber");
 			});
 
 			modelBuilder.Entity<Person>(person =>
@@ -94,9 +101,13 @@ namespace Restify.API.Data
 					.HasAnnotation("EmailAddress", null)
 					.HasMaxLength(150);
 
-				//person.HasMany(p => p.PhoneNumbers)
-				//	.WithOne()
-				//	.HasForeignKey(p => p.PersonId);
+				person.HasOne(p => p.User)
+					.WithOne(u => u.Person)
+					.HasForeignKey<Person>(p => p.UserName);
+
+				person.HasMany(p => p.PhoneNumbers)
+					.WithOne()
+					.HasForeignKey(p => p.PersonId);
 			});
 
 			modelBuilder.Entity<Lodging>(lodging =>
@@ -142,8 +153,12 @@ namespace Restify.API.Data
 
 			modelBuilder.Entity<Booking>(booking =>
 			{
-				booking.HasKey(b => b.BookingId);
+				booking.HasKey(b => b.Id);
 
+				booking.Property(b => b.Id)
+					.IsRequired()
+					.HasColumnName("bookingId");
+				
 				booking.Property(b => b.CustomerId)
 					.IsRequired()
 					.HasColumnName("customerPersonId");
@@ -174,11 +189,6 @@ namespace Restify.API.Data
 					.WithMany()
 					.HasForeignKey(b => b.LodgingId)
 					.OnDelete(DeleteBehavior.Restrict);
-
-				booking.HasOne(b => b.Payment)
-					.WithOne()
-					.HasForeignKey(typeof(Booking), nameof(Booking.PaymentId))
-					.IsRequired(false);
 			});
 
 			modelBuilder.Entity<Payment>(payment =>
@@ -194,11 +204,15 @@ namespace Restify.API.Data
 
 				payment.Property(p => p.DateAndTime)
 					.IsRequired();
+
+				payment.HasOne<Booking>()
+					.WithOne(b => b.Payment)
+					.HasForeignKey<Payment>(p => p.BookingId);
 			});
 
 			modelBuilder.Entity<Room>(room =>
 			{
-				room.HasKey(new string[] { nameof(Room.LodgingId), nameof(Room.Number) });
+				room.HasKey(new string[] { nameof(Models.Room.LodgingId), nameof(Models.Room.Number) });
 
 				room.Property(r => r.LodgingId)
 					.IsRequired();
@@ -245,7 +259,5 @@ namespace Restify.API.Data
 					.HasForeignKey(r => new { r.LodgingId, r.RoomNumber });
 			});
 		}
-
-		public DbSet<Restify.API.Models.User> User { get; set; } = default!;
 	}
 }

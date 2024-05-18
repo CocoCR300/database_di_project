@@ -8,6 +8,11 @@ namespace Restify.API.Util
 	{
 		protected override ValidationResult IsValid(object value, ValidationContext validationContext)
 		{
+			if (value == null)
+			{
+				return ValidationResult.Success;
+			}
+			
 			var context = validationContext.GetService<RestifyDbContext>();
 			if (context.Find<T>(value) != null)
 			{
