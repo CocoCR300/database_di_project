@@ -24,7 +24,9 @@ namespace Restify.API.Controllers
         [HttpGet]
         public IEnumerable<User> Get()
         {
-            var users = _context.User.Include(u => u.Role);
+            var users = _context.User
+                .Include(u => u.Role)
+                .Include(u => u.Person);
             return users;
         }
 
@@ -33,6 +35,7 @@ namespace Restify.API.Controllers
         {
             var user = _context.User.Find(userName);
             _context.Entry(user).Reference(u => u.Role).Load();
+            _context.Entry(user).Reference(u => u.Person).Load();
 
             return user;
         }
@@ -91,10 +94,27 @@ namespace Restify.API.Controllers
 
             if (user != null)
             {
+                bool noneExists = true;
                 _context.Entry(user).Reference(u => u.Person).Load();
-                IQueryable<PhoneNumber> phoneNumbersToDelete = _context.PhoneNumber.Where(p => p.PersonId == user.Person.Id && phoneNumbers.Contains(p.Number));
-                _context.PhoneNumber.RemoveRange(phoneNumbersToDelete);
+                // TODO: Is this necessary now that PhoneNumbers are owned ??
+                _context.Entry(user.Person).Collection(p => p.PhoneNumbers).Load();
+
+                for (int i = 0; i < user.Person.PhoneNumbers.Count; ++i)
+                {
+                    string phoneNumber = user.Person.PhoneNumbers[i].Number;
+                    if (phoneNumbers.Contains(phoneNumber))
+                    {
+                        noneExists = false;
+                        user.Person.PhoneNumbers.RemoveAt(i);
+                    }
+                }
+                
                 _context.SaveChanges();
+
+                if (noneExists)
+                {
+                    return NotFound("El usuario no tiene asignado ninguno de los números de teléfono especificados.");
+                }
                 
                 return Ok("Los números de teléfono han sido eliminados con éxito.");
             }
@@ -155,7 +175,7 @@ namespace Restify.API.Controllers
         }
 
         [HttpPost("{userName}/phone_number")]
-        public ObjectResult StorePhoneNumber(string userName, string[] phoneNumbers)
+        public ObjectResult StorePhoneNumbers(string userName, string[] phoneNumbers)
         {
             User user = _context.Find<User>(userName);
 
@@ -165,7 +185,7 @@ namespace Restify.API.Controllers
                 _context.Entry(user.Person).Collection(p => p.PhoneNumbers).Load();
                 foreach (string phoneNumber in phoneNumbers)
                 {
-                    user.Person.PhoneNumbers.Add(new PhoneNumber
+                    user.Person.PhoneNumbers.Add(new PersonPhoneNumber
                     {
                         PersonId = user.Person.Id,
                         Number = phoneNumber

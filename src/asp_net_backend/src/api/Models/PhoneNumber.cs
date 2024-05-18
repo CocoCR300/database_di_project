@@ -2,6 +2,15 @@
 
 public class PhoneNumber
 {
-	public uint		PersonId { get; set; }
 	public string	Number { get; set; }
+}
+
+public class LodgingPhoneNumber : PhoneNumber
+{
+	public uint LodgingId { get; set; }
+}
+
+public class PersonPhoneNumber : PhoneNumber
+{
+	public uint PersonId { get; set; }
 }

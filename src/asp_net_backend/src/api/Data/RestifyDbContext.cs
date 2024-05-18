@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Restify.API.Models;
 
 namespace Restify.API.Data
@@ -8,7 +8,7 @@ namespace Restify.API.Data
 	{
 		public DbSet<Booking> Booking { get; set; }
 		public DbSet<Lodging> Lodging { get; set; }
-		public DbSet<PhoneNumber> PhoneNumber { get; set; }
+		public DbSet<Perk> Perks { get; set; }
 		public DbSet<Room> Room { get; set; }
 		public DbSet<RoomBooking> RoomBooking { get; set; }
 		public DbSet<User> User { get; set; }
@@ -20,7 +20,7 @@ namespace Restify.API.Data
 		{
 			if (!optionsBuilder.IsConfigured)
 			{
-				string connectionString = "server=localhost;user=root;password=;database=restify";
+				string connectionString = "server=localhost;user=root;password=;database=restify_v2";
 				optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 			}
 		}
@@ -64,15 +64,23 @@ namespace Restify.API.Data
 
 			modelBuilder.Entity<PhoneNumber>(phoneNumber =>
 			{
-				phoneNumber.HasKey(p => new { p.PersonId, p.Number });
-
-				phoneNumber.Property(p => p.PersonId)
-					.IsRequired();
-
-				phoneNumber.Property(p => p.Number)
+				phoneNumber.HasNoKey();
+				phoneNumber.UseTpcMappingStrategy();
+			});
+			modelBuilder.Entity<Photo>(photo =>
+			{
+				// TODO: Not really like this in the database, but it is needed for this to work
+				// TODO: Why do I have to duplicate this definition for it to work with Lodging
+				photo.HasKey(p => p.FileName);
+				
+				photo.Property(p => p.FileName)
 					.IsRequired()
-					.HasColumnType("CHAR(30)")
-					.HasColumnName("phoneNumber");
+					.HasColumnType("CHAR(75)");
+				
+				photo.Property(p => p.Ordering)
+					.IsRequired();
+				
+				photo.UseTpcMappingStrategy();
 			});
 
 			modelBuilder.Entity<Person>(person =>
@@ -105,9 +113,35 @@ namespace Restify.API.Data
 					.WithOne(u => u.Person)
 					.HasForeignKey<Person>(p => p.UserName);
 
-				person.HasMany(p => p.PhoneNumbers)
-					.WithOne()
-					.HasForeignKey(p => p.PersonId);
+				person.OwnsMany(p => p.PhoneNumbers,
+					phoneNumber =>
+					{
+						// TODO: Is not really like this in the DB, but it is required for this to work
+						phoneNumber.HasKey(p => new { p.PersonId, p.Number });
+						
+						phoneNumber.Property(p => p.PersonId)
+							.IsRequired();
+
+						phoneNumber.Property(p => p.Number)
+							.IsRequired()
+							.HasColumnType("CHAR(30)")
+							.HasColumnName("phoneNumber");
+					});
+				});
+
+			modelBuilder.Entity<Perk>(perk =>
+			{
+				perk.HasKey(p => p.Id);
+
+				perk.Property(p => p.Id)
+					.IsRequired()
+					.HasColumnName("perkId");
+
+				perk.Property(p => p.Name)
+					.IsRequired()
+					.HasMaxLength(50);
+
+				perk.ToTable("Perk");
 			});
 
 			modelBuilder.Entity<Lodging>(lodging =>
@@ -115,19 +149,18 @@ namespace Restify.API.Data
 				lodging.HasKey(l => l.Id);
 
 				lodging.Property(l => l.Id)
-					.IsRequired();
-
-				lodging.Property(l => l.Id)
 					.IsRequired()
-					.HasColumnName("LodgingId");
+					.HasColumnName("lodgingId");
 
 				lodging.Property(l => l.OwnerId)
 					.IsRequired()
 					.HasColumnName("ownerPersonId");
 
-				lodging.Property(l => l.LodgingType)
+				lodging.Property(l => l.Type)
 					.IsRequired()
-					.HasMaxLength(50);
+					.HasColumnName("lodgingType")
+					.HasColumnType("CHAR(50)")
+					.HasConversion<string>();
 
 				lodging.Property(l => l.Name)
 					.IsRequired()
@@ -140,11 +173,57 @@ namespace Restify.API.Data
 				lodging.Property(l => l.Description)
 					.IsRequired()
 					.HasMaxLength(1000);
+				
+				lodging.Property(l => l.EmailAddress)
+					.IsRequired()
+					.HasMaxLength(200);
+				
+				lodging.OwnsMany(l => l.PhoneNumbers,
+					phoneNumber =>
+					{
+						// TODO: Is not really like this in the DB, but it is required for this to work
+						phoneNumber.HasKey(p => new { p.LodgingId, p.Number });
+						
+						phoneNumber.Property(p => p.LodgingId)
+							.IsRequired();
+
+						phoneNumber.Property(p => p.Number)
+							.IsRequired()
+							.HasColumnType("CHAR(30)")
+							.HasColumnName("phoneNumber");
+					});
+				
+				lodging.OwnsMany(l => l.Photos,
+					photo =>
+					{
+						// TODO: Is not really like this in the database, but it is required for this to work
+						photo.HasKey(p => p.FileName);
+						
+						photo.Property(p => p.LodgingId)
+							.IsRequired();
+					});
+
+				lodging.HasMany(l => l.Perks)
+					.WithMany()
+					.UsingEntity<LodgingPerk>(lodgingPerk =>
+					{
+						lodgingPerk.Property(p => p.LodgingId)
+							.IsRequired();
+						
+						lodgingPerk.Property(p => p.PerkId)
+							.IsRequired();
+					});
 
 				lodging.HasMany(l => l.Rooms)
 					.WithOne(r => r.Lodging)
-					.HasForeignKey(r => r.LodgingId);
+					.HasForeignKey(r => r.LodgingId)
+					.OnDelete(DeleteBehavior.Cascade);
 
+				lodging.HasMany(l => l.RoomTypes)
+					.WithOne()
+					.HasForeignKey(r => r.LodgingId)
+					.OnDelete(DeleteBehavior.Cascade);
+				
 				lodging.HasOne(l => l.Owner)
 					.WithMany()
 					.HasForeignKey(l => l.OwnerId)
@@ -165,16 +244,11 @@ namespace Restify.API.Data
 
 				booking.Property(b => b.LodgingId)
 					.IsRequired();
-
+				
 				booking.Property(b => b.Status)
-					.IsRequired()
-					.HasMaxLength(50);
-
-				booking.Property(b => b.StartDate)
-					.IsRequired();
-
-				booking.Property(b => b.EndDate)
-					.IsRequired();
+					.HasColumnType("CHAR(50)")
+					.IsRequired(false)
+					.HasConversion<string>();
 
 				booking.HasMany(r => r.RoomBookings)
 					.WithOne(r => r.Booking)
@@ -204,31 +278,69 @@ namespace Restify.API.Data
 
 				payment.Property(p => p.DateAndTime)
 					.IsRequired();
+				
+				payment.Property(p => p.Amount)
+					.IsRequired();
+				
+				payment.Property(p => p.InvoiceImageFileName)
+					.IsRequired()
+					.HasMaxLength(75);
 
 				payment.HasOne<Booking>()
 					.WithOne(b => b.Payment)
 					.HasForeignKey<Payment>(p => p.BookingId);
 			});
 
+			modelBuilder.Entity<RoomType>(roomType =>
+			{
+				roomType.HasKey(r => r.Id);
+
+				roomType.Property(r => r.Id)
+					.IsRequired()
+					.HasColumnName("RoomTypeId");
+				
+				roomType.Property(r => r.LodgingId)
+					.IsRequired();
+
+				roomType.Property(r => r.Name)
+					.IsRequired()
+					.HasMaxLength(75);
+
+				roomType.Property(r => r.PerNightPrice)
+					.IsRequired();
+
+				roomType.Property(r => r.Capacity)
+					.IsRequired();
+
+				roomType.OwnsMany(r => r.Photos,
+					photo =>
+					{
+						// TODO: Is not really like this in the database, but it is required for this to work
+						photo.HasKey(p => p.FileName);
+						
+						photo.Property(p => p.RoomTypeId)
+							.IsRequired();
+					});
+			});
+			
 			modelBuilder.Entity<Room>(room =>
 			{
-				room.HasKey(new string[] { nameof(Models.Room.LodgingId), nameof(Models.Room.Number) });
+				room.HasKey(r => new  { r.LodgingId, r.Number });
 
 				room.Property(r => r.LodgingId)
 					.IsRequired();
+				
+				room.Property(r => r.TypeId)
+					.IsRequired()
+					.HasColumnName("roomTypeId");
 
 				room.Property(r => r.Number)
 					.IsRequired()
 					.HasColumnName("roomNumber");
 
-				room.Property(r => r.Occupied)
-					.IsRequired();
-
-				room.Property(r => r.PerNightPrice)
-					.IsRequired();
-
-				room.Property(r => r.Capacity)
-					.IsRequired();
+				room.HasOne(r => r.Type)
+					.WithMany()
+					.HasForeignKey(r => r.TypeId);
 			});
 
 			modelBuilder.Entity<RoomBooking>(roomBooking =>
@@ -253,6 +365,17 @@ namespace Restify.API.Data
 
 				roomBooking.Property(r => r.Fees)
 					.IsRequired();
+				
+				roomBooking.Property(r => r.StartDate)
+					.IsRequired();
+				
+				roomBooking.Property(r => r.EndDate)
+					.IsRequired();
+
+				roomBooking.Property(b => b.Status)
+					.IsRequired()
+					.HasColumnType("CHAR(50)")
+					.HasConversion<string>();
 
 				roomBooking.HasOne(r => r.Room)
 					.WithMany()

@@ -1,9 +1,11 @@
-CREATE DATABASE IF NOT EXISTS restify;
+CREATE DATABASE IF NOT EXISTS restify_v2;
+
+USE restify_v2;
 
 -- Tabla "Rol de usuario"
 CREATE TABLE IF NOT EXISTS UserRole (
   userRoleId	INT 		UNSIGNED	NOT NULL AUTO_INCREMENT,
-  type			VARCHAR(50)				  NOT NULL,
+  type			VARCHAR(50)				NOT NULL,
   
   PRIMARY KEY (userRoleId),
   
@@ -12,9 +14,9 @@ CREATE TABLE IF NOT EXISTS UserRole (
 
 -- Tabla "Usuario"
 CREATE TABLE IF NOT EXISTS User (
-  userName		VARCHAR(50) 			NOT NULL,
-  userRoleId	INT 		UNSIGNED 	NOT NULL,
-  password 		VARCHAR(100) 			NOT NULL,
+  userName		VARCHAR(50) 				NOT NULL,
+  userRoleId	INT 			UNSIGNED 	NOT NULL,
+  password 		VARCHAR(100) 				NOT NULL,
   
   PRIMARY KEY (userName),
   
@@ -39,8 +41,8 @@ CREATE TABLE IF NOT EXISTS Person (
   CONSTRAINT FK_PERSON_USER FOREIGN KEY (userName) REFERENCES User (userName)
 );
 
--- Tabla "Número de telefono"
-CREATE TABLE IF NOT EXISTS PhoneNumber (
+-- Tabla "Número de telefono de persona"
+CREATE TABLE IF NOT EXISTS PersonPhoneNumber (
   personId 		INT 		UNSIGNED 	NOT NULL,
   phoneNumber 	CHAR(30) 				NOT NULL,
   
@@ -53,10 +55,11 @@ CREATE TABLE IF NOT EXISTS PhoneNumber (
 CREATE TABLE IF NOT EXISTS Lodging (
   lodgingId 	INT 			UNSIGNED 	NOT NULL      AUTO_INCREMENT,
   ownerPersonId INT 			UNSIGNED 	NOT NULL,
-  lodgingType 	VARCHAR(50) 				NOT NULL,
+  lodgingType 	CHAR(50) 					NOT NULL,
   name 			VARCHAR(100) 				NOT NULL,
   address 		VARCHAR(300) 				NOT NULL,
   description 	VARCHAR(1000) 				NOT NULL,
+  emailAddress	VARCHAR(200)				NOT NULL,	
   
   PRIMARY KEY (lodgingId),
   
@@ -65,14 +68,53 @@ CREATE TABLE IF NOT EXISTS Lodging (
   CONSTRAINT FK_LODGING_PERSON FOREIGN KEY (ownerPersonId) REFERENCES Person (personId)
 );
 
+-- Tabla "Número de telefono de alojamiento"
+CREATE TABLE IF NOT EXISTS LodgingPhoneNumber (
+  lodgingId 		INT 		UNSIGNED 	NOT NULL,
+  phoneNumber 		CHAR(30) 				NOT NULL,
+  
+  INDEX FK_INDEX_LODGING_PHONE_NUMBER (lodgingId),
+  
+  CONSTRAINT FK_LODGING_PHONE_NUMBER FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
+);
+
+-- Tabla "Foto de alojamiento"
+CREATE TABLE IF NOT EXISTS LodgingPhoto (
+	lodgingId	INT			UNSIGNED	NOT NULL	AUTO_INCREMENT,
+	fileName	VARCHAR(75)				NOT NULL,
+	ordering	TINYINT		UNSIGNED	NOT NULL,
+	
+	INDEX FK_INDEX_LODGING_LODGING_PHOTO (lodgingId),
+	
+	CONSTRAINT FK_LODGING_LODGING_PHOTO	FOREIGN KEY (lodgingId)	REFERENCES Lodging (lodgingId)
+);
+
+-- Tabla "Beneficio adicional"
+CREATE TABLE IF NOT EXISTS Perk (
+	perkId	INT			UNSIGNED	NOT NULL	AUTO_INCREMENT,
+	name	VARCHAR(50)				NOT NULL,
+	
+	PRIMARY KEY (perkId)
+);
+
+-- Tabla "Alojamiento beneficio adicional"
+CREATE TABLE IF NOT EXISTS LodgingPerk (
+	lodgingId	INT			UNSIGNED	NOT NULL,
+	perkId		INT			UNSIGNED	NOT NULL,
+	
+	INDEX FK_INDEX_LODGING_LODGING_PERK	(lodgingId),
+	INDEX FK_INDEX_PERK_LODGING_PERK	(perkId),
+	
+	CONSTRAINT FK_LODGING_LODGING_PERK	FOREIGN KEY (lodgingId)	REFERENCES Lodging (lodgingId),
+	CONSTRAINT FK_PERK_LODGING_PERK		FOREIGN KEY (perkId)	REFERENCES Perk (perkId)
+);
+
 -- Tabla "Reservación"
 CREATE TABLE IF NOT EXISTS Booking (
-  bookingId 		INT 		UNSIGNED 	NOT NULL      AUTO_INCREMENT,
+  bookingId 		INT 		UNSIGNED 	NOT NULL	AUTO_INCREMENT,
   customerPersonId 	INT 		UNSIGNED 	NOT NULL,
   lodgingId 		INT 		UNSIGNED 	NOT NULL,
-  status 			VARCHAR(50) 			NOT NULL,
-  startDate 		DATE 					NOT NULL,
-  endDate 			DATE 					NOT NULL,
+  status 			CHAR(50)					NULL,
   
   PRIMARY KEY (bookingId),
   
@@ -85,9 +127,11 @@ CREATE TABLE IF NOT EXISTS Booking (
 
 -- Tabla "Pago"
 CREATE TABLE IF NOT EXISTS Payment (
-  paymentId 	INT 		UNSIGNED 	NOT NULL  AUTO_INCREMENT,
-  bookingId 	INT 		UNSIGNED 	NOT NULL,
-  dateAndTime 	DATETIME 				NOT NULL,
+  paymentId 			INT 		UNSIGNED 	NOT NULL  AUTO_INCREMENT,
+  bookingId 			INT 		UNSIGNED 	NOT NULL,
+  amount				DECIMAL		UNSIGNED	NOT NULL,
+  dateAndTime 			DATETIME 				NOT NULL,
+  invoiceImageFileName	CHAR(75),
   
   PRIMARY KEY (paymentId),
   
@@ -96,36 +140,68 @@ CREATE TABLE IF NOT EXISTS Payment (
   CONSTRAINT FK_PAYMENT_BOOKING FOREIGN KEY (bookingId) REFERENCES Booking (bookingId)
 );
 
+-- Tabla "Tipo de habitación"
+CREATE TABLE IF NOT EXISTS RoomType (
+	roomTypeId		INT 		UNSIGNED	NOT NULL,
+	lodgingId		INT			UNSIGNED	NOT NULL,
+	name			VARCHAR(75)	UNSIGNED	NOT NULL,
+	perNightPrice 	DECIMAL 	UNSIGNED 	NOT NULL,
+	fees			DECIMAL 	UNSIGNED 	NOT NULL,
+	capacity		INT 		UNSIGNED	NOT NULL,
+	
+	PRIMARY KEY (roomTypeId),
+	
+	INDEX FK_INDEX_LODGING_ROOM_TYPE (lodgingId),
+  
+	CONSTRAINT FK_LODGING_ROOM_TYPE FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
+);
+
+-- Tabla "Foto de tipo de habitación"
+CREATE TABLE IF NOT EXISTS RoomTypePhoto (
+	roomTypeId	INT			UNSIGNED	NOT NULL,
+	fileName	CHAR(75)				NOT NULL,
+	ordering	TINYINT		UNSIGNED	NOT NULL,
+	
+	INDEX FK_INDEX_LODGING_ROOM_TYPE (lodgingId),
+  
+	CONSTRAINT FK_ROOM_TYPE_ROOM_TYPE_PHOTO FOREIGN KEY (roomTypeId) REFERENCES RoomType (roomTypeId)
+);
+
 -- Tabla "Habitación"
 CREATE TABLE IF NOT EXISTS Room (
   roomNumber   	INT 	UNSIGNED 	NOT NULL,
   lodgingId   	INT 	UNSIGNED 	NOT NULL,
-  occupied 	  	TINYINT 			NOT NULL,
-  perNightPrice DECIMAL UNSIGNED 	NOT NULL,
-  capacity 		  INT 	UNSIGNED	NOT NULL,
+  roomTypeId	INT		UNSIGNED	NOT NULL,
   
-  PRIMARY KEY (roomNumber, lodgingId),
+  PRIMARY KEY (lodgingId, roomNumber),
   
   INDEX FK_INDEX_LODGING_ROOM (lodgingId),
+  INDEX FK_INDEX_ROOM_ROOM_TYPE (lodgingId),
   
-  CONSTRAINT FK_LODGING_ROOM FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
+  CONSTRAINT FK_LODGING_ROOM FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId),
+  CONSTRAINT FK_ROOM_ROOM_TYPE FOREIGN KEY (lodgingId, roomTypeId) REFERENCES RoomType (lodgingId, roomTypeId)
 );
 
--- Tabla "HabitaciónReservación"
+-- Tabla "Reservación de habitación"
 CREATE TABLE IF NOT EXISTS RoomBooking (
-  roomBookingId INT 	UNSIGNED NOT NULL AUTO_INCREMENT,
-  bookingId 	INT 	UNSIGNED NOT NULL,
-  lodgingId 	INT 	UNSIGNED NOT NULL,
-  roomNumber 	INT 	UNSIGNED NOT NULL,
-  cost			DECIMAL UNSIGNED NOT NULL,
-  fees			DECIMAL UNSIGNED NOT NULL,
+  roomBookingId INT 		UNSIGNED 	NOT NULL AUTO_INCREMENT,
+  bookingId 	INT 		UNSIGNED 	NOT NULL,
+  lodgingId 	INT 		UNSIGNED 	NOT NULL,
+  roomNumber 	INT 		UNSIGNED 	NOT NULL,
+  cost			DECIMAL 	UNSIGNED 	NOT NULL,
+  fees			DECIMAL 	UNSIGNED 	NOT NULL,
+  discount		DECIMAL		UNSIGNED	NOT NULL,
+  status		CHAR(50)				NOT NULL,
+  startDate 	DATE					NOT NULL,
+  endDate 		DATE 					NOT NULL,
   
   PRIMARY KEY (roomBookingId),
   
   INDEX FK_INDEX_ROOM_ROOM_BOOKING (roomNumber),
   INDEX FK_INDEX_BOOKING_ROOM_BOOKING (bookingId),
+  INDEX FK_INDEX_LODGING_ROOM_BOOKING (lodgingId),
   
-  CONSTRAINT FK_BOOKING_ROOM_BOOKING 	FOREIGN KEY (bookingId)		REFERENCES Booking (bookingId),
-  CONSTRAINT FK_LODGING_ROOM_BOOKING 	FOREIGN KEY (lodgingId)		REFERENCES Lodging (lodgingId),
-  CONSTRAINT FK_ROOM_ROOM_BOOKING		FOREIGN KEY (roomNumber)	REFERENCES Room (roomNumber)
+  CONSTRAINT FK_ROOM_ROOM_BOOKING		FOREIGN KEY (lodgingId, roomNumber)	REFERENCES Room (lodgingId, roomNumber),
+  CONSTRAINT FK_BOOKING_ROOM_BOOKING 	FOREIGN KEY (bookingId)				REFERENCES Booking (bookingId),
+  CONSTRAINT FK_LODGING_ROOM_BOOKING 	FOREIGN KEY (lodgingId)				REFERENCES Lodging (lodgingId)
 );

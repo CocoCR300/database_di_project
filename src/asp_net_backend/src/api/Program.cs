@@ -37,7 +37,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContext<RestifyDbContext>(
 	options =>
 	{
-		string connectionString = "server=localhost;user=root;password=;database=restify";
+		string connectionString = "server=localhost;user=root;password=;database=restify_v2";
 		options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
 			.LogTo(Console.WriteLine, LogLevel.Information)
 			.EnableSensitiveDataLogging()
