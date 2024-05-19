@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS UserRole (
   
   PRIMARY KEY (userRoleId),
   
-  UNIQUE INDEX UNIQUE_userRoleId (userRoleId)
+  UNIQUE INDEX UNIQUE_type (type)
 );
 
 -- Tabla "Usuario"
@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS PersonPhoneNumber (
   INDEX FK_INDEX_PERSON_PHONE_NUMBER (personId),
   
   CONSTRAINT FK_PERSON_PHONE_NUMBER FOREIGN KEY (personId) REFERENCES Person (personId)
+	ON DELETE CASCADE
+	ON UPDATE CASCADE
 );
 
 -- Tabla "Alojamiento"
@@ -70,6 +72,8 @@ CREATE TABLE IF NOT EXISTS Lodging (
   INDEX FK_INDEX_LODGING_PERSON (ownerPersonId),
   
   CONSTRAINT FK_LODGING_PERSON FOREIGN KEY (ownerPersonId) REFERENCES Person (personId)
+	ON DELETE RESTRICT
+	ON UPDATE CASCADE
 );
 
 -- Tabla "Número de telefono de alojamiento"
@@ -80,6 +84,8 @@ CREATE TABLE IF NOT EXISTS LodgingPhoneNumber (
   INDEX FK_INDEX_LODGING_PHONE_NUMBER (lodgingId),
   
   CONSTRAINT FK_LODGING_PHONE_NUMBER FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
+	ON DELETE CASCADE
+	ON UPDATE CASCADE
 );
 
 -- Tabla "Foto de alojamiento"
@@ -91,6 +97,8 @@ CREATE TABLE IF NOT EXISTS LodgingPhoto (
 	INDEX FK_INDEX_LODGING_LODGING_PHOTO (lodgingId),
 	
 	CONSTRAINT FK_LODGING_LODGING_PHOTO	FOREIGN KEY (lodgingId)	REFERENCES Lodging (lodgingId)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
 );
 
 -- Tabla "Beneficio adicional"
@@ -111,8 +119,12 @@ CREATE TABLE IF NOT EXISTS LodgingPerk (
 	INDEX FK_INDEX_LODGING_LODGING_PERK	(lodgingId),
 	INDEX FK_INDEX_PERK_LODGING_PERK	(perkId),
 	
-	CONSTRAINT FK_LODGING_LODGING_PERK	FOREIGN KEY (lodgingId)	REFERENCES Lodging (lodgingId),
+	CONSTRAINT FK_LODGING_LODGING_PERK	FOREIGN KEY (lodgingId)	REFERENCES Lodging (lodgingId)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE,
 	CONSTRAINT FK_PERK_LODGING_PERK		FOREIGN KEY (perkId)	REFERENCES Perk (perkId)
+		ON DELETE RESTRICT
+		ON UPDATE CASCADE
 );
 
 -- Tabla "Reservación"
@@ -127,8 +139,12 @@ CREATE TABLE IF NOT EXISTS Booking (
   INDEX FK_INDEX_BOOKING_LODGING 	(lodgingId),
   INDEX FK_INDEX_BOOKING_PERSON 	(customerPersonId),
   
-  CONSTRAINT FK_BOOKING_LODGING FOREIGN KEY (lodgingId) 		REFERENCES Lodging (lodgingId),
+  CONSTRAINT FK_BOOKING_LODGING FOREIGN KEY (lodgingId) 		REFERENCES Lodging (lodgingId)
+	ON DELETE RESTRICT
+	ON UPDATE CASCADE,
   CONSTRAINT FK_BOOKING_PERSON	FOREIGN KEY (customerPersonId) 	REFERENCES Person (personId)
+	ON DELETE CASCADE
+	ON UPDATE CASCADE
 );
 
 -- Tabla "Pago"
@@ -144,6 +160,8 @@ CREATE TABLE IF NOT EXISTS Payment (
   INDEX FK_INDEX_PAYMENT_BOOKING (bookingId),
   
   CONSTRAINT FK_PAYMENT_BOOKING FOREIGN KEY (bookingId) REFERENCES Booking (bookingId)
+	ON DELETE RESTRICT -- Should set to a default value to be able to delete the associated booking
+	ON UPDATE CASCADE
 );
 
 -- Tabla "Tipo de habitación"
@@ -160,6 +178,8 @@ CREATE TABLE IF NOT EXISTS RoomType (
 	INDEX FK_INDEX_LODGING_ROOM_TYPE (lodgingId),
   
 	CONSTRAINT FK_LODGING_ROOM_TYPE FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
 );
 
 -- Tabla "Foto de tipo de habitación"
@@ -171,6 +191,8 @@ CREATE TABLE IF NOT EXISTS RoomTypePhoto (
 	INDEX FK_INDEX_ROOM_TYPE_ROOM_TYPE_PHOTO (roomTypeId),
   
 	CONSTRAINT FK_ROOM_TYPE_ROOM_TYPE_PHOTO FOREIGN KEY (roomTypeId) REFERENCES RoomType (roomTypeId)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
 );
 
 -- Tabla "Habitación"
@@ -184,8 +206,12 @@ CREATE TABLE IF NOT EXISTS Room (
   INDEX FK_INDEX_LODGING_ROOM (lodgingId),
   INDEX FK_INDEX_ROOM_ROOM_TYPE (lodgingId),
   
-  CONSTRAINT FK_LODGING_ROOM FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId),
+  CONSTRAINT FK_LODGING_ROOM FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
+	ON DELETE NO ACTION
+	ON UPDATE CASCADE,
   CONSTRAINT FK_ROOM_ROOM_TYPE FOREIGN KEY (roomTypeId) REFERENCES RoomType (roomTypeId)
+	ON DELETE CASCADE
+	ON UPDATE CASCADE
 );
 
 -- Tabla "Reservación de habitación"
@@ -207,7 +233,28 @@ CREATE TABLE IF NOT EXISTS RoomBooking (
   INDEX FK_INDEX_BOOKING_ROOM_BOOKING (bookingId),
   INDEX FK_INDEX_LODGING_ROOM_BOOKING (lodgingId),
   
-  CONSTRAINT FK_ROOM_ROOM_BOOKING		FOREIGN KEY (lodgingId, roomNumber)	REFERENCES Room (lodgingId, roomNumber),
-  CONSTRAINT FK_BOOKING_ROOM_BOOKING 	FOREIGN KEY (bookingId)				REFERENCES Booking (bookingId),
+  CONSTRAINT FK_ROOM_ROOM_BOOKING		FOREIGN KEY (lodgingId, roomNumber)	REFERENCES Room (lodgingId, roomNumber)
+	ON DELETE NO ACTION
+	ON UPDATE CASCADE,
+  CONSTRAINT FK_BOOKING_ROOM_BOOKING 	FOREIGN KEY (bookingId)				REFERENCES Booking (bookingId)
+	ON DELETE CASCADE
+	ON UPDATE CASCADE,
   CONSTRAINT FK_LODGING_ROOM_BOOKING 	FOREIGN KEY (lodgingId)				REFERENCES Lodging (lodgingId)
+	ON DELETE NO ACTION
+	ON UPDATE CASCADE
 );
+
+INSERT INTO userRole (type) VALUES ('Administrator'), ('Customer'), ('Lessor');
+
+INSERT INTO User (userName, userRoleId, password)
+	VALUES	('root', 1, 'root'),
+			('generic_customer', 2, ''),
+			('generic_lessor', 3, '');
+	
+INSERT INTO Person (personId, userName, firstName, lastName, emailAddress)
+	VALUES	(1, 'root', 'Root', '', ''),
+			(2, 'generic_customer', 'Generic Customer', '', ''),
+			(3, 'generic_lessor', 'Generic Lessor', '', '');
+	
+INSERT INTO Lodging (lodgingId, ownerPersonId, lodgingType, name, address, description, emailAddress)
+	VALUES (1, 1, 'Hotel', 'Generic Lodging', '', '', '');
