@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS User (
   UNIQUE INDEX UNIQUE_userName (userName),
   
   CONSTRAINT FK_USER_USER_ROLE FOREIGN KEY (userRoleId) REFERENCES UserRole (userRoleId)
+	ON DELETE RESTRICT
+	ON UPDATE CASCADE
 );
 
 
@@ -36,9 +38,11 @@ CREATE TABLE IF NOT EXISTS Person (
   
   PRIMARY KEY (personId),
   
-  UNIQUE INDEX userName_UNIQUE (userName),
+  UNIQUE INDEX UNIQUE_userName (userName),
   
   CONSTRAINT FK_PERSON_USER FOREIGN KEY (userName) REFERENCES User (userName)
+	ON DELETE CASCADE
+	ON UPDATE CASCADE
 );
 
 -- Tabla "Número de telefono de persona"
@@ -94,7 +98,9 @@ CREATE TABLE IF NOT EXISTS Perk (
 	perkId	INT			UNSIGNED	NOT NULL	AUTO_INCREMENT,
 	name	VARCHAR(50)				NOT NULL,
 	
-	PRIMARY KEY (perkId)
+	PRIMARY KEY (perkId),
+	
+	UNIQUE INDEX UNIQUE_name (name)
 );
 
 -- Tabla "Alojamiento beneficio adicional"
@@ -114,7 +120,7 @@ CREATE TABLE IF NOT EXISTS Booking (
   bookingId 		INT 		UNSIGNED 	NOT NULL	AUTO_INCREMENT,
   customerPersonId 	INT 		UNSIGNED 	NOT NULL,
   lodgingId 		INT 		UNSIGNED 	NOT NULL,
-  status 			CHAR(50)					NULL,
+  status 			CHAR(50)					NULL	DEFAULT NULL,
   
   PRIMARY KEY (bookingId),
   
@@ -127,11 +133,11 @@ CREATE TABLE IF NOT EXISTS Booking (
 
 -- Tabla "Pago"
 CREATE TABLE IF NOT EXISTS Payment (
-  paymentId 			INT 		UNSIGNED 	NOT NULL  AUTO_INCREMENT,
+  paymentId 			INT 		UNSIGNED 	NOT NULL	AUTO_INCREMENT,
   bookingId 			INT 		UNSIGNED 	NOT NULL,
   amount				DECIMAL		UNSIGNED	NOT NULL,
   dateAndTime 			DATETIME 				NOT NULL,
-  invoiceImageFileName	CHAR(75),
+  invoiceImageFileName	CHAR(75)					NULL	DEFAULT NULL,
   
   PRIMARY KEY (paymentId),
   
@@ -142,9 +148,9 @@ CREATE TABLE IF NOT EXISTS Payment (
 
 -- Tabla "Tipo de habitación"
 CREATE TABLE IF NOT EXISTS RoomType (
-	roomTypeId		INT 		UNSIGNED	NOT NULL,
+	roomTypeId		INT 		UNSIGNED	NOT NULL	AUTO_INCREMENT,
 	lodgingId		INT			UNSIGNED	NOT NULL,
-	name			VARCHAR(75)	UNSIGNED	NOT NULL,
+	name			VARCHAR(75)				NOT NULL,
 	perNightPrice 	DECIMAL 	UNSIGNED 	NOT NULL,
 	fees			DECIMAL 	UNSIGNED 	NOT NULL,
 	capacity		INT 		UNSIGNED	NOT NULL,
@@ -162,7 +168,7 @@ CREATE TABLE IF NOT EXISTS RoomTypePhoto (
 	fileName	CHAR(75)				NOT NULL,
 	ordering	TINYINT		UNSIGNED	NOT NULL,
 	
-	INDEX FK_INDEX_LODGING_ROOM_TYPE (lodgingId),
+	INDEX FK_INDEX_ROOM_TYPE_ROOM_TYPE_PHOTO (roomTypeId),
   
 	CONSTRAINT FK_ROOM_TYPE_ROOM_TYPE_PHOTO FOREIGN KEY (roomTypeId) REFERENCES RoomType (roomTypeId)
 );
@@ -179,7 +185,7 @@ CREATE TABLE IF NOT EXISTS Room (
   INDEX FK_INDEX_ROOM_ROOM_TYPE (lodgingId),
   
   CONSTRAINT FK_LODGING_ROOM FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId),
-  CONSTRAINT FK_ROOM_ROOM_TYPE FOREIGN KEY (lodgingId, roomTypeId) REFERENCES RoomType (lodgingId, roomTypeId)
+  CONSTRAINT FK_ROOM_ROOM_TYPE FOREIGN KEY (roomTypeId) REFERENCES RoomType (roomTypeId)
 );
 
 -- Tabla "Reservación de habitación"

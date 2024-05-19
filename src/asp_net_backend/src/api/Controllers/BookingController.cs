@@ -10,7 +10,7 @@ namespace Restify.API.Controllers;
 [ApiController]
 [ApiVersion(2)]
 [Route("v{version:apiVersion}/[controller]")]
-public class BookingController : Controller
+public class BookingController : BaseController
 {
     private readonly RestifyDbContext _context;
 
@@ -19,6 +19,12 @@ public class BookingController : Controller
         _context = context;
     }
 
+    [HttpGet("status")]
+    public string[] GetStatuses()
+    {
+        return  Enum.GetNames<BookingStatus>();
+    }
+    
     [HttpPost]
     public ObjectResult Post(BookingRequestData data)
     {
@@ -58,10 +64,7 @@ public class BookingController : Controller
                     }
                     else
                     {
-                        return new ObjectResult("Algunas de las habitaciones ya están reservadas en el rango de fechas especificado.")
-                        {
-                            StatusCode = StatusCodes.Status406NotAcceptable,
-                        };
+                        return NotAcceptable("Algunas de las habitaciones ya están reservadas en el rango de fechas especificado.");
                     }
                 }
                 else

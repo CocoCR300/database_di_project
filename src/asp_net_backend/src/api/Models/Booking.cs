@@ -2,10 +2,10 @@
 
 public class Booking
 {
-	public uint		Id { get; set; }
-	public string?	Status { get; set; }
-	public uint		CustomerId { get; set; }
-	public uint		LodgingId { get; set; }
+	public uint				Id { get; set; }
+	public BookingStatus?	Status { get; set; }
+	public uint				CustomerId { get; set; }
+	public uint				LodgingId { get; set; }
 
 	public IList<RoomBooking>	RoomBookings { get; }
 	public Payment				Payment { get; set; }

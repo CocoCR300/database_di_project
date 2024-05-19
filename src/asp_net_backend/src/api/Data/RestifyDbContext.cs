@@ -306,6 +306,9 @@ namespace Restify.API.Data
 					.IsRequired()
 					.HasMaxLength(75);
 
+				roomType.Property(r => r.Fees)
+					.IsRequired();
+				
 				roomType.Property(r => r.PerNightPrice)
 					.IsRequired();
 

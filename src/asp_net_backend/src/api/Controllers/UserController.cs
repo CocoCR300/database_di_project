@@ -12,7 +12,7 @@ namespace Restify.API.Controllers
     [ApiController]
     [ApiVersion(2)]
     [Route("v{version:apiVersion}/[controller]")]
-    public class UserController : Controller
+    public class UserController : BaseController
     {
         private readonly RestifyDbContext _context;
 
@@ -135,43 +135,30 @@ namespace Restify.API.Controllers
                     if (!string.Equals(user.Password, DataUtil.GetHash(data.CurrentPassword),
                             StringComparison.OrdinalIgnoreCase))
                     {
-                        return new ObjectResult("La contraseña es incorrecta.")
-                        {
-                            StatusCode = StatusCodes.Status406NotAcceptable
-                        };
+                        return NotAcceptable("La contraseña es incorrecta.");
                     }
-                    else if (data.NewPassword != data.NewPasswordConfirmation)
+                    
+                    if (data.NewPassword != data.NewPasswordConfirmation)
                     {
-                        return new ObjectResult("Las contraseñas no coinciden")
-                        {
-                            StatusCode = StatusCodes.Status406NotAcceptable
-                        };
+                        return NotAcceptable("Las contraseñas no coinciden");
                     }
-                    else if (string.Equals(user.Password, (newPasswordHash = DataUtil.GetHash(data.NewPassword)),
+                    
+                    if (string.Equals(user.Password, (newPasswordHash = DataUtil.GetHash(data.NewPassword)),
                                  StringComparison.OrdinalIgnoreCase))
                     {
-                        return new ObjectResult("La nueva contraseña no puede ser igual a la anterior.")
-                        {
-                            StatusCode = StatusCodes.Status406NotAcceptable
-                        };
+                        return NotAcceptable("La nueva contraseña no puede ser igual a la anterior.");
                     }
-                    else
-                    {
-                        user.Password = newPasswordHash;
-                        _context.SaveChanges();
+                    
+                    user.Password = newPasswordHash;
+                    _context.SaveChanges();
 
-                        return Ok("El cambio de contraseña ha sido realizado con éxito.");
-                    }
+                    return Ok("El cambio de contraseña ha sido realizado con éxito.");
                 }
-                else
-                {
-                    return NotFound("No existe un usuario con el nombre especificado.");
-                }
+                
+                return NotFound("No existe un usuario con el nombre especificado.");
             }
-            else
-            {
-                return BadRequest("Los datos son inválidos.");
-            }
+            
+            return BadRequest("Los datos son inválidos.");
         }
 
         [HttpPost("{userName}/phone_number")]
@@ -201,13 +188,25 @@ namespace Restify.API.Controllers
         [HttpPatch("{userName}")]
         public ObjectResult Update(string userName, UserPatchRequestData data)
         {
-            User user = _context.Find<User>(userName);
-
             if (ModelState.IsValid)
             {
+                User? user = _context.Find<User>(userName);
+                
                 if (user != null)
                 {
                     _context.Entry(user).Reference(u => u.Person).Load();
+
+                    if (data.UserName != null)
+                    {
+                        User? existingUser = _context.Find<User>(data.UserName);
+                        if (existingUser != null)
+                        {
+                            return NotAcceptable("Ya existe un usuario con el nuevo nombre especificado.");
+                        }
+                        
+                        user.Name = data.UserName;
+                        user.Person.UserName = data.UserName;
+                    }
                     
                     if (data.RoleId != null)
                         user.RoleId = data.RoleId.Value;
@@ -225,13 +224,8 @@ namespace Restify.API.Controllers
                 
                 return NotFound("No existe un usuario con el nombre especificado.");
             }
-            else
-            {
-                return new ObjectResult("Datos inválidos.")
-                {
-                    StatusCode = StatusCodes.Status406NotAcceptable
-                };
-            }
+            
+            return BadRequest("Datos inválidos.");
         }
     }
 
@@ -239,21 +233,26 @@ namespace Restify.API.Controllers
     public class UserRequestData
     {
         [Required]
+        [NotEmptyOrWhiteSpace]
+        [MaxLength(200)]
         [EmailAddress]
         [Unique<User>]
-        [MaxLength(200)]
         public string   EmailAddress { get; set; }
         [Required]
-        [Unique<User>]
+        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
+        [Unique<User>]
         public string   UserName { get; set; }
         [Required]
+        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string   FirstName { get; set; }
         [Required]
+        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string   LastName { get; set; }
         [Required]
+        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string   Password { get; set; }
         [Required]
@@ -263,27 +262,36 @@ namespace Restify.API.Controllers
     
     public class UserPatchRequestData
     {
-        [EmailAddress]
         [Unique<User>]
+        [NotEmptyOrWhiteSpace]
         [MaxLength(200)]
-        public string?   EmailAddress { get; set; }
+        [EmailAddress]
+        public string?  EmailAddress { get; set; }
+        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
-        public string?   FirstName { get; set; }
+        public string?  UserName { get; set; }
+        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
-        public string?   LastName { get; set; }
+        public string?  FirstName { get; set; }
+        [NotEmptyOrWhiteSpace]
+        [MaxLength(50)]
+        public string?  LastName { get; set; }
         [Exists<UserRole>]
-		public uint?     RoleId { get; set; }
+		public uint?    RoleId { get; set; }
 	}
 
     public class PasswordRequestData
     {
         [Required]
+        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string CurrentPassword { get; set; }
         [Required]
+        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string NewPassword { get; set; }
         [Required]
+        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string NewPasswordConfirmation { get; set; }
     }

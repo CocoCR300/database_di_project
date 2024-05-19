@@ -12,7 +12,7 @@ namespace Restify.API.Controllers;
 [ApiController]
 [ApiVersion(2)]
 [Route("v{version:apiVersion}/[controller]")]
-public class LodgingController : Controller
+public class LodgingController : BaseController
 {
     private readonly RestifyDbContext _context;
 
@@ -50,6 +50,14 @@ public class LodgingController : Controller
         return NotFound("No existe un alojamiento con el identificador especificado.");
     }
 
+    [HttpGet("type")]
+    public string[] GetLodgingTypes()
+    {
+        string[] lodgingTypes = Enum.GetNames<LodgingType>();
+
+        return lodgingTypes;
+    }
+
     [HttpGet("{lodgingId}/booking")]
     public IEnumerable<Booking> GetBookings(uint lodgingId)
     {
@@ -67,8 +75,10 @@ public class LodgingController : Controller
 
         if (lodging != null)
         {
-            _context.Entry(lodging).Collection(l => l.Rooms).Load();
-            return Ok(lodging.Rooms);
+            var rooms = _context.Room
+                .Select(r => new { r.LodgingId, r.Number, r.TypeId })
+                . Where(r => r.LodgingId == lodgingId);
+            return Ok(rooms);
         }
         
         return NotFound("No existe un alojamiento con el identificador especificado");
@@ -341,35 +351,53 @@ public class LodgingController : Controller
     [HttpPost("{lodgingId}/room_type")]
     public ObjectResult StoreRoomTypes(uint lodgingId, RoomTypeRequestData[] roomTypes)
     {
-        Lodging? lodging = _context.Find<Lodging>(lodgingId);
-
-        if (lodging != null)
+        if (ModelState.IsValid)
         {
-            foreach (RoomTypeRequestData roomType in roomTypes)
+            Lodging? lodging = _context.Find<Lodging>(lodgingId);
+
+            if (lodging != null)
             {
-                lodging.RoomTypes.Add(new RoomType 
+                foreach (RoomTypeRequestData roomType in roomTypes)
                 {
-                    LodgingId = lodging.Id,
-                    Name = roomType.Name,
-                    Capacity = roomType.Capacity,
-                    PerNightPrice = roomType.PerNightPrice
-                });
+                    lodging.RoomTypes.Add(new RoomType 
+                    {
+                        LodgingId = lodging.Id,
+                        Name = roomType.Name,
+                        Capacity = roomType.Capacity,
+                        PerNightPrice = roomType.PerNightPrice,
+                        Fees = roomType.Fees
+                    });
+                }
+
+                try
+                {
+                    _context.Database.BeginTransaction();
+                    _context.SaveChanges();
+                    _context.Database.CommitTransaction();
+                    
+                    return Ok("Los tipos de habitación han sido agregados con éxito.");
+                }
+                catch (Exception ex)
+                {
+                    _context.Database.RollbackTransaction();
+                    return NotAcceptable("Ha ocurrido un error al insertar los datos.");
+                }
+                
             }
-            
-            _context.SaveChanges();
-            return Ok("Los tipos de habitación han sido agregados con éxito.");
+                
+            return NotFound("No existe un alojamiento con el identificador especificado.");
         }
-            
-        return NotFound("No existe un alojamiento con el identificador especificado.");
+        
+        return BadRequest("Datos inválidos.");
     }
         
     [HttpPatch("{bookingId}")]
     public ObjectResult Update(string bookingId, LodgingPatchRequestData data)
     {
-        Lodging? lodging = _context.Find<Lodging>(bookingId);
-
         if (ModelState.IsValid)
         {
+            Lodging? lodging = _context.Find<Lodging>(bookingId);
+
             if (lodging != null)
             {
                 if (data.OwnerId != null)
@@ -393,10 +421,7 @@ public class LodgingController : Controller
             return NotFound("No existe un alojamiento con el nombre especificado.");
         }
             
-        return new ObjectResult("Datos inválidos.")
-        {
-            StatusCode = StatusCodes.Status406NotAcceptable
-        };
+        return BadRequest("Datos inválidos.");
     }
 }
 
@@ -452,6 +477,8 @@ public class RoomRequestData
 
 public class RoomTypeRequestData 
 {
+    [Required]
+    public decimal Fees { get; set; }
     [Required]
     public decimal PerNightPrice { get; set; }
     [Required]
