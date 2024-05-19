@@ -8,7 +8,7 @@ public class Booking
 	public uint				LodgingId { get; set; }
 
 	public IList<RoomBooking>	RoomBookings { get; }
-	public Payment				Payment { get; set; }
+	public Payment?				Payment { get; set; }
 	public Person				Customer { get; }
 	public Lodging				Lodging { get; }
 }

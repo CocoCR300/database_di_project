@@ -10,9 +10,4 @@ public class RoomType
     public string   Name { get; set; }
     
     public IList<RoomTypePhoto>	Photos { get; }
-
-    public RoomType()
-    {
-	    Photos = new List<RoomTypePhoto>(0);
-    }
 }

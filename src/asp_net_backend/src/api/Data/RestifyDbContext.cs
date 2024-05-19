@@ -50,7 +50,7 @@ namespace Restify.API.Data
 					.HasColumnName("userName")
 					.IsRequired()
 					.HasMaxLength(50);
-
+				
 				user.Property(u => u.RoleId)
 					.HasColumnName("userRoleId")
 					.IsRequired();
@@ -263,6 +263,8 @@ namespace Restify.API.Data
 					.WithMany()
 					.HasForeignKey(b => b.LodgingId)
 					.OnDelete(DeleteBehavior.Restrict);
+
+				booking.Navigation(b => b.Lodging).AutoInclude(false);
 			});
 
 			modelBuilder.Entity<Payment>(payment =>
@@ -274,7 +276,7 @@ namespace Restify.API.Data
 					.HasColumnName("paymentId");
 
 				payment.Property(p => p.BookingId)
-					.IsRequired();
+					.IsRequired(false);
 
 				payment.Property(p => p.DateAndTime)
 					.IsRequired();
@@ -288,7 +290,8 @@ namespace Restify.API.Data
 
 				payment.HasOne<Booking>()
 					.WithOne(b => b.Payment)
-					.HasForeignKey<Payment>(p => p.BookingId);
+					.HasForeignKey<Payment>(p => p.BookingId)
+					.IsRequired(false);
 			});
 
 			modelBuilder.Entity<RoomType>(roomType =>

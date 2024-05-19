@@ -22,22 +22,39 @@ namespace Restify.API.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<User> Get()
+        public ObjectResult Get()
         {
             var users = _context.User
-                .Include(u => u.Role)
-                .Include(u => u.Person);
-            return users;
+                .Include(u => u.Person)
+                .Select(u => new { u.Name, u.Person, u.RoleId });
+            
+            return Ok(users);
         }
 
         [HttpGet("{userName}")]
-        public User? Get(string userName)
+        public ObjectResult Get(string userName)
         {
-            var user = _context.User.Find(userName);
-            _context.Entry(user).Reference(u => u.Role).Load();
-            _context.Entry(user).Reference(u => u.Person).Load();
+            User? user = _context.User.Find(userName);
 
-            return user;
+            if (user != null)
+            {
+                _context.Entry(user).Reference(u => u.Person).Load();
+
+                return Ok(new
+                {
+                    user.Name,
+                    user.RoleId,
+                    Person = new {
+                        user.Person.Id,
+                        user.Person.FirstName,
+                        user.Person.LastName,
+                        user.Person.EmailAddress,
+                        user.Person.PhoneNumbers
+                    }
+                });
+            }
+
+            return NotFound("No existe un usuario con el nombre especificado.");
         }
 
         [HttpPost]

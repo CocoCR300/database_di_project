@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS Booking (
 -- Tabla "Pago"
 CREATE TABLE IF NOT EXISTS Payment (
   paymentId 			INT 		UNSIGNED 	NOT NULL	AUTO_INCREMENT,
-  bookingId 			INT 		UNSIGNED 	NOT NULL,
+  bookingId 			INT 		UNSIGNED,
   amount				DECIMAL		UNSIGNED	NOT NULL,
   dateAndTime 			DATETIME 				NOT NULL,
   invoiceImageFileName	CHAR(75)					NULL	DEFAULT NULL,
@@ -160,7 +160,7 @@ CREATE TABLE IF NOT EXISTS Payment (
   INDEX FK_INDEX_PAYMENT_BOOKING (bookingId),
   
   CONSTRAINT FK_PAYMENT_BOOKING FOREIGN KEY (bookingId) REFERENCES Booking (bookingId)
-	ON DELETE RESTRICT -- Should set to a default value to be able to delete the associated booking
+	ON DELETE SET NULL
 	ON UPDATE CASCADE
 );
 

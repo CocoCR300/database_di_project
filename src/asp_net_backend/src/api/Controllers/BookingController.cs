@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Restify.API.Data;
 using Restify.API.Models;
 using Restify.API.Util;
+using Z.EntityFramework.Plus;
 
 namespace Restify.API.Controllers;
 
@@ -23,6 +25,43 @@ public class BookingController : BaseController
     public string[] GetStatuses()
     {
         return  Enum.GetNames<BookingStatus>();
+    }
+    
+    [HttpGet("lodging/{lodgingId}")]
+    public ObjectResult GetLodgingBookings(uint lodgingId)
+    {
+        Lodging? lodging = _context.Find<Lodging>(lodgingId);
+        if (lodging != null)
+        {
+            var bookings = _context.Booking
+                .AsNoTracking()
+                .Where(b => b.LodgingId == lodgingId)
+                .Include(b => b.RoomBookings)
+                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Status, b.Payment, b.RoomBookings });
+            
+            return Ok(bookings);
+        }
+
+        return NotFound("No existe ningún alojamiento con el identificador especificado.");
+    }
+    
+    [HttpGet("user/{userName}")]
+    public ObjectResult GetUserBookings(string userName)
+    {
+        User? user = _context.Find<User>(userName);
+        if (user != null)
+        {
+            _context.Entry(user).Reference(u => u.Person).Load();
+            var bookings = _context.Booking
+                .AsNoTracking()
+                .Where(b => b.CustomerId == user.Person.Id)
+                .Include(b => b.RoomBookings)
+                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Status, b.Payment, b.RoomBookings });
+            
+            return Ok(bookings);
+        }
+
+        return NotFound("No existe ningún usuario con el nombre especificado.");
     }
     
     [HttpPost]
@@ -105,6 +144,35 @@ public class BookingController : BaseController
         
         return BadRequest(ModelState);
     }
+
+    [HttpDelete("user/{userName}")]
+    public ObjectResult DeleteUserBookings(string userName, uint[] bookingIds)
+    {
+        User? user = _context.Find<User>(userName);
+
+        if (user != null)
+        {
+            _context.Entry(user).Reference(u => u.Person).Load();
+            int rows = _context.Booking
+                .Where(b => b.CustomerId == user.Person.Id && bookingIds.Contains(b.Id))
+                .Delete();
+
+            if (rows == 0)
+            {
+                return NotFound("No existe ninguna reserva con los identificadores especificados.");
+            }
+
+            string message = "Las reservaciones han sido eliminadas con éxito.";
+            if (rows == bookingIds.Length)
+            {
+                return Ok($"{message} Algunos identificadores no correspondieron a ninguna reservación.");
+            }
+
+            return Ok(message);
+        }
+        
+        return NotFound("No existe un usuario con el nombre especificado.");
+    }
 }
 
 public record RoomBookingRequestData(
@@ -116,8 +184,8 @@ public record RoomBookingRequestData(
 public class BookingRequestData
 {
     [Required]
-    [MaxLength(20)] // TODO: One of restriction
-    public string Status { get; set; }
+    [MaxLength(20)]
+    public BookingStatus Status { get; set; }
     [Required]
     [Exists<Person>]
     public uint CustomerId { get; set; }

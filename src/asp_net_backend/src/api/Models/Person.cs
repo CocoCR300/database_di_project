@@ -10,9 +10,4 @@ public class Person
 
 	public IList<PersonPhoneNumber>	PhoneNumbers { get; }
 	public User	User { get; }
-
-	public Person()
-	{
-		PhoneNumbers = new List<PersonPhoneNumber>();
-	}
 }

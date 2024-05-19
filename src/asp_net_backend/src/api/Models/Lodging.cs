@@ -16,11 +16,6 @@ public class Lodging
 	public IList<Room>					Rooms { get; }
 	public IList<RoomType>				RoomTypes { get; }
 	public Person						Owner { get; }
-
-	public Lodging()
-	{
-		Perks = new List<Perk>(0);
-	}
 }
 
 public enum LodgingType

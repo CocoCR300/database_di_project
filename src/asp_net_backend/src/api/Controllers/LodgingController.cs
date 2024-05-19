@@ -58,26 +58,16 @@ public class LodgingController : BaseController
         return lodgingTypes;
     }
 
-    [HttpGet("{lodgingId}/booking")]
-    public IEnumerable<Booking> GetBookings(uint lodgingId)
-    {
-        IQueryable<Booking> bookings = _context.Booking.Where(b => b.LodgingId == lodgingId)
-            .Include(b => b.Customer)
-            .Include(b => b.Payment)
-            .Include(b => b.RoomBookings);
-        return bookings;
-    }
-    
     [HttpGet("{lodgingId}/room")]
     public ObjectResult GetRooms(uint lodgingId)
     {
-        Lodging? lodging = _context.Lodging.Find(lodgingId);
+        Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
         if (lodging != null)
         {
-            var rooms = _context.Room
-                .Select(r => new { r.LodgingId, r.Number, r.TypeId })
-                . Where(r => r.LodgingId == lodgingId);
+            _context.Entry(lodging).Collection(l => l.Rooms).Load();
+            var rooms = lodging.Rooms
+                .Select(r => new { r.Number, r.TypeId });
             return Ok(rooms);
         }
         
@@ -92,7 +82,9 @@ public class LodgingController : BaseController
         if (lodging != null)
         {
             _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
-            return Ok(lodging.RoomTypes);
+            var roomTypes = lodging.RoomTypes
+                .Select(r => new { r.Id, r.Name, r.Capacity, r.PerNightPrice, r.Fees });
+            return Ok(roomTypes);
         }
         
         return NotFound("No existe un alojamiento con el identificador especificado");
