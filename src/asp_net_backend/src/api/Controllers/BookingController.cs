@@ -75,34 +75,10 @@ public class BookingController : BaseController
                 .ToArray();
 
             var availableRoomsByType = new Dictionary<uint, List<Room>>(requestedRoomsDataByType.Length);
+            var availableRoomsNewBookings = new Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>();
             foreach (var requestedRoomData in requestedRoomsDataByType)
             {
-                //var roomsOfType = _context.Room.Where(
-                //    r => r.LodgingId == data.LodgingId
-                //         && r.TypeId == requestedRoomData.Key)
-                //    .Include(r => r.Type);
-                
-                // TODO: And this still needs to check if the lodging type is a house or whatever
-                // to not check the room bookings
-                //var existingRoomBookingsByType = _context.RoomBooking
-                //    .Where(r => r.LodgingId == data.LodgingId
-                //                && (r.Status == BookingStatus.Created || r.Status == BookingStatus.Confirmed)
-                //                && r.Room.TypeId == requestedRoomData.Key);
-
-                //foreach (var roomData in requestedRoomData)
-                //{
-                //    existingRoomBookingsByType = existingRoomBookingsByType.Where(
-                //        r => r.StartDate < roomData.EndDate
-                //               && r.EndDate > roomData.StartDate);
-                //}
-
-                //existingRoomBookingsByType = existingRoomBookingsByType.Where((Expression<Func<RoomBooking, bool>>)expression);
-
-                //var existingRoomBookingsRoomNumbers = existingRoomBookingsByType
-                //    .Select(r => r.Room.Number);
-
-                //var availableRoomsOfType = roomsOfType
-                //    .Where(r => !existingRoomBookingsRoomNumbers.Contains(r.Number));
+                // TODO: Check if the lodging type is a house or whatever to not check the room bookings
                 StringBuilder sqlQuery = new StringBuilder($"""
                     SELECT * FROM Room AS r
                     WHERE r.lodgingId = {data.LodgingId} AND r.roomTypeId = {requestedRoomData.Key}
@@ -132,15 +108,33 @@ public class BookingController : BaseController
             }
 
             List<RoomBooking> roomBookings = new List<RoomBooking>();
+            // You can't have enough nested for loops, can you?
             foreach (var group in requestedRoomsDataByType)
             {
                 var availableRoomsOfType = availableRoomsByType[group.Key];
-                
+
                 foreach (var requestedRoomData in group)
                 {
-                    if (availableRoomsOfType.Count != 0)
+                    foreach (var room in availableRoomsOfType)
                     {
-                        Room room = availableRoomsOfType[0];
+                        if (availableRoomsNewBookings.TryGetValue(room.Number, out var newBookings))
+                        {
+                            foreach (var reservation in newBookings)
+                            {
+                                if (reservation.StartDate < requestedRoomData.EndDate &&
+                                    reservation.EndDate > requestedRoomData.StartDate)
+                                {
+                                    goto nextAvailableRoom;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            newBookings = new List<(DateOnly StartDate, DateOnly EndDate)>();
+                            availableRoomsNewBookings.Add(room.Number, newBookings);
+                            goto nextRoomRequest;
+                        }
+                        
                         roomBookings.Add(new RoomBooking
                         {
                             LodgingId = data.LodgingId,
@@ -152,13 +146,18 @@ public class BookingController : BaseController
                             Discount = requestedRoomData.Discount,
                             Status = BookingStatus.Created
                         });
-                        availableRoomsOfType.RemoveAt(0);
+                        
+                        newBookings.Add((requestedRoomData.StartDate, requestedRoomData.EndDate));
+                        
+                        nextAvailableRoom:
+                            continue; // Just whatever for the label to work
                     }
-                    else
-                    {
-                        return NotAcceptable(
-                            "No hay habitaciones suficientes para llevar a cabo la reservación en los intervalos de tiempo especificados.");
-                    }
+
+                    return NotAcceptable(
+                        "No hay habitaciones suficientes para llevar a cabo la reservación en los intervalos de tiempo especificados.");
+                    
+                    nextRoomRequest:
+                        continue; // Just whatever for the label to work
                 }
             }
             
