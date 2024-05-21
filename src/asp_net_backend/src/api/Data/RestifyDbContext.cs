@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Restify.API.Models;
 
 namespace Restify.API.Data
 {
 	public class RestifyDbContext : DbContext
 	{
+		public const string DATE_FORMAT = "yyyy-MM-dd";
+		
 		public DbSet<Booking> Booking { get; set; }
 		public DbSet<Lodging> Lodging { get; set; }
 		public DbSet<Perk> Perks { get; set; }
@@ -369,6 +370,9 @@ namespace Restify.API.Data
 				roomBooking.Property(r => r.Cost)
 					.IsRequired();
 
+				roomBooking.Property(r => r.Discount)
+					.IsRequired();
+				
 				roomBooking.Property(r => r.Fees)
 					.IsRequired();
 				

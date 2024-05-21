@@ -2,9 +2,10 @@
 
 public class RoomBooking
 {
-	public DateTimeOffset	StartDate { get; set; }
-	public DateTimeOffset	EndDate { get; set; }
+	public DateOnly			StartDate { get; set; }
+	public DateOnly			EndDate { get; set; }
 	public decimal			Cost { get; set; }
+	public decimal			Discount { get; set; }
 	public decimal			Fees { get; set; }
 	public BookingStatus	Status { get; set; }
 	public uint				BookingId { get; set; }

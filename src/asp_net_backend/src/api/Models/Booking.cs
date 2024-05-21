@@ -11,6 +11,11 @@ public class Booking
 	public Payment?				Payment { get; set; }
 	public Person				Customer { get; }
 	public Lodging				Lodging { get; }
+
+	public Booking()
+	{
+		RoomBookings = new List<RoomBooking>();
+	}
 }
 
 public enum BookingStatus

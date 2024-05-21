@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -69,74 +70,110 @@ public class BookingController : BaseController
     {
         if (ModelState.IsValid)
         {
-            List<RoomBooking> roomBookings = new List<RoomBooking>(data.Rooms.Length);
-            
-            uint[] requestedRoomNumbers = data.Rooms.Select(r => r.Number)
-                .ToArray();
-            
-            var existingRoomBookings = _context.RoomBooking
-                .Select(r => new { r.LodgingId, r.RoomNumber, r.StartDate, r.EndDate })
-                .Where(r => r.LodgingId == data.LodgingId && requestedRoomNumbers.Contains(r.RoomNumber))
-                .ToDictionary(r => r.RoomNumber, r => r);
-
-            var referencedLodgingRooms = _context.Room
-                .Select(r => new { r.LodgingId, r.Number, r.Type }) // TODO: Does selecting a navigation property work? 
-                .Where(r => r.LodgingId == data.LodgingId && requestedRoomNumbers.Contains(r.Number))
+            var requestedRoomsDataByType = data.Rooms
+                .GroupBy(r => r.RoomTypeId)
                 .ToArray();
 
-            if (referencedLodgingRooms.Length != data.Rooms.Length)
+            var availableRoomsByType = new Dictionary<uint, List<Room>>(requestedRoomsDataByType.Length);
+            foreach (var requestedRoomData in requestedRoomsDataByType)
             {
-                return NotFound("El alojamiento no tiene algunos de los números de habitación especificados.");
+                //var roomsOfType = _context.Room.Where(
+                //    r => r.LodgingId == data.LodgingId
+                //         && r.TypeId == requestedRoomData.Key)
+                //    .Include(r => r.Type);
+                
+                // TODO: And this still needs to check if the lodging type is a house or whatever
+                // to not check the room bookings
+                //var existingRoomBookingsByType = _context.RoomBooking
+                //    .Where(r => r.LodgingId == data.LodgingId
+                //                && (r.Status == BookingStatus.Created || r.Status == BookingStatus.Confirmed)
+                //                && r.Room.TypeId == requestedRoomData.Key);
+
+                //foreach (var roomData in requestedRoomData)
+                //{
+                //    existingRoomBookingsByType = existingRoomBookingsByType.Where(
+                //        r => r.StartDate < roomData.EndDate
+                //               && r.EndDate > roomData.StartDate);
+                //}
+
+                //existingRoomBookingsByType = existingRoomBookingsByType.Where((Expression<Func<RoomBooking, bool>>)expression);
+
+                //var existingRoomBookingsRoomNumbers = existingRoomBookingsByType
+                //    .Select(r => r.Room.Number);
+
+                //var availableRoomsOfType = roomsOfType
+                //    .Where(r => !existingRoomBookingsRoomNumbers.Contains(r.Number));
+                StringBuilder sqlQuery = new StringBuilder($"""
+                    SELECT * FROM Room AS r
+                    WHERE r.lodgingId = {data.LodgingId} AND r.roomTypeId = {requestedRoomData.Key}
+                    AND r.roomNumber NOT IN (
+                        SELECT rb.roomNumber FROM RoomBooking AS rb
+                            INNER JOIN Room AS r2 ON r2.roomNumber = rb.roomNumber
+                            INNER JOIN RoomType AS rt ON rt.roomTypeId = r2.roomTypeId
+                            WHERE rb.lodgingId = {data.LodgingId}
+                                AND rt.roomTypeId = {requestedRoomData.Key}
+                                AND rb.status IN ('Created', 'Confirmed')
+                                AND (
+                    """);
+
+                foreach (var roomData in requestedRoomData)
+                {
+                    sqlQuery.Append($"(rb.startDate < '{roomData.EndDate.ToString(RestifyDbContext.DATE_FORMAT)}' AND rb.endDate > '{roomData.StartDate.ToString(RestifyDbContext.DATE_FORMAT)}') OR");
+                }
+
+                sqlQuery.Replace("OR", "))", sqlQuery.Length - 2, 2);
+
+                var availableRoomsOfType = _context.Room
+                    .FromSqlRaw(sqlQuery.ToString())
+                    .Include(r => r.Type);
+                
+                availableRoomsByType.Add(requestedRoomData.Key, availableRoomsOfType
+                    .ToList());
             }
 
-            var availableRoomsRequestData = new List<RoomBookingRequestData>();
-            foreach (var room in referencedLodgingRooms)
+            List<RoomBooking> roomBookings = new List<RoomBooking>();
+            foreach (var group in requestedRoomsDataByType)
             {
-                var roomData = Array.Find(data.Rooms, r => r.Number == room.Number);
+                var availableRoomsOfType = availableRoomsByType[group.Key];
                 
-                if (existingRoomBookings.TryGetValue(room.Number, out var existingRoomBooking))
+                foreach (var requestedRoomData in group)
                 {
-                    if (existingRoomBooking.StartDate <= roomData.EndDate &&
-                        existingRoomBooking.EndDate >= roomData.StartDate)
+                    if (availableRoomsOfType.Count != 0)
                     {
-                        availableRoomsRequestData.Add(roomData);
+                        Room room = availableRoomsOfType[0];
+                        roomBookings.Add(new RoomBooking
+                        {
+                            LodgingId = data.LodgingId,
+                            StartDate = requestedRoomData.StartDate,
+                            EndDate = requestedRoomData.EndDate,
+                            RoomNumber = room.Number,
+                            Cost = room.Type.PerNightPrice,
+                            Fees = room.Type.Fees,
+                            Discount = requestedRoomData.Discount,
+                            Status = BookingStatus.Created
+                        });
+                        availableRoomsOfType.RemoveAt(0);
                     }
                     else
                     {
-                        return NotAcceptable("Algunas de las habitaciones ya están reservadas en el rango de fechas especificado.");
+                        return NotAcceptable(
+                            "No hay habitaciones suficientes para llevar a cabo la reservación en los intervalos de tiempo especificados.");
                     }
                 }
-                else
-                {
-                    availableRoomsRequestData.Add(roomData);
-                }
             }
-            
-            Dictionary<uint, decimal> perNightPricesByRoom = referencedLodgingRooms
-                .ToDictionary(r => r.Number, r => r.Type.PerNightPrice);
             
             Booking booking = new Booking 
             {
                 CustomerId = data.CustomerId,
                 LodgingId = data.LodgingId
             };
-            _context.Booking.Add(booking);
-            _context.SaveChanges(); // Save changes now so the new booking gets its ID
-
-            foreach (var roomBookingRequestData in availableRoomsRequestData)
+            
+            foreach (var roomBooking in roomBookings)
             {
-                roomBookings.Add(new RoomBooking
-                {
-                    RoomNumber = roomBookingRequestData.Number,
-                    StartDate = roomBookingRequestData.StartDate,
-                    EndDate = roomBookingRequestData.EndDate,
-                    LodgingId = data.LodgingId,
-                    Cost = perNightPricesByRoom[roomBookingRequestData.Number],
-                    Status = BookingStatus.Created,
-                    BookingId = booking.Id
-                });
+                booking.RoomBookings.Add(roomBooking);
             }
-            _context.RoomBooking.AddRange(roomBookings);
+            
+            _context.Booking.Add(booking);
             _context.SaveChanges();
 
             return Ok("La reservación ha sido creada con éxito");
@@ -173,22 +210,85 @@ public class BookingController : BaseController
         
         return NotFound("No existe un usuario con el nombre especificado.");
     }
+    
+    [HttpPatch("user/{userName}")]
+    public ObjectResult UpdateUserBooking(string userName, BookingPatchRequestData bookingData)
+    {
+        if (ModelState.IsValid)
+        {
+            User? user = _context.Find<User>(userName);
+
+            if (user != null)
+            {
+                _context.Entry(user).Reference(u => u.Person).Load();
+                Booking? booking = _context.Booking
+                    .Where(b => b.Id == bookingData.BookingId
+                                && b.CustomerId == user.Person.Id
+                                && b.LodgingId == bookingData.LodgingId)
+                    .Include(b => b.RoomBookings)
+                    .First();
+
+                if (booking == null)
+                {
+                    return NotFound(
+                        "No existe una reservación asociada al cliente y alojamiento especificados, con el ese identificador.");
+                }
+                
+                foreach (RoomBooking roomBooking in booking.RoomBookings)
+                {
+                    //RoomBookingRequestData? data = Array.Find(bookingData.Rooms,
+                    //    r => r.Number == roomBooking.RoomNumber);
+
+                    //if (data == null)
+                    //{
+                    //    // TODO: Put all the rooms that are not associated in this message
+                    //    return NotFound($"La habitación {roomBooking.RoomNumber} no está incluida en la reservación.");
+                    //}
+                    
+                    
+                }
+
+                string message = "Las reservaciones han sido actualizadas con éxito.";
+                //if (rows == bookingIds.Length)
+                //{
+                //    return Ok($"{message} Algunos identificadores no correspondieron a ninguna reservación.");
+                //}
+
+                return Ok(message);
+            }
+            
+            return NotFound("No existe un usuario con el nombre especificado.");
+        }
+        
+        return BadRequest(ModelState);
+    }
 }
 
+[EndDateIsAfterStartDate]
 public record RoomBookingRequestData(
-    [Required] uint Number,
-    [Required] DateTimeOffset StartDate,
-    [Required] DateTimeOffset EndDate
+    [Required] uint     RoomTypeId,
+    [Required] DateOnly StartDate,
+    [Required] DateOnly EndDate,
+    [Required] decimal  Discount
 );
 
 public class BookingRequestData
 {
     [Required]
-    [MaxLength(20)]
-    public BookingStatus Status { get; set; }
-    [Required]
     [Exists<Person>]
     public uint CustomerId { get; set; }
+    [Required]
+    [Exists<Lodging>]
+    public uint LodgingId { get; set; }
+    [Required]
+    public RoomBookingRequestData[] Rooms { get; set; }
+}
+
+public class BookingPatchRequestData
+{
+    [Required]
+    [Exists<Booking>]
+    public uint BookingId { get; set; }
     [Required]
     [Exists<Lodging>]
     public uint LodgingId { get; set; }
