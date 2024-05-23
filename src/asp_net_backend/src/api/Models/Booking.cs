@@ -14,7 +14,12 @@ public class Booking
 
 	public Booking()
 	{
-		RoomBookings = new List<RoomBooking>();
+		
+	}
+	
+	public Booking(IList<RoomBooking> roomBookings)
+	{
+		RoomBookings = roomBookings;
 	}
 }
 

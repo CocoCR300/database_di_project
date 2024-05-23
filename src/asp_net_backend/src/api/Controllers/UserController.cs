@@ -250,26 +250,21 @@ namespace Restify.API.Controllers
     public class UserRequestData
     {
         [Required]
-        [NotEmptyOrWhiteSpace]
         [MaxLength(200)]
         [EmailAddress]
         [Unique<User>]
         public string   EmailAddress { get; set; }
         [Required]
-        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         [Unique<User>]
         public string   UserName { get; set; }
         [Required]
-        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string   FirstName { get; set; }
         [Required]
-        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string   LastName { get; set; }
         [Required]
-        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string   Password { get; set; }
         [Required]
@@ -300,15 +295,12 @@ namespace Restify.API.Controllers
     public class PasswordRequestData
     {
         [Required]
-        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string CurrentPassword { get; set; }
         [Required]
-        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string NewPassword { get; set; }
         [Required]
-        [NotEmptyOrWhiteSpace]
         [MaxLength(50)]
         public string NewPasswordConfirmation { get; set; }
     }

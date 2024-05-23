@@ -68,117 +68,29 @@ public class BookingController : BaseController
     [HttpPost]
     public ObjectResult Post(BookingRequestData data)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            var requestedRoomsDataByType = data.Rooms
-                .GroupBy(r => r.RoomTypeId)
-                .ToArray();
-
-            var availableRoomsByType = new Dictionary<uint, List<Room>>(requestedRoomsDataByType.Length);
-            var availableRoomsNewBookings = new Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>();
-            foreach (var requestedRoomData in requestedRoomsDataByType)
-            {
-                // TODO: Check if the lodging type is a house or whatever to not check the room bookings
-                StringBuilder sqlQuery = new StringBuilder($"""
-                    SELECT * FROM Room AS r
-                    WHERE r.lodgingId = {data.LodgingId} AND r.roomTypeId = {requestedRoomData.Key}
-                    AND r.roomNumber NOT IN (
-                        SELECT rb.roomNumber FROM RoomBooking AS rb
-                            INNER JOIN Room AS r2 ON r2.roomNumber = rb.roomNumber
-                            INNER JOIN RoomType AS rt ON rt.roomTypeId = r2.roomTypeId
-                            WHERE rb.lodgingId = {data.LodgingId}
-                                AND rt.roomTypeId = {requestedRoomData.Key}
-                                AND rb.status IN ('Created', 'Confirmed')
-                                AND (
-                    """);
-
-                foreach (var roomData in requestedRoomData)
-                {
-                    sqlQuery.Append($"(rb.startDate < '{roomData.EndDate.ToString(RestifyDbContext.DATE_FORMAT)}' AND rb.endDate > '{roomData.StartDate.ToString(RestifyDbContext.DATE_FORMAT)}') OR");
-                }
-
-                sqlQuery.Replace("OR", "))", sqlQuery.Length - 2, 2);
-
-                var availableRoomsOfType = _context.Room
-                    .FromSqlRaw(sqlQuery.ToString())
-                    .Include(r => r.Type);
-                
-                availableRoomsByType.Add(requestedRoomData.Key, availableRoomsOfType
-                    .ToList());
-            }
-
-            List<RoomBooking> roomBookings = new List<RoomBooking>();
-            // You can't have enough nested for loops, can you?
-            foreach (var group in requestedRoomsDataByType)
-            {
-                var availableRoomsOfType = availableRoomsByType[group.Key];
-
-                foreach (var requestedRoomData in group)
-                {
-                    foreach (var room in availableRoomsOfType)
-                    {
-                        if (availableRoomsNewBookings.TryGetValue(room.Number, out var newBookings))
-                        {
-                            foreach (var reservation in newBookings)
-                            {
-                                if (reservation.StartDate < requestedRoomData.EndDate &&
-                                    reservation.EndDate > requestedRoomData.StartDate)
-                                {
-                                    goto nextAvailableRoom;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            newBookings = new List<(DateOnly StartDate, DateOnly EndDate)>();
-                            availableRoomsNewBookings.Add(room.Number, newBookings);
-                            goto nextRoomRequest;
-                        }
-                        
-                        roomBookings.Add(new RoomBooking
-                        {
-                            LodgingId = data.LodgingId,
-                            StartDate = requestedRoomData.StartDate,
-                            EndDate = requestedRoomData.EndDate,
-                            RoomNumber = room.Number,
-                            Cost = room.Type.PerNightPrice,
-                            Fees = room.Type.Fees,
-                            Discount = requestedRoomData.Discount,
-                            Status = BookingStatus.Created
-                        });
-                        
-                        newBookings.Add((requestedRoomData.StartDate, requestedRoomData.EndDate));
-                        
-                        nextAvailableRoom:
-                            continue; // Just whatever for the label to work
-                    }
-
-                    return NotAcceptable(
-                        "No hay habitaciones suficientes para llevar a cabo la reservación en los intervalos de tiempo especificados.");
-                    
-                    nextRoomRequest:
-                        continue; // Just whatever for the label to work
-                }
-            }
-            
-            Booking booking = new Booking 
-            {
-                CustomerId = data.CustomerId,
-                LodgingId = data.LodgingId
-            };
-            
-            foreach (var roomBooking in roomBookings)
-            {
-                booking.RoomBookings.Add(roomBooking);
-            }
-            
-            _context.Booking.Add(booking);
-            _context.SaveChanges();
-
-            return Ok("La reservación ha sido creada con éxito");
+            return BadRequest(ModelState);
         }
-        
-        return BadRequest(ModelState);
+
+        ObjectResult? result = GetRoomBookingsToAdd(data.LodgingId, data.Rooms, out List<RoomBooking>? roomBookingsToAdd,
+            out _);
+
+        if (result != null)
+        {
+            return result;
+        }
+            
+        Booking booking = new Booking(roomBookingsToAdd!)
+        {
+            CustomerId = data.CustomerId,
+            LodgingId = data.LodgingId
+        };
+            
+        _context.Booking.Add(booking);
+        _context.SaveChanges();
+
+        return Ok("La reservación ha sido creada con éxito");
     }
 
     [HttpDelete("user/{userName}")]
@@ -186,111 +98,411 @@ public class BookingController : BaseController
     {
         User? user = _context.Find<User>(userName);
 
-        if (user != null)
+        if (user == null)
         {
-            _context.Entry(user).Reference(u => u.Person).Load();
-            int rows = _context.Booking
-                .Where(b => b.CustomerId == user.Person.Id && bookingIds.Contains(b.Id))
-                .Delete();
-
-            if (rows == 0)
-            {
-                return NotFound("No existe ninguna reserva con los identificadores especificados.");
-            }
-
-            string message = "Las reservaciones han sido eliminadas con éxito.";
-            if (rows == bookingIds.Length)
-            {
-                return Ok($"{message} Algunos identificadores no correspondieron a ninguna reservación.");
-            }
-
-            return Ok(message);
+            return NotFound("No existe un usuario con el nombre especificado.");
         }
-        
-        return NotFound("No existe un usuario con el nombre especificado.");
+
+        _context.Entry(user).Reference(u => u.Person).Load();
+        int rows = _context.Booking
+            .Where(b => b.CustomerId == user.Person.Id && bookingIds.Contains(b.Id))
+            .Delete();
+
+        if (rows == 0)
+        {
+            return NotFound("No existe ninguna reserva con los identificadores especificados.");
+        }
+
+        string message = "Las reservaciones han sido eliminadas con éxito.";
+        if (rows != bookingIds.Length)
+        {
+            return Ok($"{message} Algunos identificadores no correspondieron a ninguna reservación.");
+        }
+
+        return Ok(message);
+
     }
     
     [HttpPatch("user/{userName}")]
     public ObjectResult UpdateUserBooking(string userName, BookingPatchRequestData bookingData)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            User? user = _context.Find<User>(userName);
+            return BadRequest(ModelState);
+        }
 
-            if (user != null)
-            {
-                _context.Entry(user).Reference(u => u.Person).Load();
-                Booking? booking = _context.Booking
-                    .Where(b => b.Id == bookingData.BookingId
-                                && b.CustomerId == user.Person.Id
-                                && b.LodgingId == bookingData.LodgingId)
-                    .Include(b => b.RoomBookings)
-                    .First();
+        User? user = _context.Find<User>(userName);
 
-                if (booking == null)
-                {
-                    return NotFound(
-                        "No existe una reservación asociada al cliente y alojamiento especificados, con el ese identificador.");
-                }
-                
-                foreach (RoomBooking roomBooking in booking.RoomBookings)
-                {
-                    //RoomBookingRequestData? data = Array.Find(bookingData.Rooms,
-                    //    r => r.Number == roomBooking.RoomNumber);
-
-                    //if (data == null)
-                    //{
-                    //    // TODO: Put all the rooms that are not associated in this message
-                    //    return NotFound($"La habitación {roomBooking.RoomNumber} no está incluida en la reservación.");
-                    //}
-                    
-                    
-                }
-
-                string message = "Las reservaciones han sido actualizadas con éxito.";
-                //if (rows == bookingIds.Length)
-                //{
-                //    return Ok($"{message} Algunos identificadores no correspondieron a ninguna reservación.");
-                //}
-
-                return Ok(message);
-            }
-            
+        if (user == null)
+        {
             return NotFound("No existe un usuario con el nombre especificado.");
         }
-        
-        return BadRequest(ModelState);
+
+        _context.Entry(user).Reference(u => u.Person).Load();
+        Booking? booking = _context.Booking
+            .Where(b => b.Id == bookingData.BookingId
+                        && b.CustomerId == user.Person.Id
+                        && b.LodgingId == bookingData.LodgingId)
+            .Include(b => b.RoomBookings)
+            .ThenInclude(r => r.Room)
+            .ThenInclude(r => r.Type)
+            .FirstOrDefault();
+
+        if (booking == null)
+        {
+            return NotFound(
+                "No existe una reservación asociada al cliente y alojamiento, con el identificador especificado.");
+        }
+
+        List<uint> nonExistentRoomBookingIdsToDelete = new List<uint>();
+        if (bookingData.RoomsBookingsToDelete != null)
+        {
+            foreach (var roomBookingId in bookingData.RoomsBookingsToDelete)
+            {
+                RoomBooking? roomBooking = booking.RoomBookings.FirstOrDefault(r => r.Id == roomBookingId);
+                if (roomBooking == null)
+                {
+                    nonExistentRoomBookingIdsToDelete.Add(roomBookingId);
+                    continue;
+                }
+                
+                booking.RoomBookings.Remove(roomBooking);
+            }
+        }
+
+        Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>? newRoomBookingsByRoomNumber = null;
+        if (bookingData.RoomsBookingsToAdd != null)
+        {
+            ObjectResult? result = GetRoomBookingsToAdd(bookingData.LodgingId, bookingData.RoomsBookingsToAdd,
+                out var roomBookingsToAdd, out newRoomBookingsByRoomNumber);
+
+            if (result != null)
+            {
+                return result;
+            }
+
+            foreach (RoomBooking roomBooking in roomBookingsToAdd)
+            {
+                booking.RoomBookings.Add(roomBooking);
+            }
+        }
+
+        bool invalidUpdateData = false;
+        List<uint> invalidRoomBookingIds = new List<uint>();
+        if (bookingData.RoomsBookingsToUpdate != null)
+        {
+            if (newRoomBookingsByRoomNumber == null)
+            {
+                newRoomBookingsByRoomNumber = new Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>();
+            }
+            
+            Dictionary<uint, List<Room>>? availableRoomsByType = null;
+            foreach (RoomBookingPatchRequestData roomBookingData in bookingData.RoomsBookingsToUpdate)
+            {
+                RoomBooking? roomBooking = booking.RoomBookings.FirstOrDefault(
+                    r => r.Id == roomBookingData.RoomBookingId);
+
+                if (roomBooking == null)
+                {
+                    invalidRoomBookingIds.Add(roomBookingData.RoomBookingId);
+                    invalidUpdateData = true;
+                }
+                else if (!invalidUpdateData)
+                {
+                    // If only the discount is to be updated, then there's no need to do all the rest here
+                    if (roomBookingData.RoomTypeId == roomBooking.Room.TypeId &&
+                        (!roomBookingData.StartDate.HasValue || roomBookingData.StartDate.Value == roomBooking.StartDate) &&
+                        (!roomBookingData.EndDate.HasValue || roomBookingData.EndDate.Value == roomBooking.EndDate))
+                    {
+                        if (roomBookingData.Discount.HasValue)
+                            roomBooking.Discount = roomBookingData.Discount.Value;
+                        
+                        break;
+                    }
+                    
+                    if (availableRoomsByType == null)
+                    {
+                        var roomBookingIdsToExclude = booking.RoomBookings.Select(
+                            r => r.BookingId);
+                        
+                        if (bookingData.RoomsBookingsToDelete != null)
+                        {
+                            roomBookingIdsToExclude = roomBookingIdsToExclude
+                                .Concat(bookingData.RoomsBookingsToDelete);
+                        }
+                        
+                        var requestedRoomsDataByType = bookingData.RoomsBookingsToUpdate
+                            .GroupBy(r => r.RoomTypeId)
+                            .ToArray();
+                        availableRoomsByType = GetAvailableRoomsByType(bookingData.LodgingId,
+                            requestedRoomsDataByType,
+                            roomBookingIdsToExclude.ToArray());
+                    }
+
+                    Room? selectedRoom;
+                    // TODO: Should test first if the room type really exists in this lodging
+                    if (availableRoomsByType.TryGetValue(roomBookingData.RoomTypeId, out var availableRoomsOfType))
+                    {
+                        selectedRoom = null;
+                        List<(DateOnly StartDate, DateOnly EndDate)>? newBookings = null;
+                        if (roomBooking.Room.TypeId == roomBookingData.RoomTypeId &&
+                            IsRoomStillAvailable(roomBooking.RoomNumber, roomBookingData, newRoomBookingsByRoomNumber, out newBookings))
+                        {
+                            selectedRoom = availableRoomsOfType.Find(r => r.Number == roomBooking.RoomNumber);
+                        }
+                        else
+                        {
+                            foreach (var availableRoom in availableRoomsOfType)
+                            {
+                                if (IsRoomStillAvailable(availableRoom.Number, roomBookingData, newRoomBookingsByRoomNumber, out newBookings))
+                                {
+                                    selectedRoom = availableRoom;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (selectedRoom != null)
+                        {
+                            if (roomBookingData.StartDate.HasValue)
+                                roomBooking.StartDate = roomBookingData.StartDate.Value;
+                            
+                            if (roomBookingData.EndDate.HasValue)
+                                roomBooking.EndDate = roomBookingData.EndDate.Value;
+                            
+                            if (roomBookingData.Discount.HasValue)
+                                roomBooking.Discount = roomBookingData.Discount.Value;
+                            
+                            roomBooking.RoomNumber = selectedRoom.Number;
+                            roomBooking.Cost = selectedRoom.Type.PerNightPrice;
+                            roomBooking.Fees = selectedRoom.Type.Fees;
+                            
+                            newBookings.Add((roomBooking.StartDate, roomBooking.EndDate));
+                        }
+                    }
+                    else
+                    {
+                        return NotFound("El alojamiento no posee algunos de los tipos de habitación especificados.");
+                    }
+                    
+                    if (selectedRoom == null)
+                    {
+                        return NotAcceptable(
+                            "No hay habitaciones suficientes para llevar a cabo la actualización en la reservación en los intervalos de tiempo especificados.");
+                    }
+                }
+            }
+        }
+
+        if (invalidUpdateData)
+        {
+            string idsJoined = string.Join(',', invalidRoomBookingIds);
+            return NotFound($"No existen las reservaciones de habitación con los identificadores {idsJoined} en la reservación a modificar.");
+        }
+
+        string message = "Las reservaciones han sido actualizadas con éxito.";
+        if (nonExistentRoomBookingIdsToDelete.Count > 0)
+        {
+            string nonExistentRoomBookingIdsToDeleteJoined = string.Join(',', nonExistentRoomBookingIdsToDelete);
+            message +=
+                $" Los identificadores {nonExistentRoomBookingIdsToDeleteJoined} a borrar no correspondieron a ninguna reserva de habitación";
+        }
+
+        _context.SaveChanges();
+        return Ok(message);
+    }
+
+    private ObjectResult? GetRoomBookingsToAdd(uint lodgingId,
+        RoomBookingRequestData[] roomBookingsData,
+        out List<RoomBooking>? roomBookingsToAdd,
+        out Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>? roomBookingDatesByRoomNumber)
+    {
+        var requestedRoomsDataByType = roomBookingsData
+            .GroupBy(r => r.RoomTypeId)
+            .ToArray();
+
+        var availableRoomsByType = GetAvailableRoomsByType(lodgingId, requestedRoomsDataByType);
+        var availableRoomsNewBookings = new Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>();
+
+        List<RoomBooking> roomBookings = new List<RoomBooking>();
+        // You can't have enough nested for loops, can you?
+        foreach (var group in requestedRoomsDataByType)
+        {
+            if (availableRoomsByType.TryGetValue(group.Key, out var availableRoomsOfType))
+            {
+                foreach (var requestedRoomData in group)
+                {
+                    bool noRoomsAvailable = true;
+                    foreach (var room in availableRoomsOfType)
+                    {
+                        if (IsRoomStillAvailable(room.Number, requestedRoomData, availableRoomsNewBookings,
+                                out var newBookings))
+                        {
+                            roomBookings.Add(new RoomBooking
+                            {
+                                LodgingId = lodgingId,
+                                StartDate = requestedRoomData.StartDate!.Value,
+                                EndDate = requestedRoomData.EndDate!.Value,
+                                RoomNumber = room.Number,
+                                Cost = room.Type.PerNightPrice,
+                                Fees = room.Type.Fees,
+                                Discount = requestedRoomData.Discount ?? 0,
+                                Status = BookingStatus.Created
+                            });
+                                
+                            newBookings.Add((requestedRoomData.StartDate.Value, requestedRoomData.EndDate.Value));
+                            noRoomsAvailable = false;
+                            break;
+                        }
+                    }
+                        
+                    if (noRoomsAvailable)
+                    {
+                        roomBookingsToAdd = null;
+                        roomBookingDatesByRoomNumber = null;
+                        return NotAcceptable(
+                            $"No hay habitaciones suficientes del tipo {group.Key} para llevar a cabo la reservación en los intervalos de tiempo especificados.");
+                    }
+                }
+            }
+            else
+            {
+                roomBookingsToAdd = null;
+                roomBookingDatesByRoomNumber = null;
+                return NotFound($"No hay habitaciones del tipo {group.Key} disponibles en los intervalos de tiempo especificados.");
+            }
+        }
+
+        roomBookingsToAdd = roomBookings;
+        roomBookingDatesByRoomNumber = availableRoomsNewBookings;
+        return null;
+    }
+
+    private Dictionary<uint, List<Room>> GetAvailableRoomsByType(
+        uint lodgingId,
+        IList<IGrouping<uint, IRoomBookingRequestData>> requestedRoomsDataByType,
+        uint[]? roomBookingsToExclude = null)
+    {
+        Dictionary<uint, List<Room>> availableRoomsByType = new Dictionary<uint, List<Room>>(requestedRoomsDataByType.Count);
+        foreach (var requestedRoomData in requestedRoomsDataByType)
+        {
+            // TODO: Check if the lodging type is a house or whatever to not check the room bookings
+            StringBuilder sqlQuery = new StringBuilder($"""
+                SELECT * FROM Room AS r
+                WHERE r.lodgingId = {lodgingId} AND r.roomTypeId = {requestedRoomData.Key}
+                AND r.roomNumber NOT IN (
+                    SELECT rb.roomNumber FROM RoomBooking AS rb
+                        INNER JOIN Room AS r2 ON r2.roomNumber = rb.roomNumber
+                        INNER JOIN RoomType AS rt ON rt.roomTypeId = r2.roomTypeId
+                        WHERE rb.lodgingId = {lodgingId}
+                            AND rt.roomTypeId = {requestedRoomData.Key}
+                            AND rb.status IN ('Created', 'Confirmed')
+                            {(roomBookingsToExclude != null ? $"AND rb.roomBookingId NOT IN ({string.Join(',', roomBookingsToExclude)})" : "")}
+                            AND (
+                """);
+
+            foreach (var roomData in requestedRoomData)
+            {
+                sqlQuery.Append($"""
+                                 (rb.startDate < '{roomData.EndDate!.Value.ToString(RestifyDbContext.DATE_FORMAT)}'
+                                 AND rb.endDate > '{roomData.StartDate!.Value.ToString(RestifyDbContext.DATE_FORMAT)}')
+                                 OR
+                                 """);
+            }
+
+            sqlQuery.Replace("OR", "))", sqlQuery.Length - 2, 2);
+
+            var availableRoomsOfType = _context.Room
+                .FromSqlRaw(sqlQuery.ToString())
+                .Include(r => r.Type)
+                .ToList();
+
+            if (availableRoomsOfType.Count > 0)
+            {
+                availableRoomsByType.Add(requestedRoomData.Key, availableRoomsOfType);
+            }
+        }
+
+        return availableRoomsByType;
+    }
+
+    private bool IsRoomStillAvailable(uint roomNumber, IRoomBookingRequestData roomBookingData,
+        Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>> availableRoomsNewBookings,
+        out List<(DateOnly StartDate, DateOnly EndDate)> newBookings)
+    {
+        bool isAvailable = true;
+        if (availableRoomsNewBookings.TryGetValue(roomNumber, out newBookings))
+        {
+            foreach (var reservation in newBookings)
+            {
+                if (reservation.StartDate < roomBookingData.EndDate &&
+                    reservation.EndDate > roomBookingData.StartDate)
+                {
+                    isAvailable = false;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            newBookings = new List<(DateOnly StartDate, DateOnly EndDate)>();
+            availableRoomsNewBookings.Add(roomNumber, newBookings);
+        }
+
+        return isAvailable;
     }
 }
 
-[EndDateIsAfterStartDate]
-public record RoomBookingRequestData(
-    [Required] uint     RoomTypeId,
-    [Required] DateOnly StartDate,
-    [Required] DateOnly EndDate,
-    [Required] decimal  Discount
-);
+public interface IRoomBookingRequestData
+{
+    uint        RoomTypeId { get; }
+    DateOnly?   StartDate { get; }
+    DateOnly?   EndDate { get; }
+    decimal?    Discount { get; }
+}
 
-public class BookingRequestData
+[EndDateIsAfterStartDate]
+public record RoomBookingRequestData : IRoomBookingRequestData
+{
+    [Required]  public uint        RoomTypeId { get; init; }
+    [Required]  public DateOnly?   StartDate { get; init; }
+    [Required]  public DateOnly?   EndDate { get; init; }
+                public decimal?    Discount { get; init; }
+}
+
+[EndDateIsAfterStartDate]
+public record RoomBookingPatchRequestData : IRoomBookingRequestData
+{
+    [Required]  public uint          RoomBookingId { get; init; }
+    [Required]  public uint          RoomTypeId { get; init; }
+                public DateOnly?     StartDate { get; init; }
+                public DateOnly?     EndDate { get; init; }
+                public decimal?      Discount { get; init; }
+}
+
+public record BookingRequestData
 {
     [Required]
     [Exists<Person>]
-    public uint CustomerId { get; set; }
+    public uint CustomerId { get; init; }
     [Required]
     [Exists<Lodging>]
-    public uint LodgingId { get; set; }
+    public uint LodgingId { get; init; }
     [Required]
-    public RoomBookingRequestData[] Rooms { get; set; }
+    public RoomBookingRequestData[] Rooms { get; init; }
 }
 
-public class BookingPatchRequestData
+
+[BookingPatchRequestDataValidation]
+public record BookingPatchRequestData
 {
     [Required]
     [Exists<Booking>]
-    public uint BookingId { get; set; }
+    public uint BookingId { get; init; }
     [Required]
     [Exists<Lodging>]
-    public uint LodgingId { get; set; }
-    [Required]
-    public RoomBookingRequestData[] Rooms { get; set; }
+    public uint LodgingId { get; init; }
+    public RoomBookingRequestData[]? RoomsBookingsToAdd { get; init; }
+    public uint[]? RoomsBookingsToDelete { get; init; }
+    public RoomBookingPatchRequestData[]? RoomsBookingsToUpdate { get; init; }
 }

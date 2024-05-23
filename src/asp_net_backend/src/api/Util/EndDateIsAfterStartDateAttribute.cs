@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Restify.API.Controllers;
 using Restify.API.Models;
 
 namespace Restify.API.Util
@@ -7,12 +8,11 @@ namespace Restify.API.Util
 	{
 		protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
 		{
-			if (value == null)
+			IRoomBookingRequestData roomBookingData = (IRoomBookingRequestData) value;
+			if (roomBookingData.StartDate == null || roomBookingData.EndDate == null)
 			{
 				return ValidationResult.Success;
 			}
-
-			dynamic roomBookingData = value;
 
 			if (roomBookingData.EndDate.CompareTo(roomBookingData.StartDate) > 0)
 			{
