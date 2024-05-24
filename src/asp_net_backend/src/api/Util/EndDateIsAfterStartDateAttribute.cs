@@ -9,12 +9,14 @@ namespace Restify.API.Util
 		protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
 		{
 			IRoomBookingRequestData roomBookingData = (IRoomBookingRequestData) value;
-			if (roomBookingData.StartDate == null || roomBookingData.EndDate == null)
+			if (!roomBookingData.StartDate.HasValue || !roomBookingData.EndDate.HasValue)
 			{
 				return ValidationResult.Success;
 			}
 
-			if (roomBookingData.EndDate.CompareTo(roomBookingData.StartDate) > 0)
+			DateOnly	startDate = roomBookingData.StartDate.Value,
+						endDate = roomBookingData.EndDate.Value;
+			if (endDate.CompareTo(startDate) > 0)
 			{
 				return ValidationResult.Success;
 			}

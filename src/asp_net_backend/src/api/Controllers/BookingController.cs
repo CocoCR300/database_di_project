@@ -140,18 +140,15 @@ public class BookingController : BaseController
 
         _context.Entry(user).Reference(u => u.Person).Load();
         Booking? booking = _context.Booking
-            .Where(b => b.Id == bookingData.BookingId
-                        && b.CustomerId == user.Person.Id
-                        && b.LodgingId == bookingData.LodgingId)
+            .Where(b => b.Id == bookingData.BookingId)
             .Include(b => b.RoomBookings)
             .ThenInclude(r => r.Room)
             .ThenInclude(r => r.Type)
             .FirstOrDefault();
 
-        if (booking == null)
+        if (booking == null || booking.CustomerId != user.Person.Id)
         {
-            return NotFound(
-                "No existe una reservación asociada al cliente y alojamiento, con el identificador especificado.");
+            return NotFound("No existe una reservación asociada al cliente, con el identificador especificado.");
         }
 
         List<uint> nonExistentRoomBookingIdsToDelete = new List<uint>();
@@ -173,7 +170,7 @@ public class BookingController : BaseController
         Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>? newRoomBookingsByRoomNumber = null;
         if (bookingData.RoomsBookingsToAdd != null)
         {
-            ObjectResult? result = GetRoomBookingsToAdd(bookingData.LodgingId, bookingData.RoomsBookingsToAdd,
+            ObjectResult? result = GetRoomBookingsToAdd(booking.LodgingId, bookingData.RoomsBookingsToAdd,
                 out var roomBookingsToAdd, out newRoomBookingsByRoomNumber);
 
             if (result != null)
@@ -209,6 +206,14 @@ public class BookingController : BaseController
                 }
                 else if (!invalidUpdateData)
                 {
+                    DateOnly    startDate = roomBookingData.StartDate ?? roomBooking.StartDate,
+                                endDate = roomBookingData.EndDate ?? roomBooking.EndDate;
+                    if (endDate.CompareTo(startDate) <= 0)
+                    {
+                        return NotAcceptable(
+                            "La fecha de inicio de la reservación debe ser anterior a la fecha de finalización.");
+                    }
+                    
                     // If only the discount is to be updated, then there's no need to do all the rest here
                     if (roomBookingData.RoomTypeId == roomBooking.Room.TypeId &&
                         (!roomBookingData.StartDate.HasValue || roomBookingData.StartDate.Value == roomBooking.StartDate) &&
@@ -234,7 +239,7 @@ public class BookingController : BaseController
                         var requestedRoomsDataByType = bookingData.RoomsBookingsToUpdate
                             .GroupBy(r => r.RoomTypeId)
                             .ToArray();
-                        availableRoomsByType = GetAvailableRoomsByType(bookingData.LodgingId,
+                        availableRoomsByType = GetAvailableRoomsByType(booking.LodgingId,
                             requestedRoomsDataByType,
                             roomBookingIdsToExclude.ToArray());
                     }
@@ -272,9 +277,12 @@ public class BookingController : BaseController
                             
                             if (roomBookingData.Discount.HasValue)
                                 roomBooking.Discount = roomBookingData.Discount.Value;
+
+                            // TODO: This calculation and assignment could be done in the database itself
+                            int days = roomBooking.EndDate.DayNumber - roomBooking.StartDate.DayNumber;
                             
                             roomBooking.RoomNumber = selectedRoom.Number;
-                            roomBooking.Cost = selectedRoom.Type.PerNightPrice;
+                            roomBooking.Cost = selectedRoom.Type.PerNightPrice * days;
                             roomBooking.Fees = selectedRoom.Type.Fees;
                             
                             newBookings.Add((roomBooking.StartDate, roomBooking.EndDate));
@@ -338,13 +346,15 @@ public class BookingController : BaseController
                         if (IsRoomStillAvailable(room.Number, requestedRoomData, availableRoomsNewBookings,
                                 out var newBookings))
                         {
+                            // TODO: This calculation and assignment could be done in the database itself
+                            int days = requestedRoomData.EndDate.Value.DayNumber - requestedRoomData.StartDate.Value.DayNumber;
                             roomBookings.Add(new RoomBooking
                             {
                                 LodgingId = lodgingId,
                                 StartDate = requestedRoomData.StartDate!.Value,
                                 EndDate = requestedRoomData.EndDate!.Value,
                                 RoomNumber = room.Number,
-                                Cost = room.Type.PerNightPrice,
+                                Cost = room.Type.PerNightPrice * days,
                                 Fees = room.Type.Fees,
                                 Discount = requestedRoomData.Discount ?? 0,
                                 Status = BookingStatus.Created
@@ -464,31 +474,35 @@ public interface IRoomBookingRequestData
 [EndDateIsAfterStartDate]
 public record RoomBookingRequestData : IRoomBookingRequestData
 {
-    [Required]  public uint        RoomTypeId { get; init; }
-    [Required]  public DateOnly?   StartDate { get; init; }
-    [Required]  public DateOnly?   EndDate { get; init; }
-                public decimal?    Discount { get; init; }
+    [Required(ErrorMessage = "El identificador del tipo de habitación es obligatorio.")]
+    public uint        RoomTypeId { get; init; }
+    [Required(ErrorMessage = "La fecha de inicio de la reservación de la habitación es obligatoria.")]
+    public DateOnly?   StartDate { get; init; }
+    [Required(ErrorMessage = "La fecha de finalización de la reservación es obligatoria.")]
+    public DateOnly?   EndDate { get; init; }
+    public decimal?    Discount { get; init; }
 }
 
 [EndDateIsAfterStartDate]
 public record RoomBookingPatchRequestData : IRoomBookingRequestData
 {
-    [Required]  public uint          RoomBookingId { get; init; }
-    [Required]  public uint          RoomTypeId { get; init; }
-                public DateOnly?     StartDate { get; init; }
-                public DateOnly?     EndDate { get; init; }
-                public decimal?      Discount { get; init; }
+    [Required(ErrorMessage = "El identificador de la reservación de la habitación es obligatorio.")]
+    public uint          RoomBookingId { get; init; }
+    [Required(ErrorMessage = "El identificador del tipo de habitación es obligatorio.")]
+    public uint          RoomTypeId { get; init; }
+    public DateOnly?     StartDate { get; init; }
+    public DateOnly?     EndDate { get; init; }
+    public decimal?      Discount { get; init; }
 }
 
 public record BookingRequestData
 {
-    [Required]
-    [Exists<Person>]
+    [Required(ErrorMessage = "El identificador del cliente es obligatorio.")]
+    [Exists<Person>(ErrorMessage = "No existe un cliente con el identificador especificado.")]
     public uint CustomerId { get; init; }
-    [Required]
-    [Exists<Lodging>]
+    [Required(ErrorMessage = "El identificador del alojamiento es obligatorio.")]
+    [Exists<Lodging>(ErrorMessage = "No existe un alojamiento con el identificador especificado.")]
     public uint LodgingId { get; init; }
-    [Required]
     public RoomBookingRequestData[] Rooms { get; init; }
 }
 
@@ -496,12 +510,9 @@ public record BookingRequestData
 [BookingPatchRequestDataValidation]
 public record BookingPatchRequestData
 {
-    [Required]
-    [Exists<Booking>]
+    [Required(ErrorMessage = "El identificador de la reservación es obligatorio.")]
+    [Exists<Booking>(ErrorMessage = "No existe una reservación con el identificador especificado.")]
     public uint BookingId { get; init; }
-    [Required]
-    [Exists<Lodging>]
-    public uint LodgingId { get; init; }
     public RoomBookingRequestData[]? RoomsBookingsToAdd { get; init; }
     public uint[]? RoomsBookingsToDelete { get; init; }
     public RoomBookingPatchRequestData[]? RoomsBookingsToUpdate { get; init; }

@@ -113,8 +113,6 @@ namespace Restify.API.Controllers
             {
                 bool noneExists = true;
                 _context.Entry(user).Reference(u => u.Person).Load();
-                // TODO: Is this necessary now that PhoneNumbers are owned ??
-                _context.Entry(user.Person).Collection(p => p.PhoneNumbers).Load();
 
                 for (int i = 0; i < user.Person.PhoneNumbers.Count; ++i)
                 {

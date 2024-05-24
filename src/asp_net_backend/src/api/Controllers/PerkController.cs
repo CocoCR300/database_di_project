@@ -138,9 +138,9 @@ public class PerkController : BaseController
 
 public class PerkUpdateRequestData
 {
-    [Required]
-    [MaxLength(50)]
-    public string Name { get; set; }
-    [Required]
-    public uint Id { get; set; }
+    [Required(ErrorMessage = "El identificador del beneficio adicional es obligatorio.")]
+    public uint     Id { get; set; }
+    [Required(ErrorMessage = "El nombre del beneficio adicional es obligatorio.")]
+    [MaxLength(50, ErrorMessage = "El nombre del beneficio adicional debe tener 50 carácteres como máximo.")]
+    public string   Name { get; set; }
 }

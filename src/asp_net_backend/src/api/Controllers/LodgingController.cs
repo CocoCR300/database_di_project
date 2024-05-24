@@ -57,22 +57,6 @@ public class LodgingController : BaseController
 
         return lodgingTypes;
     }
-
-    [HttpGet("{lodgingId}/room")]
-    public ObjectResult GetRooms(uint lodgingId)
-    {
-        Lodging? lodging = _context.Find<Lodging>(lodgingId);
-
-        if (lodging != null)
-        {
-            _context.Entry(lodging).Collection(l => l.Rooms).Load();
-            var rooms = lodging.Rooms
-                .Select(r => new { r.Number, r.TypeId });
-            return Ok(rooms);
-        }
-        
-        return NotFound("No existe un alojamiento con el identificador especificado");
-    }
     
     [HttpGet("{lodgingId}/room_type")]
     public ObjectResult GetRoomTypes(uint lodgingId)
@@ -197,40 +181,6 @@ public class LodgingController : BaseController
             
         return NotFound("No existe un alojamiento con el identificador especificado.");
     }
-        
-    [HttpDelete("{lodgingId}/room")]
-    public ObjectResult DeleteRooms(uint lodgingId, uint[] roomNumbers)
-    {
-        Lodging? lodging = _context.Find<Lodging>(lodgingId);
-
-        if (lodging != null)
-        {
-            _context.Entry(lodging).Collection(l => l.Rooms).Load();
-            
-            bool noneExists = true;
-            for (int i = 0; i < lodging.Rooms.Count; ++i)
-            {
-                uint roomNumber = lodging.Rooms[i].Number;
-                if (roomNumbers.Contains(roomNumber))
-                {
-                    noneExists = false;
-                    lodging.Rooms.RemoveAt(i);
-                }
-            }
-                
-            _context.SaveChanges();
-
-            if (noneExists)
-            {
-                return NotFound(
-                    "El alojamiento no tiene ninguno de los números de habitación especificados.");
-            }
-                
-            return Ok("Las habitaciones han sido eliminadas con éxito.");
-        }
-            
-        return NotFound("No existe un alojamiento con el identificador especificado.");
-    }
     
     [HttpDelete("{lodgingId}/room_type")]
     public ObjectResult DeleteRoomTypes(uint lodgingId, uint[] roomTypeIds)
@@ -316,30 +266,6 @@ public class LodgingController : BaseController
         return NotFound("No existe un alojamiento con el identificador especificado.");
     }
 
-    [HttpPost("{lodgingId}/room")]
-    public ObjectResult StoreRooms(uint lodgingId, RoomRequestData[] rooms)
-    {
-        Lodging? lodging = _context.Find<Lodging>(lodgingId);
-
-        if (lodging != null)
-        {
-            foreach (RoomRequestData room in rooms)
-            {
-                lodging.Rooms.Add(new Room
-                {
-                    LodgingId = lodging.Id,
-                    Number = room.Number,
-                    TypeId = room.TypeId
-                });
-            }
-            
-            _context.SaveChanges();
-            return Ok("Las habitaciones han sido agregadas con éxito.");
-        }
-            
-        return NotFound("No existe un alojamiento con el identificador especificado.");
-    }
-    
     [HttpPost("{lodgingId}/room_type")]
     public ObjectResult StoreRoomTypes(uint lodgingId, RoomTypeRequestData[] roomTypes)
     {
@@ -420,61 +346,50 @@ public class LodgingController : BaseController
 
 public class LodgingRequestData
 {
-    [Required]
-    [Unique<Lodging>]
-    [MaxLength(300)]
+    [Required(ErrorMessage = "La dirección del alojamiento es obligatoria.")]
+    [MaxLength(300, ErrorMessage = "La dirección debe tener 300 carácteres como máximo.")]
     public string   Address { get; set; }
-    [Required]
-    [MaxLength(1000)]
+    [Required(AllowEmptyStrings = true)]
+    [MaxLength(1000, ErrorMessage = "La descripción del alojamiento debe tener 1000 carácteres como máximo.")]
     public string   Description { get; set; }
-    [Required]
-    [MaxLength(100)]
+    [Required(ErrorMessage = "El nombre del alojamiento es obligatorio.")]
+    [MaxLength(100, ErrorMessage = "El nombre del alojamiento debe tener 100 carácteres como máximo.")]
     public string   Name { get; set; }
-    [Required]
+    [Required(ErrorMessage = "El tipo del alojamiento es obligatorio.")]
     public LodgingType Type { get; set; }
-    [Required]
-    [EmailAddress]
-    [MaxLength(200)]
+    [Required(ErrorMessage = "El correo electrónico del alojamiento es obligatorio.")]
+    [MaxLength(200, ErrorMessage = "El correo electrónico debe tener 200 carácteres como máximo.")]
+    [EmailAddress(ErrorMessage = "El correo electrónico es inválido.")]
     public string   EmailAddress { get; set; }
-    [Required]
-    [Exists<Person>]
+    [Required(ErrorMessage = "El identificador del arrendador es obligatorio.")]
+    [Exists<Person>(ErrorMessage = "No existe un arrendador con el identificador especificado.")]
     public uint     OwnerId { get; set; }
 }
     
 public class LodgingPatchRequestData
 {
-    [Unique<Lodging>]
-    [MaxLength(300)]
+    [MaxLength(300, ErrorMessage = "La dirección debe tener 300 carácteres como máximo.")]
     public string?   Address { get; set; }
-    [MaxLength(1000)]
+    [MaxLength(1000, ErrorMessage = "La descripción del alojamiento debe tener 1000 carácteres como máximo.")]
     public string?   Description { get; set; }
-    [MaxLength(100)]
+    [MaxLength(100, ErrorMessage = "El nombre del alojamiento debe tener 100 carácteres como máximo.")]
     public string?   Name { get; set; }
     public LodgingType?   Type { get; set; }
-    [EmailAddress]
-    [MaxLength(200)]
+    [MaxLength(200, ErrorMessage = "El correo electrónico debe tener 200 carácteres como máximo.")]
+    [EmailAddress(ErrorMessage = "El correo electrónico es inválido.")]
     public string?   EmailAddress { get; set; }
-    [Exists<Person>]
+    [Exists<Person>(ErrorMessage = "No existe un arrendador con el identificador especificado.")]
     public uint?    OwnerId { get; set; }
-}
-
-public class RoomRequestData 
-{
-    [Required]
-    public uint Number { get; set; }
-    [Required]
-    [Exists<RoomType>]
-    public uint TypeId { get; set; }
 }
 
 public class RoomTypeRequestData 
 {
-    [Required]
+    [Required(ErrorMessage = "El impuesto del tipo de habitación es obligatorio.")]
     public decimal Fees { get; set; }
-    [Required]
+    [Required(ErrorMessage = "El precio por noche del tipo de habitación es obligatorio.")]
     public decimal PerNightPrice { get; set; }
-    [Required]
+    [Required(ErrorMessage = "El nombre del tipo de habitación es obligatorio.")]
     public string Name { get; set; }
-    [Required]
+    [Required(ErrorMessage = "La capacidad del tipo de habitación es obligatorio.")]
     public uint Capacity { get; set; }
 }

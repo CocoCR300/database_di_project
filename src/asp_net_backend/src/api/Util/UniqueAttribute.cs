@@ -1,6 +1,7 @@
 ﻿using Restify.API.Data;
 
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 
 namespace Restify.API.Util
 {
@@ -13,12 +14,20 @@ namespace Restify.API.Util
 				return ValidationResult.Success;
 			}
 			
-			var context = validationContext.GetService<RestifyDbContext>();
-			if (context.Find<T>(value) == null)
+			Expression	parameter	= Expression.Parameter(typeof(T), "entity"),
+						property	= Expression.Property(parameter, typeof(T), validationContext.MemberName),
+						equals = Expression.Equal(property, Expression.Constant(value));
+			
+			Expression<Func<T, bool>> predicate = (Expression<Func<T, bool>>) Expression.Lambda(equals);
+			
+			RestifyDbContext context = validationContext.GetRequiredService<RestifyDbContext>();
+			T? entity = context.Set<T>().Where(predicate).FirstOrDefault();
+			if (entity == null)
 			{
 				return ValidationResult.Success;
 			}
-			return new ValidationResult($"The specified {validationContext.MemberName} is already taken.");
+			
+			return new ValidationResult(ErrorMessage);
 		}
 	}
 }

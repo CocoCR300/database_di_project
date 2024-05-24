@@ -70,10 +70,6 @@ namespace Restify.API.Data
 			});
 			modelBuilder.Entity<Photo>(photo =>
 			{
-				// TODO: Not really like this in the database, but it is needed for this to work
-				// TODO: Why do I have to duplicate this definition for it to work with Lodging
-				photo.HasKey(p => p.FileName);
-				
 				photo.Property(p => p.FileName)
 					.IsRequired()
 					.HasColumnType("CHAR(75)");
