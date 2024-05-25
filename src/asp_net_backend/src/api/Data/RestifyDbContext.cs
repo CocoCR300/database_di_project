@@ -70,6 +70,8 @@ namespace Restify.API.Data
 			});
 			modelBuilder.Entity<Photo>(photo =>
 			{
+				photo.HasNoKey();
+				
 				photo.Property(p => p.FileName)
 					.IsRequired()
 					.HasColumnType("CHAR(75)");

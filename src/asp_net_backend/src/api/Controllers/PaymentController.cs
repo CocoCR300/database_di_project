@@ -86,8 +86,8 @@ public class PaymentController : BaseController
 
         string? path = _configuration["InvoiceImageFilesPath"];
         string filePath = Path.Combine(path, fileName);
-        byte[] imageBytes = Convert.FromBase64String(data.InvoiceImage);
-        System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
+        byte[] imageBytes = Convert.FromBase64String(data.InvoiceImageBase64);
+        System.IO.File.WriteAllBytes(filePath, imageBytes);
         
         return Ok(booking.Payment);
     }
@@ -100,7 +100,7 @@ public record PaymentRequestData
     [Required]
 	public decimal			Amount { get; set; }
     [Required]
-	public string           InvoiceImage { get; set; }
+	public string           InvoiceImageBase64 { get; set; }
     [Required]
 	public string           InvoiceImageFileExtension { get; set; }
 }

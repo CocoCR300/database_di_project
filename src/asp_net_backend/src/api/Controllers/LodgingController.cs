@@ -14,10 +14,12 @@ namespace Restify.API.Controllers;
 [Route("v{version:apiVersion}/[controller]")]
 public class LodgingController : BaseController
 {
+    private readonly IConfiguration _configuration;
     private readonly RestifyDbContext _context;
 
-    public LodgingController(RestifyDbContext context)
+    public LodgingController(IConfiguration configuration, RestifyDbContext context)
     {
+        _configuration = configuration;
         _context = context;
     }
 
@@ -56,6 +58,22 @@ public class LodgingController : BaseController
         string[] lodgingTypes = Enum.GetNames<LodgingType>();
 
         return lodgingTypes;
+    }
+    
+    [HttpGet("{lodgingId}/room")]
+    public ObjectResult GetRooms(uint lodgingId)
+    {
+        Lodging? lodging = _context.Lodging.Find(lodgingId);
+
+        if (lodging != null)
+        {
+            _context.Entry(lodging).Collection(l => l.Rooms).Load();
+            var rooms = lodging.Rooms
+                .Select(r => new { r.Number, r.TypeId });
+            return Ok(rooms);
+        }
+        
+        return NotFound("No existe un alojamiento con el identificador especificado");
     }
     
     [HttpGet("{lodgingId}/room_type")]
@@ -153,33 +171,69 @@ public class LodgingController : BaseController
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
-        if (lodging != null)
+        if (lodging == null)
         {
-            _context.Entry(lodging).Collection(l => l.PhoneNumbers).Load();
-            
-            bool noneExists = true;
-            for (int i = 0; i < lodging.PhoneNumbers.Count; ++i)
-            {
-                string phoneNumber = lodging.PhoneNumbers[i].Number;
-                if (phoneNumbers.Contains(phoneNumber))
-                {
-                    noneExists = false;
-                    lodging.PhoneNumbers.RemoveAt(i);
-                }
-            }
-                
-            _context.SaveChanges();
-
-            if (noneExists)
-            {
-                return NotFound(
-                    "El alojamiento no tiene asignado ninguno de los números de teléfono especificados.");
-            }
-                
-            return Ok("Los números de teléfono han sido eliminados con éxito.");
+            return NotFound("No existe un alojamiento con el identificador especificado.");
         }
-            
-        return NotFound("No existe un alojamiento con el identificador especificado.");
+
+        bool noneExists = true;
+        for (int i = 0; i < lodging.PhoneNumbers.Count; ++i)
+        {
+            string phoneNumber = lodging.PhoneNumbers[i].Number;
+            if (phoneNumbers.Contains(phoneNumber))
+            {
+                noneExists = false;
+                lodging.PhoneNumbers.RemoveAt(i);
+            }
+        }
+                
+        _context.SaveChanges();
+
+        if (noneExists)
+        {
+            return NotFound(
+                "El alojamiento no tiene asignado ninguno de los números de teléfono especificados.");
+        }
+                
+        return Ok("Los números de teléfono han sido eliminados con éxito.");
+
+    }
+    
+    [HttpDelete("{lodgingId}/photo")]
+    public ObjectResult DeletePhotos(uint lodgingId, string[] fileNames)
+    {
+        Lodging? lodging = _context.Find<Lodging>(lodgingId);
+
+        if (lodging == null)
+        {
+            return NotFound("No existe un alojamiento con el identificador especificado.");
+        }
+
+        string[] existingFileNames = lodging.Photos
+            .Select(p => p.FileName)
+            .OrderBy(n => n)
+            .ToArray();
+        
+        bool noneExists = true;
+        foreach (var fileName in fileNames)
+        {
+            int index = Array.BinarySearch(existingFileNames, fileName);
+            if (index > 0)
+            {
+                noneExists = false;
+                lodging.Photos.RemoveAt(index);
+            }
+        }
+                
+        _context.SaveChanges();
+
+        if (noneExists)
+        {
+            return NotFound("El alojamiento no tiene ninguna de las fotos especificadas.");
+        }
+                
+        return Ok("Los números de teléfono han sido eliminados con éxito.");
+
     }
     
     [HttpDelete("{lodgingId}/room_type")]
@@ -266,6 +320,64 @@ public class LodgingController : BaseController
         return NotFound("No existe un alojamiento con el identificador especificado.");
     }
 
+    [HttpPost("{lodgingId}/photo")]
+    public async Task<ObjectResult> StorePhotos(uint lodgingId, PhotoRequestData[] photosData)
+    {
+        Lodging? lodging = _context.Find<Lodging>(lodgingId);
+
+        if (lodging == null)
+        {
+            return NotFound("No existe un alojamiento con el identificador especificado.");
+        }
+
+        if (photosData.Length > 10)
+        {
+            return NotAcceptable("Puede agregar un máximo de 10 fotos por solicitud.");
+        }
+
+        if (lodging.Photos.Count == 100)
+        {
+            return NotAcceptable("Puede agregar un máximo de 100 fotos por alojamiento.");
+        }
+        
+        byte order = lodging.Photos.MaxBy(p => p.Ordering)?.Ordering ?? 0;
+        string[] fileNames = new string[photosData.Length];
+        for (int i = 0; i < photosData.Length; ++i)
+        {
+            PhotoRequestData data = photosData[i];
+            
+            string fileName = $"{Guid.NewGuid().ToString()}.{data.ImageFileExtension}";
+
+            fileNames[i] = fileName;
+            lodging.Photos.Add(new LodgingPhoto
+            {
+                FileName = fileName,
+                LodgingId = lodging.Id,
+                Ordering = order
+            });
+
+            ++order;
+        }
+
+        await _context.SaveChangesAsync();
+
+        List<Task> tasks = new List<Task>();
+        string? path = _configuration["LodgingImageFilesPath"];
+        for (int i = 0; i < photosData.Length; ++i)
+        {
+            var data = photosData[i];
+            string fileName = fileNames[i];
+            string filePath = Path.Combine(path, fileName);
+            byte[] imageBytes = Convert.FromBase64String(data.ImageBase64);
+            tasks.Add(System.IO.File.WriteAllBytesAsync(filePath, imageBytes));
+        }
+
+        await Task.WhenAll(tasks);
+
+        return Ok("Los beneficios han sido agregados con éxito.");
+
+    }
+    
     [HttpPost("{lodgingId}/room_type")]
     public ObjectResult StoreRoomTypes(uint lodgingId, RoomTypeRequestData[] roomTypes)
     {
@@ -392,4 +504,12 @@ public class RoomTypeRequestData
     public string Name { get; set; }
     [Required(ErrorMessage = "La capacidad del tipo de habitación es obligatorio.")]
     public uint Capacity { get; set; }
+}
+
+public class PhotoRequestData
+{
+    [Required]
+	public string ImageBase64 { get; set; }
+    [Required]
+	public string ImageFileExtension { get; set; }
 }
