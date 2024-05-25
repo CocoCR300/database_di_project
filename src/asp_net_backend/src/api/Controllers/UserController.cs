@@ -26,7 +26,7 @@ namespace Restify.API.Controllers
         {
             var users = _context.User
                 .Include(u => u.Person)
-                .Select(u => new { u.Name, u.Person, u.RoleId });
+                .Select(u => Models.User.WithoutPassword(u));
             
             return Ok(users);
         }
@@ -38,8 +38,6 @@ namespace Restify.API.Controllers
 
             if (user != null)
             {
-                _context.Entry(user).Reference(u => u.Person).Load();
-
                 return Ok(new
                 {
                     user.Name,
@@ -87,11 +85,10 @@ namespace Restify.API.Controllers
         [HttpDelete]
         public ObjectResult Delete(string userName)
         {
-            User user = _context.Find<User>(userName);
+            User? user = _context.Find<User>(userName);
 
             if (user != null)
             {
-                _context.Entry(user).Reference(u => u.Person).Load();
                 _context.Entry(user.Person).Collection(p => p.PhoneNumbers).Load();
 
                 _context.Remove(user.Person);
@@ -112,7 +109,6 @@ namespace Restify.API.Controllers
             if (user != null)
             {
                 bool noneExists = true;
-                _context.Entry(user).Reference(u => u.Person).Load();
 
                 for (int i = 0; i < user.Person.PhoneNumbers.Count; ++i)
                 {
@@ -179,14 +175,19 @@ namespace Restify.API.Controllers
         [HttpPost("{userName}/phone_number")]
         public ObjectResult StorePhoneNumbers(string userName, string[] phoneNumbers)
         {
-            User user = _context.Find<User>(userName);
+            User? user = _context.Find<User>(userName);
 
             if (user != null)
             {
                 _context.Entry(user).Reference(u => u.Person).Load();
-                _context.Entry(user.Person).Collection(p => p.PhoneNumbers).Load();
                 foreach (string phoneNumber in phoneNumbers)
                 {
+                    if (user.Person.PhoneNumbers.Any(p =>
+                            string.Equals(p.Number, phoneNumber)))
+                    {
+                        continue;
+                    }
+                    
                     user.Person.PhoneNumbers.Add(new PersonPhoneNumber
                     {
                         PersonId = user.Person.Id,
@@ -209,8 +210,6 @@ namespace Restify.API.Controllers
                 
                 if (user != null)
                 {
-                    _context.Entry(user).Reference(u => u.Person).Load();
-
                     if (data.UserName != null)
                     {
                         User? existingUser = _context.Find<User>(data.UserName);

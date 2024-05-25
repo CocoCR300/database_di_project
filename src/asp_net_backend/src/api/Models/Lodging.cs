@@ -16,6 +16,24 @@ public class Lodging
 	public IList<Room>					Rooms { get; }
 	public IList<RoomType>				RoomTypes { get; }
 	public Person						Owner { get; }
+	
+	public Lodging() {}
+
+	public Lodging(List<Room>? rooms, List<RoomType>? roomTypes)
+	{
+		Rooms = rooms;
+		RoomTypes = roomTypes;
+	}
+
+	public static bool OffersRooms(Lodging lodging)
+	{
+        return TypeOffersRooms(lodging.Type);
+	}
+	
+	public static bool TypeOffersRooms(LodgingType type)
+	{
+        return type is not LodgingType.Apartment and not LodgingType.VacationRental;
+	}
 }
 
 public enum LodgingType

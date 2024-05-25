@@ -61,6 +61,7 @@ namespace Restify.API.Data
 					.HasMaxLength(100);
 
 				user.HasOne(u => u.Role).WithMany().OnDelete(DeleteBehavior.Restrict);
+				user.Navigation(u => u.Person).AutoInclude();
 			});
 
 			modelBuilder.Entity<PhoneNumber>(phoneNumber =>
@@ -244,11 +245,6 @@ namespace Restify.API.Data
 				booking.Property(b => b.LodgingId)
 					.IsRequired();
 				
-				booking.Property(b => b.Status)
-					.HasColumnType("CHAR(50)")
-					.IsRequired(false)
-					.HasConversion<string>();
-
 				booking.HasMany(r => r.RoomBookings)
 					.WithOne(r => r.Booking)
 					.HasForeignKey(r => r.BookingId);

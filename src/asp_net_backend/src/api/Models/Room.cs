@@ -8,4 +8,11 @@ public class Room
 
 	public Lodging	Lodging { get; }
 	public RoomType	Type { get; }
+	
+	public Room() {}
+
+	public Room(RoomType type)
+	{
+		 Type = type;
+	}
 }

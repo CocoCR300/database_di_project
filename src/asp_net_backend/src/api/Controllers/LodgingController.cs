@@ -23,32 +23,96 @@ public class LodgingController : BaseController
     }
 
     [HttpGet]
-    public IEnumerable<Lodging> Get()
+    public IEnumerable<object> Get()
     {
         var lodgings = _context.Lodging
+            .AsNoTracking()
             .Include(l => l.Perks)
             .Include(l => l.PhoneNumbers)
+            .Include(l => l.RoomTypes)
             .Include(l => l.Owner)
-            .ThenInclude(p => p.User);
+            .AsEnumerable()
+            .Select<Lodging, object>(lodging =>
+            {
+                if (!Lodging.OffersRooms(lodging))
+                {
+                    _context.Entry(lodging).Collection(l => l.RoomTypes);
+                    RoomType roomType = lodging.RoomTypes[0];
+                    
+                    return new
+                    {
+                        lodging.Address,
+                        lodging.Description,
+                        lodging.EmailAddress,
+                        lodging.Id,
+                        lodging.Name,
+                        lodging.Owner,
+                        lodging.Perks,
+                        lodging.PhoneNumbers,
+                        lodging.Type,
+                        roomType.PerNightPrice,
+                        roomType.Fees
+                    };
+                }
+                
+                // Exclude photos data
+                return new
+                {
+                    lodging.Address,
+                    lodging.Description,
+                    lodging.EmailAddress,
+                    lodging.Id,
+                    lodging.Name,
+                    lodging.Owner,
+                    lodging.Perks,
+                    lodging.PhoneNumbers,
+                    lodging.Type
+                };
+            });
+        
         return lodgings;
     }
 
     [HttpGet("{lodgingId}")]
     public ObjectResult Get(uint lodgingId)
     {
-        var lodging = _context.Lodging.Find(lodgingId);
+        var lodging = _context.Lodging
+            .AsNoTracking()
+            .Where(l => l.Id == lodgingId)
+            .Include(l => l.Owner)
+            .Select(l => new
+            {
+                l.Address, l.Description, l.EmailAddress, l.Id, l.Name,
+                l.Owner, l.Perks, l.PhoneNumbers, l.Type,
+                l.RoomTypes
+            }).SingleOrDefault();
 
-        if (lodging != null)
+        if (lodging == null)
         {
-            _context.Entry(lodging).Reference(l => l.Owner).Load();
-            _context.Entry(lodging).Collection(l => l.Perks).Load();
-            _context.Entry(lodging).Collection(l => l.PhoneNumbers).Load();
-            _context.Entry(lodging.Owner).Reference(p => p.User).Load();
-
-            return Ok(lodging);
+            return NotFound("No existe un alojamiento con el identificador especificado.");
+        }
+        
+        if (!Lodging.TypeOffersRooms(lodging.Type))
+        {
+            RoomType roomType = lodging.RoomTypes[0];
+            
+            return Ok(new
+            {
+                lodging.Address,
+                lodging.Description,
+                lodging.EmailAddress,
+                lodging.Id,
+                lodging.Name,
+                lodging.Owner,
+                lodging.Perks,
+                lodging.PhoneNumbers,
+                lodging.Type,
+                roomType.PerNightPrice,
+                roomType.Fees
+            });
         }
 
-        return NotFound("No existe un alojamiento con el identificador especificado.");
+        return Ok(lodging);
     }
 
     [HttpGet("type")]
@@ -66,7 +130,7 @@ public class LodgingController : BaseController
 
         if (lodging == null)
         {
-            return NotFound("No existe un alojamiento con el identificador especificado");
+            return StandardResponses.IdDoesNotExist(this, "alojamiento");
         }
 
         _context.Entry(lodging).Collection(l => l.Photos).Load();
@@ -85,91 +149,58 @@ public class LodgingController : BaseController
         return Ok(await Task.WhenAll(photos));
     }
     
-    [HttpGet("{lodgingId}/room")]
-    public ObjectResult GetRooms(uint lodgingId)
-    {
-        Lodging? lodging = _context.Lodging.Find(lodgingId);
-
-        if (lodging != null)
-        {
-            _context.Entry(lodging).Collection(l => l.Rooms).Load();
-            var rooms = lodging.Rooms
-                .Select(r => new { r.Number, r.TypeId });
-            return Ok(rooms);
-        }
-        
-        return NotFound("No existe un alojamiento con el identificador especificado");
-    }
-    
-    [HttpGet("{lodgingId}/room_type")]
-    public ObjectResult GetRoomTypes(uint lodgingId)
-    {
-        Lodging? lodging = _context.Lodging.Find(lodgingId);
-
-        if (lodging != null)
-        {
-            _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
-            var roomTypes = lodging.RoomTypes
-                .Select(r => new { r.Id, r.Name, r.Capacity, r.PerNightPrice, r.Fees });
-            return Ok(roomTypes);
-        }
-        
-        return NotFound("No existe un alojamiento con el identificador especificado");
-    }
-        
-    [HttpGet("{lodgingId}/room_type/{roomTypeId}/photo")]
-    public async Task<ObjectResult> GetRoomTypePhotos(uint lodgingId, uint roomTypeId)
-    {
-        Lodging? lodging = _context.Lodging.Find(lodgingId);
-
-        if (lodging == null)
-        {
-            return NotFound("No existe un alojamiento con el identificador especificado");
-        }
-
-        _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
-        RoomType? roomType = lodging.RoomTypes.FirstOrDefault(r => r.Id == roomTypeId);
-        if (roomType == null)
-        {
-            return NotFound($"No existe un tipo de habitación con el identificador {roomTypeId} en el alojamiento.");
-        }
-
-        string? filesPath = _configuration["RoomTypeImageFilesPath"];
-        var photos = roomType.Photos
-            .Select(async p =>
-            {
-                string path = Path.Combine(filesPath, p.FileName);
-                var imageBytes = await System.IO.File.ReadAllBytesAsync(Path.Combine(filesPath, p.FileName));
-                return new
-                {
-                    p.FileName, imageBytes
-                };
-            });
-        return Ok(await Task.WhenAll(photos));
-    }
-    
     [HttpPost]
     public ObjectResult Post(LodgingRequestData data)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            Lodging lodging = new Lodging
-            {
-                Name = data.Name,
-                Address = data.Address,
-                Description = data.Description,
-                Type = data.Type,
-                EmailAddress = data.EmailAddress,
-                OwnerId = data.OwnerId
-            };
-
-            _context.Lodging.Add(lodging);
-            _context.SaveChanges();
-
-            return Ok("El alojamiento ha sido creado con éxito");
+            return BadRequest(ModelState);
         }
-            
-        return BadRequest(ModelState);
+
+        List<Room> rooms = null;
+        List<RoomType> roomTypes = null;
+        if (!Lodging.TypeOffersRooms(data.Type))
+        {
+            if (!data.PerNightPrice.HasValue || !data.Fees.HasValue)
+            {
+                return NotAcceptable(
+                    "El costo por noche y el impuesto es obligatorio para el tipo de alojamiento especificado.");
+            }
+
+            decimal perNightPrice = data.PerNightPrice.Value,
+                    fees = data.Fees.Value;
+            roomTypes = new List<RoomType>
+            {
+                new RoomType
+                {
+                    PerNightPrice = perNightPrice,
+                    Fees = fees
+                }
+            };
+            rooms = new List<Room>
+            {
+                new Room(roomTypes[0])
+                {
+                    Number = 0
+                }
+            };
+        }
+
+        Lodging lodging = new Lodging(rooms, roomTypes)
+        {
+            Name = data.Name,
+            Address = data.Address,
+            Description = data.Description,
+            Type = data.Type,
+            EmailAddress = data.EmailAddress,
+            OwnerId = data.OwnerId
+        };
+
+        _context.Lodging.Add(lodging);
+        _context.SaveChanges();
+
+        return Ok("El alojamiento ha sido creado con éxito");
+
     }
 
     [HttpDelete]
@@ -297,91 +328,6 @@ public class LodgingController : BaseController
         return Ok("Las fotos han sido eliminadas con éxito.");
     }
     
-    [HttpDelete("{lodgingId}/room_type")]
-    public ObjectResult DeleteRoomTypes(uint lodgingId, uint[] roomTypeIds)
-    {
-        Lodging? lodging = _context.Find<Lodging>(lodgingId);
-
-        if (lodging != null)
-        {
-            _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
-            
-            bool noneExists = true;
-            for (int i = 0; i < lodging.RoomTypes.Count; ++i)
-            {
-                uint roomTypeId = lodging.RoomTypes[i].Id;
-                if (roomTypeIds.Contains(roomTypeId))
-                {
-                    noneExists = false;
-                    lodging.RoomTypes.RemoveAt(i);
-                }
-            }
-                
-            _context.SaveChanges();
-
-            if (noneExists)
-            {
-                return NotFound(
-                    "El alojamiento no tiene ninguno de los tipos de habitación especificados.");
-            }
-                
-            return Ok("Las tipos de habitación han sido eliminadas con éxito.");
-        }
-            
-        return NotFound("No existe un alojamiento con el identificador especificado.");
-    }
-    
-    [HttpDelete("{lodgingId}/room_type/{roomTypeId}")]
-    public ObjectResult DeleteRoomTypePhotos(uint lodgingId, uint roomTypeId, string[] fileNames)
-    {
-        Lodging? lodging = _context.Find<Lodging>(lodgingId);
-
-        if (lodging == null)
-        {
-            return NotFound("No existe un alojamiento con el identificador especificado.");
-        }
-        
-        _context.Entry(lodging)
-            .Collection(l => l.RoomTypes)
-            .Load();
-
-        RoomType? roomType = lodging.RoomTypes.FirstOrDefault(r => r.Id == roomTypeId);
-        if (roomType == null)
-        {
-            return NotFound($"No existe un tipo de habitación con el identificador {roomTypeId} en este alojamiento.");
-        }
-        
-        bool noneExists = true;
-        int count = fileNames.Length;
-        List<string> fileNamesToDelete = new List<string>(fileNames.Length);
-        for (int i = 0; count > 0 && i < roomType.Photos.Count; ++i)
-        {
-            string fileName = roomType.Photos[i].FileName;
-            if (Array.Exists(fileNames, n => n == fileName))
-            {
-                --count;
-                noneExists = false;
-                roomType.Photos.RemoveAt(i);
-                fileNamesToDelete.Add(fileName);
-            }
-        }
-                
-        _context.SaveChanges();
-
-        string? filesPath = _configuration["RoomTypeImageFilesPath"];
-        foreach (string fileName in fileNamesToDelete)
-        {
-            string path = Path.Combine(filesPath, fileName);
-            System.IO.File.Delete(path);
-        }
-
-        if (noneExists)
-        {
-            return NotFound("El tipo de habitación no tiene ninguna de las fotos especificadas.");
-        }
-                
-        return Ok("Las fotos han sido eliminadas con éxito.");
-    }
     
     [HttpPost("{lodgingId}/perk")]
     public ObjectResult StorePerks(uint lodgingId, uint[] perkIds)
@@ -416,26 +362,32 @@ public class LodgingController : BaseController
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
-        if (lodging != null)
+        if (lodging == null)
         {
-            foreach (string phoneNumber in phoneNumbers)
-            {
-                lodging.PhoneNumbers.Add(new LodgingPhoneNumber
-                {
-                    LodgingId = lodging.Id,
-                    Number = phoneNumber
-                });
-            }
-            _context.SaveChanges();
-            return Ok("Los números de teléfono han sido agregados con éxito.");
+            return NotFound("No existe un alojamiento con el identificador especificado.");
         }
-            
-        return NotFound("No existe un alojamiento con el identificador especificado.");
+
+        foreach (string phoneNumber in phoneNumbers)
+        {
+            lodging.PhoneNumbers.Add(new LodgingPhoneNumber
+            {
+                LodgingId = lodging.Id,
+                Number = phoneNumber
+            });
+        }
+        _context.SaveChanges();
+        return Ok("Los números de teléfono han sido agregados con éxito.");
+
     }
 
     [HttpPost("{lodgingId}/photo")]
     public async Task<ObjectResult> StorePhotos(uint lodgingId, PhotoRequestData[] photosData)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
         if (lodging == null)
@@ -491,148 +443,38 @@ public class LodgingController : BaseController
 
     }
     
-    [HttpPost("{lodgingId}/room_type")]
-    public ObjectResult StoreRoomTypes(uint lodgingId, RoomTypeRequestData[] roomTypes)
+    [HttpPatch("{lodgingId}")]
+    public ObjectResult Update(string lodgingId, LodgingPatchRequestData data)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            Lodging? lodging = _context.Find<Lodging>(lodgingId);
-
-            if (lodging != null)
-            {
-                foreach (RoomTypeRequestData roomType in roomTypes)
-                {
-                    lodging.RoomTypes.Add(new RoomType 
-                    {
-                        LodgingId = lodging.Id,
-                        Name = roomType.Name,
-                        Capacity = roomType.Capacity,
-                        PerNightPrice = roomType.PerNightPrice,
-                        Fees = roomType.Fees
-                    });
-                }
-
-                try
-                {
-                    _context.Database.BeginTransaction();
-                    _context.SaveChanges();
-                    _context.Database.CommitTransaction();
-                    
-                    return Ok("Los tipos de habitación han sido agregados con éxito.");
-                }
-                catch (Exception ex)
-                {
-                    _context.Database.RollbackTransaction();
-                    return NotAcceptable("Ha ocurrido un error al insertar los datos.");
-                }
-                
-            }
-                
-            return NotFound("No existe un alojamiento con el identificador especificado.");
+            return BadRequest(ModelState);
         }
-        
-        return BadRequest("Datos inválidos.");
-    }
-        
-    [HttpPost("{lodgingId}/room_type/{roomTypeId}/photo")]
-    public async Task<ObjectResult> StoreRoomTypePhotos(uint lodgingId, uint roomTypeId, PhotoRequestData[] photosData)
-    {
-        Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
+        Lodging? lodging = _context.Find<Lodging>(lodgingId);
         if (lodging == null)
         {
-            return NotFound("No existe un alojamiento con el identificador especificado.");
-        }
-
-        if (photosData.Length > 10)
-        {
-            return NotAcceptable("Puede agregar un máximo de 10 fotos por solicitud.");
-        }
-
-        _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
-        RoomType? roomType = lodging.RoomTypes.FirstOrDefault(r => r.Id == roomTypeId);
-
-        if (roomType == null)
-        {
-            return NotFound($"No existe un tipo de habitación con el identificador {roomTypeId} en el alojamiento.");
-        }
-        
-        if (roomType.Photos.Count == 100)
-        {
-            return NotAcceptable("Puede agregar un máximo de 100 fotos por alojamiento.");
-        }
-        
-        byte order = lodging.Photos.MaxBy(p => p.Ordering)?.Ordering ?? 0;
-        string[] fileNames = new string[photosData.Length];
-        for (int i = 0; i < photosData.Length; ++i)
-        {
-            PhotoRequestData data = photosData[i];
-            
-            string fileName = $"{Guid.NewGuid().ToString()}.{data.ImageFileExtension}";
-
-            fileNames[i] = fileName;
-            roomType.Photos.Add(new RoomTypePhoto 
-            {
-                FileName = fileName,
-                RoomTypeId = roomTypeId,
-                Ordering = order
-            });
-
-            ++order;
-        }
-
-        await _context.SaveChangesAsync();
-
-        List<Task> tasks = new List<Task>();
-        string? path = _configuration["RoomTypeImageFilesPath"];
-        for (int i = 0; i < photosData.Length; ++i)
-        {
-            var data = photosData[i];
-            string fileName = fileNames[i];
-            string filePath = Path.Combine(path, fileName);
-            byte[] imageBytes = Convert.FromBase64String(data.ImageBase64);
-            tasks.Add(System.IO.File.WriteAllBytesAsync(filePath, imageBytes));
-        }
-
-        await Task.WhenAll(tasks);
-
-        return Ok("Las fotos han sido agregadas con éxito.");
-
-    }
-    [HttpPatch("{bookingId}")]
-    public ObjectResult Update(string bookingId, LodgingPatchRequestData data)
-    {
-        if (ModelState.IsValid)
-        {
-            Lodging? lodging = _context.Find<Lodging>(bookingId);
-
-            if (lodging != null)
-            {
-                if (data.OwnerId != null)
-                    lodging.OwnerId = data.OwnerId.Value;
-                    
-                if (data.Name != null)
-                    lodging.Name = data.Name;
-                if (data.Description != null)
-                    lodging.Description = data.Description;
-                if (data.Address != null)
-                    lodging.Address = data.Address;
-                if (data.Type != null)
-                    lodging.Type = data.Type.Value;
-                if (data.EmailAddress != null)
-                    lodging.EmailAddress = data.EmailAddress;
-
-                _context.SaveChanges();
-                return Ok("La modificación del alojamiento ha sido realizada con éxito.");
-            }
-                
             return NotFound("No existe un alojamiento con el nombre especificado.");
         }
-            
-        return BadRequest("Datos inválidos.");
+
+        if (data.OwnerId != null)
+            lodging.OwnerId = data.OwnerId.Value;
+                    
+        if (data.Name != null)
+            lodging.Name = data.Name;
+        if (data.Description != null)
+            lodging.Description = data.Description;
+        if (data.Address != null)
+            lodging.Address = data.Address;
+        if (data.Type != null)
+            lodging.Type = data.Type.Value;
+        if (data.EmailAddress != null)
+            lodging.EmailAddress = data.EmailAddress;
+
+        _context.SaveChanges();
+        return Ok("La modificación del alojamiento ha sido realizada con éxito.");
     }
 }
-
 
 public class LodgingRequestData
 {
@@ -654,6 +496,8 @@ public class LodgingRequestData
     [Required(ErrorMessage = "El identificador del arrendador es obligatorio.")]
     [Exists<Person>(ErrorMessage = "No existe un arrendador con el identificador especificado.")]
     public uint     OwnerId { get; set; }
+    public decimal? Fees { get; set; }
+    public decimal? PerNightPrice { get; set; }
 }
     
 public class LodgingPatchRequestData
@@ -670,24 +514,4 @@ public class LodgingPatchRequestData
     public string?   EmailAddress { get; set; }
     [Exists<Person>(ErrorMessage = "No existe un arrendador con el identificador especificado.")]
     public uint?    OwnerId { get; set; }
-}
-
-public class RoomTypeRequestData 
-{
-    [Required(ErrorMessage = "El impuesto del tipo de habitación es obligatorio.")]
-    public decimal Fees { get; set; }
-    [Required(ErrorMessage = "El precio por noche del tipo de habitación es obligatorio.")]
-    public decimal PerNightPrice { get; set; }
-    [Required(ErrorMessage = "El nombre del tipo de habitación es obligatorio.")]
-    public string Name { get; set; }
-    [Required(ErrorMessage = "La capacidad del tipo de habitación es obligatorio.")]
-    public uint Capacity { get; set; }
-}
-
-public class PhotoRequestData
-{
-    [Required]
-	public string ImageBase64 { get; set; }
-    [Required]
-	public string ImageFileExtension { get; set; }
 }

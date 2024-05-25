@@ -8,4 +8,15 @@ public class User
 
 	public Person	Person { get; set; }
 	public UserRole	Role { get; set; }
+
+	public static User WithoutPassword(User user)
+	{
+		return new User
+		{
+			RoleId = user.RoleId,
+			Name = user.Name,
+			Person = user.Person,
+			Role = user.Role
+		};
+	}
 }

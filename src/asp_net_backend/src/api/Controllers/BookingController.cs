@@ -34,11 +34,12 @@ public class BookingController : BaseController
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
         if (lodging != null)
         {
+            // TODO: Should the single room booking data for lodgings "with no rooms" be inlined here?
             var bookings = _context.Booking
                 .AsNoTracking()
                 .Where(b => b.LodgingId == lodgingId)
                 .Include(b => b.RoomBookings)
-                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Status, b.Payment, b.RoomBookings });
+                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Payment, b.RoomBookings });
             
             return Ok(bookings);
         }
@@ -52,12 +53,12 @@ public class BookingController : BaseController
         User? user = _context.Find<User>(userName);
         if (user != null)
         {
-            _context.Entry(user).Reference(u => u.Person).Load();
+            // TODO: Should the single room booking data for lodgings "with no rooms" be inlined here?
             var bookings = _context.Booking
                 .AsNoTracking()
                 .Where(b => b.CustomerId == user.Person.Id)
                 .Include(b => b.RoomBookings)
-                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Status, b.Payment, b.RoomBookings });
+                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Payment, b.RoomBookings });
             
             return Ok(bookings);
         }

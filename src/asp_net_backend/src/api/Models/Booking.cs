@@ -3,7 +3,6 @@
 public class Booking
 {
 	public uint				Id { get; set; }
-	public BookingStatus?	Status { get; set; }
 	public uint				CustomerId { get; set; }
 	public uint				LodgingId { get; set; }
 
@@ -12,10 +11,7 @@ public class Booking
 	public Person				Customer { get; }
 	public Lodging				Lodging { get; }
 
-	public Booking()
-	{
-		
-	}
+	public Booking() {}
 	
 	public Booking(IList<RoomBooking> roomBookings)
 	{

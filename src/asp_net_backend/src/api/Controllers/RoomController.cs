@@ -23,9 +23,10 @@ public class RoomController : BaseController
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
-        if (lodging == null)
+        ObjectResult? result = StandardValidations.ValidateLodging(this, lodging);
+        if (result != null)
         {
-            return NotFound("No existe un alojamiento con el identificador especificado");
+            return result;
         }
         
         _context.Entry(lodging).Collection(l => l.Rooms).Load();
@@ -39,9 +40,10 @@ public class RoomController : BaseController
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
-        if (lodging == null)
+        ObjectResult? result = StandardValidations.ValidateLodging(this, lodging);
+        if (result != null)
         {
-            return NotFound("No existe un alojamiento con el identificador especificado.");
+            return result;
         }
         
         _context.Entry(lodging).Collection(l => l.Rooms).Load();
@@ -70,11 +72,17 @@ public class RoomController : BaseController
     [HttpPost("{lodgingId}")]
     public ObjectResult StoreRooms(uint lodgingId, RoomRequestData[] rooms)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
-        if (lodging == null)
+        ObjectResult? result = StandardValidations.ValidateLodging(this, lodging);
+        if (result != null)
         {
-            return NotFound("No existe un alojamiento con el identificador especificado.");
+            return result;
         }
         
         uint[] roomsNumbersOrdered = lodging.Rooms
@@ -126,11 +134,17 @@ public class RoomController : BaseController
     [HttpPost("{lodgingId}/sequence")]
     public ObjectResult StoreRoomSequence(uint lodgingId, RoomSequenceRequestData roomSequenceData)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
-        if (lodging == null)
+        ObjectResult? result = StandardValidations.ValidateLodging(this, lodging);
+        if (result != null)
         {
-            return NotFound("No existe un alojamiento con el identificador especificado.");
+            return result;
         }
 
         if (roomSequenceData.StartNumber > roomSequenceData.EndNumber)
