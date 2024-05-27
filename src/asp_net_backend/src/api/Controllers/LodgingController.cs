@@ -22,40 +22,56 @@ public class LodgingController : BaseController
         _context = context;
     }
 
-    [HttpGet]
-    public IEnumerable<object> Get()
+    [HttpGet("{pageSize}/{page}")]
+    public ObjectResult Index(
+        [FromQuery] string? lodgingName,
+        [FromQuery] string? perkIds,
+        [Range(0, int.MaxValue)] int pageSize = 10,
+        [Range(0, int.MaxValue)] int page = 1)
     {
-        var lodgings = _context.Lodging
+        IQueryable<Lodging> lodgingsQuery = _context.Lodging
             .AsNoTracking()
             .Include(l => l.Perks)
             .Include(l => l.PhoneNumbers)
             .Include(l => l.RoomTypes)
-            .Include(l => l.Owner)
-            .AsEnumerable()
-            .Select<Lodging, object>(lodging =>
+            .Include(l => l.Owner);
+
+        if (!string.IsNullOrWhiteSpace(lodgingName))
+        {
+            lodgingsQuery = lodgingsQuery.Where(l => l.Name.Contains(lodgingName));
+        }
+        
+        // Switch to "API-side" evaluation
+        IEnumerable<Lodging> lodgings = lodgingsQuery.AsEnumerable();
+        
+        if (!string.IsNullOrWhiteSpace(perkIds))
+        {
+            string[] perkIdsStringArray = perkIds.Split(',');
+            uint[] perkIdsArray = new uint[perkIdsStringArray.Length];
+            for (int i = 0; i < perkIdsStringArray.Length; ++i)
             {
-                if (!Lodging.OffersRooms(lodging))
+                string perkIdString = perkIdsStringArray[i];
+                if (uint.TryParse(perkIdString, out uint perkId))
                 {
-                    _context.Entry(lodging).Collection(l => l.RoomTypes);
-                    RoomType roomType = lodging.RoomTypes[0];
-                    
-                    return new
-                    {
-                        lodging.Address,
-                        lodging.Description,
-                        lodging.EmailAddress,
-                        lodging.Id,
-                        lodging.Name,
-                        lodging.Owner,
-                        lodging.Perks,
-                        lodging.PhoneNumbers,
-                        lodging.Type,
-                        roomType.PerNightPrice,
-                        roomType.Fees
-                    };
+                    perkIdsArray[i] = perkId;
                 }
+                else
+                {
+                    return NotAcceptable(
+                        "El parámetro 'perkIds' debe ser una lista de números enteros positivos separados por comas.");
+                }
+            }
+            
+            lodgings = lodgings.Where(l => perkIdsArray.All(p => l.Perks.Any(p1 => p == p1.Id)));
+        }
+        
+        object[] lodgingObjects = lodgings.Select<Lodging, object>(lodging =>
+        {
+            if (!Lodging.OffersRooms(lodging))
+            {
+                _context.Entry(lodging).Collection(l => l.RoomTypes);
+                RoomType roomType = lodging.RoomTypes[0];
                 
-                // Exclude photos data
                 return new
                 {
                     lodging.Address,
@@ -66,11 +82,28 @@ public class LodgingController : BaseController
                     lodging.Owner,
                     lodging.Perks,
                     lodging.PhoneNumbers,
-                    lodging.Type
+                    lodging.Type,
+                    roomType.PerNightPrice,
+                    roomType.Fees
                 };
-            });
+            }
+            
+            // Exclude photos data
+            return new
+            {
+                lodging.Address,
+                lodging.Description,
+                lodging.EmailAddress,
+                lodging.Id,
+                lodging.Name,
+                lodging.Owner,
+                lodging.Perks,
+                lodging.PhoneNumbers,
+                lodging.Type
+            };
+        }).ToArray();
         
-        return lodgings;
+        return Ok(PaginatedList<object>.Create(lodgingObjects, lodgingObjects.Length, page, pageSize));
     }
 
     [HttpGet("{lodgingId}")]

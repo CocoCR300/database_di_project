@@ -133,7 +133,6 @@ CREATE TABLE IF NOT EXISTS Booking (
   bookingId 		INT 		UNSIGNED 	NOT NULL	AUTO_INCREMENT,
   customerPersonId 	INT 		UNSIGNED 	NOT NULL,
   lodgingId 		INT 		UNSIGNED 	NOT NULL,
-  status 			CHAR(50)					NULL	DEFAULT NULL,
   
   PRIMARY KEY (bookingId),
   
@@ -206,7 +205,7 @@ CREATE TABLE IF NOT EXISTS Room (
   PRIMARY KEY (lodgingId, roomNumber),
   
   INDEX FK_INDEX_LODGING_ROOM (lodgingId),
-  INDEX FK_INDEX_ROOM_ROOM_TYPE (lodgingId),
+  INDEX FK_INDEX_ROOM_ROOM_TYPE (roomTypeId),
   
   CONSTRAINT FK_LODGING_ROOM FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
 	ON DELETE NO ACTION
