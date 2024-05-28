@@ -28,39 +28,53 @@ public class BookingController : BaseController
         return  Enum.GetNames<BookingStatus>();
     }
     
-    [HttpGet("lodging/{lodgingId}")]
-    public ObjectResult GetLodgingBookings(uint lodgingId)
+    [HttpGet("lodging/{lodgingId}/{pageSize}/{page}")]
+    public async Task<ObjectResult> GetLodgingBookings(uint lodgingId,
+        [FromQuery] DateOnly? startDate,
+        [FromQuery] DateOnly? endDate,
+        [Range(0, int.MaxValue)] int pageSize = 10,
+        [Range(0, int.MaxValue)] int page = 1)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
         if (lodging != null)
         {
-            // TODO: Should the single room booking data for lodgings "with no rooms" be inlined here?
-            var bookings = _context.Booking
+            IQueryable<Booking> bookings = _context.Booking
                 .AsNoTracking()
                 .Where(b => b.LodgingId == lodgingId)
-                .Include(b => b.RoomBookings)
-                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Payment, b.RoomBookings });
+                .Include(b => b.RoomBookings);
             
-            return Ok(bookings);
+            bookings = StandardFilters.BookingByDates(bookings, startDate, endDate);
+            
+            IQueryable<object> bookingsInfo = bookings 
+                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Payment, b.RoomBookings });
+            return Ok(await PaginatedList<object>.CreateAsync(bookingsInfo, page, pageSize));
         }
 
         return NotFound("No existe ningún alojamiento con el identificador especificado.");
     }
     
-    [HttpGet("user/{userName}")]
-    public ObjectResult GetUserBookings(string userName)
+    [HttpGet("user/{userName}/{pageSize}/{page}")]
+    public async Task<ObjectResult> GetUserBookings(string userName,
+        [FromQuery] uint? lodgingId,
+        [FromQuery] DateOnly? startDate,
+        [FromQuery] DateOnly? endDate,
+        [Range(0, int.MaxValue)] int pageSize = 10,
+        [Range(0, int.MaxValue)] int page = 1)
     {
         User? user = _context.Find<User>(userName);
         if (user != null)
         {
-            // TODO: Should the single room booking data for lodgings "with no rooms" be inlined here?
-            var bookings = _context.Booking
+            IQueryable<Booking> bookings = _context.Booking
                 .AsNoTracking()
                 .Where(b => b.CustomerId == user.Person.Id)
-                .Include(b => b.RoomBookings)
-                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Payment, b.RoomBookings });
+                .Include(b => b.RoomBookings);
+
+            bookings = StandardFilters.BookingByLodging(bookings, lodgingId);
+            bookings = StandardFilters.BookingByDates(bookings, startDate, endDate);
             
-            return Ok(bookings);
+            IQueryable<object> bookingsInfo = bookings 
+                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Payment, b.RoomBookings });
+            return Ok(await PaginatedList<object>.CreateAsync(bookingsInfo, page, pageSize));
         }
 
         return NotFound("No existe ningún usuario con el nombre especificado.");

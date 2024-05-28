@@ -21,14 +21,21 @@ namespace Restify.API.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public ObjectResult Get()
+        [HttpGet("{pageSize}/{page}")]
+        public async Task<ObjectResult> Get(uint? roleId,
+            [Range(0, int.MaxValue)] int pageSize = 10,
+            [Range(0, int.MaxValue)] int page = 1)
         {
             var users = _context.User
                 .Include(u => u.Person)
                 .Select(u => Models.User.WithoutPassword(u));
+
+            if (roleId.HasValue)
+            {
+                users = users.Where(u => u.RoleId == roleId);
+            }
             
-            return Ok(users);
+            return Ok(await PaginatedList<User>.CreateAsync(users, page, pageSize));
         }
 
         [HttpGet("{userName}")]

@@ -22,7 +22,10 @@ public class RoomTypeController : BaseController
     }
     
     [HttpGet("{lodgingId}")]
-    public ObjectResult GetRoomTypes(uint lodgingId)
+    public ObjectResult GetRoomTypes(uint lodgingId,
+        [FromQuery] uint? minCapacity,
+        [FromQuery] decimal? minPerNightPrice,
+        [FromQuery] decimal? maxPerNightPrice)
     {
         Lodging? lodging = _context.Lodging.Find(lodgingId);
 
@@ -35,6 +38,21 @@ public class RoomTypeController : BaseController
         _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
         var roomTypes = lodging.RoomTypes
             .Select(r => new { r.Id, r.Name, r.Capacity, r.PerNightPrice, r.Fees });
+
+        if (minCapacity.HasValue)
+        {
+            roomTypes = roomTypes.Where(r => r.Capacity >= minCapacity);
+        }
+
+        if (minPerNightPrice.HasValue)
+        {
+            roomTypes = roomTypes.Where(r => r.PerNightPrice >= minPerNightPrice);
+        }
+        
+        if (maxPerNightPrice.HasValue)
+        {
+            roomTypes = roomTypes.Where(r => r.PerNightPrice <= maxPerNightPrice);
+        }
         
         return Ok(roomTypes);
     }

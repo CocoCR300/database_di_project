@@ -25,6 +25,7 @@ public class LodgingController : BaseController
     [HttpGet("{pageSize}/{page}")]
     public ObjectResult Index(
         [FromQuery] string? lodgingName,
+        [FromQuery] string? lodgingTypes,
         [FromQuery] string? perkIds,
         [Range(0, int.MaxValue)] int pageSize = 10,
         [Range(0, int.MaxValue)] int page = 1)
@@ -40,29 +41,48 @@ public class LodgingController : BaseController
         {
             lodgingsQuery = lodgingsQuery.Where(l => l.Name.Contains(lodgingName));
         }
+
+        if (!string.IsNullOrWhiteSpace(lodgingTypes))
+        {
+            LodgingType[] lodgingTypeValues = Enum.GetValues<LodgingType>();
+            bool ParseFunction(string input, out LodgingType lodgingTypeName)
+            {
+                if (int.TryParse(input, out int index) && index < lodgingTypeValues.Length)
+                {
+                    lodgingTypeName = lodgingTypeValues[index];
+                    return true;
+                }
+
+                lodgingTypeName = default;
+                return false;
+            }
+
+            if (TryParseCommaSeparatedList(lodgingTypes, ParseFunction, out LodgingType[]? lodgingTypeNumbers))
+            {
+                lodgingsQuery = lodgingsQuery.Where(l => lodgingTypeNumbers.Contains(l.Type));
+            }
+            else
+            {
+                return NotAcceptable(
+                    "El parámetro 'lodgingTypes' debe ser una lista de números enteros positivos separados por comas.");
+            }
+            
+        }
         
         // Switch to "API-side" evaluation
         IEnumerable<Lodging> lodgings = lodgingsQuery.AsEnumerable();
-        
         if (!string.IsNullOrWhiteSpace(perkIds))
         {
-            string[] perkIdsStringArray = perkIds.Split(',');
-            uint[] perkIdsArray = new uint[perkIdsStringArray.Length];
-            for (int i = 0; i < perkIdsStringArray.Length; ++i)
+            if (TryParseCommaSeparatedList(perkIds, uint.TryParse, out uint[]? perkIdsArray))
             {
-                string perkIdString = perkIdsStringArray[i];
-                if (uint.TryParse(perkIdString, out uint perkId))
-                {
-                    perkIdsArray[i] = perkId;
-                }
-                else
-                {
-                    return NotAcceptable(
-                        "El parámetro 'perkIds' debe ser una lista de números enteros positivos separados por comas.");
-                }
+                lodgings = lodgings.Where(l => perkIdsArray.All(p => l.Perks.Any(p1 => p == p1.Id)));
+            }
+            else
+            {
+                return NotAcceptable(
+                    "El parámetro 'perkIds' debe ser una lista de números enteros positivos separados por comas.");
             }
             
-            lodgings = lodgings.Where(l => perkIdsArray.All(p => l.Perks.Any(p1 => p == p1.Id)));
         }
         
         object[] lodgingObjects = lodgings.Select<Lodging, object>(lodging =>
