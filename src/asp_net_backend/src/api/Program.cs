@@ -37,7 +37,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContext<RestifyDbContext>(
 	options =>
 	{
-		string connectionString = "server=localhost;user=root;password=;database=restify_v2";
+		string connectionString = "server=localhost;user=root;password=;database=restify";
 		options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
 			.LogTo(Console.WriteLine, LogLevel.Information)
 			.EnableSensitiveDataLogging()
@@ -60,7 +60,6 @@ builder.Services.AddApiVersioning(config =>
 var app = builder.Build();
 app.UsePathBase("/api");
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

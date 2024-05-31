@@ -21,7 +21,7 @@ namespace Restify.API.Data
 		{
 			if (!optionsBuilder.IsConfigured)
 			{
-				string connectionString = "server=localhost;user=root;password=;database=restify_v2";
+				string connectionString = "server=localhost;user=root;password=;database=restify";
 				optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 			}
 		}

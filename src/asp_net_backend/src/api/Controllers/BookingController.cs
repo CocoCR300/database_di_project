@@ -25,7 +25,7 @@ public class BookingController : BaseController
     [HttpGet("status")]
     public string[] GetStatuses()
     {
-        return  Enum.GetNames<BookingStatus>();
+        return Enum.GetNames<BookingStatus>();
     }
     
     [HttpGet("lodging/{lodgingId}/{pageSize}/{page}")]
@@ -411,7 +411,6 @@ public class BookingController : BaseController
         Dictionary<uint, List<Room>> availableRoomsByType = new Dictionary<uint, List<Room>>(requestedRoomsDataByType.Count);
         foreach (var requestedRoomData in requestedRoomsDataByType)
         {
-            // TODO: Check if the lodging type is a house or whatever to not check the room bookings
             StringBuilder sqlQuery = new StringBuilder($"""
                 SELECT * FROM Room AS r
                 WHERE r.lodgingId = {lodgingId} AND r.roomTypeId = {requestedRoomData.Key}

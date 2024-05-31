@@ -13,9 +13,27 @@ namespace Restify.API.Controllers;
 public class RoomController : BaseController
 {
     private RestifyDbContext _context;
+    
     public RoomController(RestifyDbContext context)
     {
         _context = context;
+    }
+    
+    [HttpGet("{lodgingId}/available/{roomTypeId}/{bookingStartDate}/{bookingEndDate}")]
+    public ObjectResult GetAvailableRoomsOfType(uint lodgingId,
+        uint roomTypeId, DateOnly bookingStartDate, DateOnly bookingEndDate)
+    {
+        IQueryable<uint> bookedRoomsNumbers = _context.RoomBooking
+            .Where(r => r.LodgingId == lodgingId && r.Room.TypeId == roomTypeId
+                                                 && (r.Status == BookingStatus.Created ||
+                                                     r.Status == BookingStatus.Confirmed)
+                                                 && r.StartDate < bookingEndDate && r.EndDate > bookingStartDate)
+            .Select(r => r.RoomNumber);
+
+        IQueryable<Room> availableRoomsOfType = _context.Room
+            .Where(r => !bookedRoomsNumbers.Contains(r.Number));
+        
+        return Ok(availableRoomsOfType);
     }
     
     [HttpGet("{lodgingId}")]

@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS restify_v2;
+CREATE DATABASE IF NOT EXISTS restify;
 
-USE restify_v2;
+USE restify;
 
 -- Tabla "Rol de usuario"
 CREATE TABLE IF NOT EXISTS UserRole (
