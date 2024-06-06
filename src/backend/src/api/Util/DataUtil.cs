@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Restify.API.Util;
 
-public class DataUtil
+public static class DataUtil
 {
     public static string GetHash(string data)
     {
@@ -13,4 +13,12 @@ public class DataUtil
 
         return hashString;
     }
+
+    public static async Task SaveFile(string filePath, IFormFile file)
+    {
+        await using (var stream = File.Create(filePath))
+        {
+            await file.CopyToAsync(stream);
+        }
+    } 
 }

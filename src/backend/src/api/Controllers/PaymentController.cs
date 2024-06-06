@@ -86,7 +86,17 @@ public class PaymentController : BaseController
             return NotFound("Ya hay un pago asociado a esta reservación.");
         }
 
-        string fileName = $"{Guid.NewGuid().ToString()}.{data.InvoiceImageFileExtension}";
+        string fileExtension = Path.GetExtension(data.InvoiceImageFile.FileName).ToLowerInvariant();
+        
+        string fileName;
+        if (!fileExtension.Equals(string.Empty))
+        {
+            fileName = $"{Guid.NewGuid().ToString()}{fileExtension}";
+        }
+        else
+        {
+            fileName = Guid.NewGuid().ToString();
+        }
         
         booking.Payment = new Payment
         {
@@ -98,9 +108,14 @@ public class PaymentController : BaseController
         _context.SaveChanges();
 
         string? path = _configuration["InvoiceImageFilesPath"];
+        Directory.CreateDirectory(path);
+        
         string filePath = Path.Combine(path, fileName);
-        byte[] imageBytes = Convert.FromBase64String(data.InvoiceImageBase64);
-        System.IO.File.WriteAllBytes(filePath, imageBytes);
+
+        using (FileStream fileStream = System.IO.File.Create(filePath))
+        {
+            data.InvoiceImageFile.CopyTo(fileStream);
+        }
         
         return Ok(booking.Payment);
     }
@@ -108,12 +123,11 @@ public class PaymentController : BaseController
 
 public record PaymentRequestData
 {
-    [Microsoft.Build.Framework.Required]
+    [Required]
 	public DateTimeOffset	DateAndTime { get; set; }
-    [Microsoft.Build.Framework.Required]
+    [Required]
 	public decimal			Amount { get; set; }
-    [Microsoft.Build.Framework.Required]
-	public string           InvoiceImageBase64 { get; set; }
-    [Microsoft.Build.Framework.Required]
-	public string           InvoiceImageFileExtension { get; set; }
+    [FromForm]
+    [Required]
+	public IFormFile        InvoiceImageFile { get; set; }
 }

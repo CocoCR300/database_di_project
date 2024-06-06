@@ -37,7 +37,7 @@ public class RoomTypeController : BaseController
         
         _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
         var roomTypes = lodging.RoomTypes
-            .Select(r => new { r.Id, r.Name, r.Capacity, r.PerNightPrice, r.Fees });
+            .Select(r => new { r.Id, r.Name, r.Capacity, r.PerNightPrice, r.Fees, r.Photos });
 
         if (minCapacity.HasValue)
         {
@@ -55,38 +55,6 @@ public class RoomTypeController : BaseController
         }
         
         return Ok(roomTypes);
-    }
-    
-    [HttpGet("{lodgingId}/{roomTypeId}/photo")]
-    public async Task<ObjectResult> GetRoomTypePhotos(uint lodgingId, uint roomTypeId)
-    {
-        Lodging? lodging = _context.Lodging.Find(lodgingId);
-
-        ObjectResult? result = StandardValidations.ValidateLodging(this, lodging);
-        if (result != null)
-        {
-            return result;
-        }
-
-        _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
-        RoomType? roomType = lodging.RoomTypes.FirstOrDefault(r => r.Id == roomTypeId);
-        if (roomType == null)
-        {
-            return NotFound($"No existe un tipo de habitación con el identificador {roomTypeId} en el alojamiento.");
-        }
-
-        string? filesPath = _configuration["RoomTypeImageFilesPath"];
-        var photos = roomType.Photos
-            .Select(async p =>
-            {
-                string path = Path.Combine(filesPath, p.FileName);
-                var imageBytes = await System.IO.File.ReadAllBytesAsync(Path.Combine(filesPath, p.FileName));
-                return new
-                {
-                    p.FileName, imageBytes
-                };
-            });
-        return Ok(await Task.WhenAll(photos));
     }
     
     [HttpDelete("{lodgingId}")]
@@ -222,7 +190,7 @@ public class RoomTypeController : BaseController
     }
         
     [HttpPost("{lodgingId}/{roomTypeId}/photo")]
-    public async Task<ObjectResult> StoreRoomTypePhotos(uint lodgingId, uint roomTypeId, PhotoRequestData[] photosData)
+    public async Task<ObjectResult> StoreRoomTypePhotos(uint lodgingId, uint roomTypeId, [FromForm] IFormFileCollection files)
     {
         if (!ModelState.IsValid)
         {
@@ -237,7 +205,7 @@ public class RoomTypeController : BaseController
             return result;
         }
 
-        if (photosData.Length > 10)
+        if (files.Count > 10)
         {
             return NotAcceptable("Puede agregar un máximo de 10 fotos por solicitud.");
         }
@@ -256,12 +224,21 @@ public class RoomTypeController : BaseController
         }
         
         byte order = lodging.Photos.MaxBy(p => p.Ordering)?.Ordering ?? 0;
-        string[] fileNames = new string[photosData.Length];
-        for (int i = 0; i < photosData.Length; ++i)
+        string[] fileNames = new string[files.Count];
+        for (int i = 0; i < files.Count; ++i)
         {
-            PhotoRequestData data = photosData[i];
+            IFormFile file = files[i];
+            string fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
             
-            string fileName = $"{Guid.NewGuid().ToString()}.{data.ImageFileExtension}";
+            string fileName;
+            if (!fileExtension.Equals(string.Empty))
+            {
+                fileName = $"{Guid.NewGuid().ToString()}{fileExtension}";
+            }
+            else
+            {
+                fileName = Guid.NewGuid().ToString();
+            }
 
             fileNames[i] = fileName;
             roomType.Photos.Add(new RoomTypePhoto 
@@ -278,13 +255,13 @@ public class RoomTypeController : BaseController
 
         List<Task> tasks = new List<Task>();
         string? path = _configuration["RoomTypeImageFilesPath"];
-        for (int i = 0; i < photosData.Length; ++i)
+        Directory.CreateDirectory(path);
+        for (int i = 0; i < files.Count; ++i)
         {
-            var data = photosData[i];
+            var file = files[i];
             string fileName = fileNames[i];
             string filePath = Path.Combine(path, fileName);
-            byte[] imageBytes = Convert.FromBase64String(data.ImageBase64);
-            tasks.Add(System.IO.File.WriteAllBytesAsync(filePath, imageBytes));
+            tasks.Add(DataUtil.SaveFile(filePath, file));
         }
 
         await Task.WhenAll(tasks);

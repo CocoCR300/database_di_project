@@ -102,13 +102,13 @@ public class LodgingController : BaseController
                     lodging.Owner,
                     lodging.Perks,
                     lodging.PhoneNumbers,
+                    lodging.Photos,
                     lodging.Type,
                     roomType.PerNightPrice,
                     roomType.Fees
                 };
             }
             
-            // Exclude photos data
             return new
             {
                 lodging.Address,
@@ -119,6 +119,7 @@ public class LodgingController : BaseController
                 lodging.Owner,
                 lodging.Perks,
                 lodging.PhoneNumbers,
+                lodging.Photos,
                 lodging.Type
             };
         }).ToArray();
@@ -136,7 +137,7 @@ public class LodgingController : BaseController
             .Select(l => new
             {
                 l.Address, l.Description, l.EmailAddress, l.Id, l.Name,
-                l.Owner, l.Perks, l.PhoneNumbers, l.Type,
+                l.Owner, l.Perks, l.PhoneNumbers, l.Photos, l.Type,
                 l.RoomTypes
             }).SingleOrDefault();
 
@@ -159,6 +160,7 @@ public class LodgingController : BaseController
                 lodging.Owner,
                 lodging.Perks,
                 lodging.PhoneNumbers,
+                lodging.Photos,
                 lodging.Type,
                 roomType.PerNightPrice,
                 roomType.Fees
@@ -176,32 +178,6 @@ public class LodgingController : BaseController
         return lodgingTypes;
     }
 
-    [HttpGet("{lodgingId}/photo")]
-    public async Task<ObjectResult> GetPhotos(uint lodgingId)
-    {
-        Lodging? lodging = _context.Lodging.Find(lodgingId);
-
-        if (lodging == null)
-        {
-            return StandardResponses.IdDoesNotExist(this, "alojamiento");
-        }
-
-        _context.Entry(lodging).Collection(l => l.Photos).Load();
-
-        string? filesPath = _configuration["LodgingImageFilesPath"];
-        var photos = lodging.Photos
-            .Select(async p =>
-            {
-                string path = Path.Combine(filesPath, p.FileName);
-                var imageBytes = await System.IO.File.ReadAllBytesAsync(Path.Combine(filesPath, p.FileName));
-                return new
-                {
-                    p.FileName, imageBytes
-                };
-            });
-        return Ok(await Task.WhenAll(photos));
-    }
-    
     [HttpPost]
     public ObjectResult Post(LodgingRequestData data)
     {
@@ -434,7 +410,7 @@ public class LodgingController : BaseController
     }
 
     [HttpPost("{lodgingId}/photo")]
-    public async Task<ObjectResult> StorePhotos(uint lodgingId, PhotoRequestData[] photosData)
+    public async Task<ObjectResult> StorePhotos(uint lodgingId, [FromForm] IFormFileCollection files)
     {
         if (!ModelState.IsValid)
         {
@@ -448,7 +424,7 @@ public class LodgingController : BaseController
             return NotFound("No existe un alojamiento con el identificador especificado.");
         }
 
-        if (photosData.Length > 10)
+        if (files.Count > 10)
         {
             return NotAcceptable("Puede agregar un máximo de 10 fotos por solicitud.");
         }
@@ -459,12 +435,21 @@ public class LodgingController : BaseController
         }
         
         byte order = lodging.Photos.MaxBy(p => p.Ordering)?.Ordering ?? 0;
-        string[] fileNames = new string[photosData.Length];
-        for (int i = 0; i < photosData.Length; ++i)
+        string[] fileNames = new string[files.Count];
+        for (int i = 0; i < files.Count; ++i)
         {
-            PhotoRequestData data = photosData[i];
+            IFormFile file = files[i];
+            string fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
             
-            string fileName = $"{Guid.NewGuid().ToString()}.{data.ImageFileExtension}";
+            string fileName;
+            if (!fileExtension.Equals(string.Empty))
+            {
+                fileName = $"{Guid.NewGuid().ToString()}{fileExtension}";
+            }
+            else
+            {
+                fileName = Guid.NewGuid().ToString();
+            }
 
             fileNames[i] = fileName;
             lodging.Photos.Add(new LodgingPhoto
@@ -481,19 +466,18 @@ public class LodgingController : BaseController
 
         List<Task> tasks = new List<Task>();
         string? path = _configuration["LodgingImageFilesPath"];
-        for (int i = 0; i < photosData.Length; ++i)
+        Directory.CreateDirectory(path);
+        for (int i = 0; i < files.Count; ++i)
         {
-            var data = photosData[i];
+            var file = files[i];
             string fileName = fileNames[i];
             string filePath = Path.Combine(path, fileName);
-            byte[] imageBytes = Convert.FromBase64String(data.ImageBase64);
-            tasks.Add(System.IO.File.WriteAllBytesAsync(filePath, imageBytes));
+            tasks.Add(DataUtil.SaveFile(filePath, file));
         }
 
         await Task.WhenAll(tasks);
 
         return Ok("Las fotos han sido agregadas con éxito.");
-
     }
     
     [HttpPatch("{lodgingId}")]

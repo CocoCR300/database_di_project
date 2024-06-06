@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using Restify.API.Data;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -64,6 +65,13 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 app.UsePathBase("/api");
+
+string storagePath = Path.Combine(builder.Environment.ContentRootPath, "storage");
+Directory.CreateDirectory(storagePath);
+app.UseStaticFiles(new StaticFileOptions 
+{
+	FileProvider = new PhysicalFileProvider(storagePath),
+});
 
 if (app.Environment.IsDevelopment())
 {
