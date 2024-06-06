@@ -1,0 +1,37 @@
+<div class="user-settings_container">
+    <h2>Configuración</h2>
+    <form class="modify-user" #userModifyForm="ngForm" [formGroup]="userModifyFormGroup" (ngSubmit)="onSubmitUserSettings()">
+        <div class="image-container">
+            <img class="image-user-settings" src="{{ user.image }}">
+            <button class="button-image" mat-stroked-button> Cargar imagen</button>
+        </div>
+        <mat-form-field class="input">
+            <mat-label>Usuario</mat-label>
+            <input type="text" matInput disabled="true" value="{{ user.name }}">
+        </mat-form-field>
+        <mat-form-field class="input">
+            <mat-label>Nombre</mat-label>
+            <input type="text" formControlName="first_name" matInput value="{{ user.first_name }}">
+        </mat-form-field>
+        <mat-form-field class="input">
+            <mat-label>Apellido</mat-label>
+            <input type="text" required="true" formControlName="last_name" matInput value="{{ user.last_name }}">
+        </mat-form-field>
+        <mat-form-field class="input">  
+            <mat-label>Correo</mat-label>
+            <input matInput formControlName="email" [formControl]="email" (blur)="updateErrorMessage()"
+            type="email" required="true" [value]="user.email_address">
+            @if (email.invalid) {
+                <mat-error>{{errorMessage}}</mat-error>
+            }
+        </mat-form-field>
+        <mat-form-field class="input">
+            <mat-label>Telefono</mat-label>
+            <input type="tel" required="true" formControlName="phone_number" matInput value="{{ user.phone_number }}">
+        </mat-form-field>
+        <div class="buttons">
+            <button class="button" mat-stroked-button type="submit">Guardar Cambios</button>
+            <button class="button" mat-stroked-button type="submit">Salir</button>
+        </div>
+    </form>
+</div>

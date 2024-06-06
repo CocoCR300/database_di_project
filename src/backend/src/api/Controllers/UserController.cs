@@ -83,7 +83,7 @@ namespace Restify.API.Controllers
                 _context.User.Add(user);
                 _context.SaveChanges();
 
-                return Ok("El usuario ha sido creado con éxito");
+                return Created(user);
             }
             
             return BadRequest(ModelState);
@@ -202,7 +202,7 @@ namespace Restify.API.Controllers
                     });
                 }
                 _context.SaveChanges();
-                return Ok("Los números de teléfono han sido agregados con éxito.");
+                return Created();
             }
             
             return NotFound("No existe un usuario con el nombre especificado.");

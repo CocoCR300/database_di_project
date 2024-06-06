@@ -90,7 +90,13 @@ public class LodgingController : BaseController
             if (!Lodging.OffersRooms(lodging))
             {
                 _context.Entry(lodging).Collection(l => l.RoomTypes);
-                RoomType roomType = lodging.RoomTypes[0];
+                
+                RoomType? roomType = null;
+
+                if (lodging.RoomTypes.Count > 0)
+                {
+                    roomType = lodging.RoomTypes[0];  
+                } 
                 
                 return new
                 {
@@ -104,8 +110,8 @@ public class LodgingController : BaseController
                     lodging.PhoneNumbers,
                     lodging.Photos,
                     lodging.Type,
-                    roomType.PerNightPrice,
-                    roomType.Fees
+                    roomType?.PerNightPrice,
+                    roomType?.Fees
                 };
             }
             
@@ -148,7 +154,12 @@ public class LodgingController : BaseController
         
         if (!Lodging.TypeOffersRooms(lodging.Type))
         {
-            RoomType roomType = lodging.RoomTypes[0];
+            RoomType? roomType = null;
+
+            if (lodging.RoomTypes.Count > 0)
+            {
+                roomType = lodging.RoomTypes[0];  
+            } 
             
             return Ok(new
             {
@@ -162,8 +173,8 @@ public class LodgingController : BaseController
                 lodging.PhoneNumbers,
                 lodging.Photos,
                 lodging.Type,
-                roomType.PerNightPrice,
-                roomType.Fees
+                roomType?.PerNightPrice,
+                roomType?.Fees
             });
         }
 
@@ -228,7 +239,7 @@ public class LodgingController : BaseController
         _context.Lodging.Add(lodging);
         _context.SaveChanges();
 
-        return Ok("El alojamiento ha sido creado con éxito");
+        return Created(lodging);
 
     }
 
@@ -405,7 +416,7 @@ public class LodgingController : BaseController
             });
         }
         _context.SaveChanges();
-        return Ok("Los números de teléfono han sido agregados con éxito.");
+        return Created(phoneNumbers);
 
     }
 
@@ -477,7 +488,7 @@ public class LodgingController : BaseController
 
         await Task.WhenAll(tasks);
 
-        return Ok("Las fotos han sido agregadas con éxito.");
+        return Created(path, fileNames);
     }
     
     [HttpPatch("{lodgingId}")]

@@ -1,0 +1,24 @@
+<div id="home_main">
+    <div id="left_side_container">
+        <div>
+            <p class="text_align_start title">¡Reserve ya!</p>
+            <p class="text_align_start subtitle">En los mejores alojamientos</p>
+            <button class="display_block" mat-stroked-button (click)="lodgingsButtonClicked()">{{ isCustomer ? "Ver todos los alojamientos" : "Ver mis alojamientos" }}</button>
+        </div>
+    </div>
+    <div id="right_side_container">
+        <c-carousel>
+            <c-carousel-inner *ngIf="lodgings != null">
+                <c-carousel-item *ngFor="let lodging of lodgings">
+                    <img class="lodging_image" alt="{{lodging.name}}" loading="lazy" src="{{prependImagesRoute(lodging.image)}}">
+                    <c-carousel-caption>
+                        <h3>{{lodging.name}}</h3>
+                        <p>{{lodging.description}}</p>
+                    </c-carousel-caption>
+                </c-carousel-item>
+            </c-carousel-inner>
+            <c-carousel-control [routerLink] caption=" " direction="prev"></c-carousel-control>
+            <c-carousel-control [routerLink] caption=" " direction="next"></c-carousel-control>
+        </c-carousel>
+    </div>
+</div>

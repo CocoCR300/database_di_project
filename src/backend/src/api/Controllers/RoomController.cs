@@ -146,7 +146,7 @@ public class RoomController : BaseController
         }
             
         _context.SaveChanges();
-        return Ok("Las habitaciones han sido agregadas con éxito.");
+        return Created();
     }
     
     [HttpPost("{lodgingId}/sequence")]
@@ -206,7 +206,7 @@ public class RoomController : BaseController
         }
             
         _context.SaveChanges();
-        return Ok("Las habitaciones han sido agregadas con éxito.");
+        return Created();
     }
 }
 

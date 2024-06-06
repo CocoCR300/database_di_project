@@ -5,13 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using Restify.API.Data;
+using Restify.API.Util;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers()
 	.AddJsonOptions(options =>
-		options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
+		options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 	
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -45,6 +46,16 @@ builder.Services.AddDbContext<RestifyDbContext>(
 			.EnableDetailedErrors();
 	});
 
+builder.Services.AddCors(corsOptions =>
+{
+	corsOptions.AddDefaultPolicy(corsBuilder =>
+	{
+		corsBuilder.AllowAnyOrigin()
+			.AllowAnyHeader()
+			.AllowAnyHeader();
+	});
+});
+
 builder.Services.AddApiVersioning(config =>
 {
 	config.DefaultApiVersion = new ApiVersion(2);
@@ -66,11 +77,11 @@ if (builder.Environment.IsDevelopment())
 var app = builder.Build();
 app.UsePathBase("/api");
 
-string storagePath = Path.Combine(builder.Environment.ContentRootPath, "storage");
-Directory.CreateDirectory(storagePath);
+Values.StoragePath = Path.Combine(builder.Environment.ContentRootPath, "storage");
+Directory.CreateDirectory(Values.StoragePath);
 app.UseStaticFiles(new StaticFileOptions 
 {
-	FileProvider = new PhysicalFileProvider(storagePath),
+	FileProvider = new PhysicalFileProvider(Values.StoragePath)
 });
 
 if (app.Environment.IsDevelopment())
@@ -85,6 +96,7 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseCors();
 app.UseAuthorization();
 
 app.MapDefaultControllerRoute();

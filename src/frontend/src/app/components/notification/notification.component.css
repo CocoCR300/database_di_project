@@ -1,0 +1,14 @@
+/* notification.component.css */
+.notification {
+    margin-top: 2%;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: aliceblue;
+    color: #132E35;
+    border-radius: 5px;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  

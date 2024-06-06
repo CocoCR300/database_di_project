@@ -1,0 +1,53 @@
+<div class="container">
+  <div class="register-container">
+    <h2>Registro</h2>
+    <form #registerForm="ngForm" (ngSubmit)="onSubmit()">
+      <div class="form-grid">
+        <div class="input-field">
+          <i class="fas fa-user"></i>
+          <input type="text" placeholder="Nombre de usuario" name="name" #name="ngModel" [(ngModel)]="user.name" required>
+        </div>
+
+        <div class="input-field">
+          <i class="fas fa-envelope"></i>
+          <input type="email" placeholder="Correo electrónico" name="email_address" #email_address="ngModel" [(ngModel)]="user.email_address" required>
+        </div>
+
+        <div class="input-field">
+          <i class="fas fa-lock"></i>
+          <input type="password" placeholder="Contraseña" name="password" #password="ngModel" [(ngModel)]="user.password" required>
+        </div>
+        
+        <div class="input-field">
+          <i class="fas fa-user"></i>
+          <input type="text" placeholder="Nombre" name="first_name" #first_name="ngModel" [(ngModel)]="user.first_name" required>
+        </div>
+        
+        <div class="input-field">
+          <i class="fas fa-user"></i>
+          <input type="text" placeholder="Apellido" name="last_name" #last_name="ngModel" [(ngModel)]="user.last_name" required>
+        </div>
+        
+        <div class="input-field">
+          <i class="fas fa-address-book"></i>
+          <input type="text" placeholder="Número de teléfono" name="phone_number" #phone_number="ngModel" [(ngModel)]="user.phone_number" required>
+        </div>
+      </div>
+
+      <div class="role-selection">
+        <label>
+          <input type="radio" name="role" value="2" role="ngModel" [(ngModel)]="user.role_id" required> Cliente
+        </label>
+        <label>
+          <input type="radio" name="role" value="3" role="ngModel" [(ngModel)]="user.role_id" required> Arrendador
+        </label>
+      </div>
+
+      <div class="buttons">
+        <button type="submit">Registrarse</button>
+        <p>¿Ya tienes una cuenta? <br> Inicia sesión!</p>
+        <button type="button" [routerLink]="['/login']">Iniciar Sesión</button>
+      </div>
+    </form>
+  </div>
+</div>

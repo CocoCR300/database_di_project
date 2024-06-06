@@ -105,7 +105,7 @@ public class BookingController : BaseController
         _context.Booking.Add(booking);
         _context.SaveChanges();
 
-        return Ok("La reservación ha sido creada con éxito");
+        return Created(booking);
     }
 
     [HttpDelete("user/{userName}")]

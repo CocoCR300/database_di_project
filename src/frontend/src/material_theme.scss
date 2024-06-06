@@ -1,0 +1,40 @@
+@use '@angular/material' as mat;
+@include mat.core();
+
+$my-primary: mat.define-palette(mat.$indigo-palette, 500);
+$my-accent: mat.define-palette(mat.$indigo-palette, A200, A100, A400);
+
+$my-theme: mat.define-dark-theme((
+ color: (
+   primary: $my-primary,
+   accent: $my-accent,
+ ),
+ typography: mat.define-typography-config(),
+ density: 0,
+));
+
+@include mat.core-theme($my-theme);
+@include mat.button-theme($my-theme);
+@include mat.datepicker-theme($my-theme);
+@include mat.form-field-theme($my-theme);
+@include mat.input-theme($my-theme);
+@include mat.paginator-theme($my-theme);
+@include mat.sidenav-theme($my-theme);
+@include mat.tooltip-theme($my-theme);
+
+html {
+  --mat-sidenav-content-background-color: none;
+}
+
+mat-paginator {
+  background-color: transparent !important;
+}
+
+.mat-mdc-paginator-container {
+  margin: auto;
+  width: auto !important;
+}
+
+.mdc-text-field--outlined {
+  --mdc-outlined-text-field-container-shape: 28px !important;
+}

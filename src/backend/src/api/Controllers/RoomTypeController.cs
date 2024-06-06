@@ -180,9 +180,9 @@ public class RoomTypeController : BaseController
             _context.SaveChanges();
             _context.Database.CommitTransaction();
                     
-            return Ok("Los tipos de habitación han sido agregados con éxito.");
+            return Created();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             _context.Database.RollbackTransaction();
             return NotAcceptable("Ha ocurrido un error al insertar los datos.");
@@ -266,7 +266,7 @@ public class RoomTypeController : BaseController
 
         await Task.WhenAll(tasks);
 
-        return Ok("Las fotos han sido agregadas con éxito.");
+        return Created(path, fileNames);
     }
     
     [HttpPatch("{lodgingId}/{roomTypeId}")]

@@ -1,0 +1,77 @@
+#lodging_info_main {
+    display: flex;
+    height: 100%;
+}
+
+#lodging_info_left_section {
+    align-items: center;
+    display: flex;
+    flex: 2;
+    flex-direction: column;
+    justify-content: center;
+    row-gap: 1em;
+}
+
+#lodging_info_right_section {
+    align-items: center;
+    display: flex;
+    flex: 3;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#lodging_form {
+    align-self: stretch;
+}
+
+#lodging_form_input_container {
+    column-gap: 2em;
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    grid-template-rows: repeat(4, 1fr);
+    padding: 2em;
+    row-gap: 1em;
+}
+
+#buttons_container {
+    gap: 2em;
+}
+
+#description_field {
+    grid-row: 1 / span 2;
+}
+
+#address_field {
+    grid-row: 3 / span 2;
+}
+
+#lodging_image_container {
+    height: 15em;
+    width: 100%;
+}
+
+#lodging_image {
+    clip-path: rect(0px 0px 100% 100% round 0.5em);
+    max-height: 15em;
+    object-fit: cover;
+    width: 25em;
+}
+
+.buttons_container > button {
+    margin: 0px 0.3em;
+}
+
+.lodging_form_input_shrink {
+    justify-self: start;
+}
+
+.lodging_form_first_column {
+    align-self: start;
+    grid-column: 1;
+    min-width: 16.5em;
+}
+
+.lodging_form_second_column {
+    grid-column: 2;
+    min-width: 19em;
+}

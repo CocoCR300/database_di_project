@@ -29,6 +29,8 @@ public class PerkController : BaseController
     [HttpPost]
     public ObjectResult Post(string[] perkNames)
     {
+        Perk? perk = null;
+        
         foreach (string name in perkNames)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -41,7 +43,7 @@ public class PerkController : BaseController
                 return BadRequest("Los nombres de beneficios pueden tener 50 carácteres como máximo.");
             }
             
-            Perk perk = new Perk
+            perk = new Perk
             {
                 Name = name
             };
@@ -64,7 +66,7 @@ public class PerkController : BaseController
             return NotAcceptable("Ha ocurrido un error al insertar los datos.");
         }
         
-        return Ok("Los beneficios han sido agregados con éxito.");
+        return Created(perk);
     }
 
     [HttpDelete]

@@ -1,0 +1,100 @@
+
+:host {
+  margin: auto;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+p {
+  font-size: 14px;
+}
+
+.register-container {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 400px;
+  backdrop-filter: blur(10px);
+  margin: 0 auto;
+  margin-top: 20px;
+}
+
+h2 {
+  text-align: center;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.input-field {
+  position: relative;
+  width: 100%;
+}
+
+.input-field i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0D1F23;
+}
+
+input {
+  padding: 10px 10px 10px 36px;
+  margin: 5px 0;
+  border: none;
+  border-bottom: 2px solid #AFB2B7;
+  border-radius: 20px;
+  color: #000000;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input::placeholder {
+  color: #9c9c9c;
+}
+
+.role-selection {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+}
+
+.role-selection label {
+  font-size: 14px;
+  color: #000;
+}
+
+button {
+  width: 60%;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #0D1F23;
+  color: #AFB2B7;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #132E35;
+}
+
+.buttons {
+  text-align: center;
+}
+
+.buttons p {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #000;
+}

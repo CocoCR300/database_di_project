@@ -1,1 +1,50 @@
-<p>user works!</p>
+<div class="users_container">
+    <h1>Usuarios</h1>
+
+    <table mat-table [dataSource]="dataSource">
+        <ng-container matColumnDef="user_name">
+            <th mat-header-cell *matHeaderCellDef> Usuario </th>
+            <td mat-cell *matCellDef="let user"> {{user.name}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="first_name">
+            <th mat-header-cell *matHeaderCellDef> Nombre </th>
+            <td mat-cell *matCellDef="let user"> {{user.first_name}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="last_name">
+            <th mat-header-cell *matHeaderCellDef> Apellido </th>
+            <td mat-cell *matCellDef="let user"> {{user.last_name}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef> Rol </th>
+            <td mat-cell *matCellDef="let user"> {{user.role_id}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="phone_number">
+            <th mat-header-cell *matHeaderCellDef> Telefono </th>
+            <td mat-cell *matCellDef="let user"> {{user.phone_number}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="email_address">
+            <th mat-header-cell *matHeaderCellDef> Correo </th>
+            <td mat-cell *matCellDef="let user"> {{user.email_address}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="image">
+            <th mat-header-cell *matHeaderCellDef> Imagen </th>
+            <td mat-cell *matCellDef="let user"> <img [src]="" alt="" class="image-user"></td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+        <tr
+        mat-row
+        (click)="delete(selectedUser.name)"
+        *matRowDef="let selectedUser; columns: columnsToDisplay;"
+        ></tr>
+    </table>
+    <mat-paginator [pageSizeOptions]="[5]">
+    </mat-paginator>
+    <h4>Seleccione un usuario para eliminar</h4>
+</div>

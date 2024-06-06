@@ -117,7 +117,7 @@ public class PaymentController : BaseController
             data.InvoiceImageFile.CopyTo(fileStream);
         }
         
-        return Ok(booking.Payment);
+        return Created(booking.Payment);
     }
 }
 
