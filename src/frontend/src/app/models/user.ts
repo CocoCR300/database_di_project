@@ -1,15 +1,13 @@
+import { Person } from "./person";
+
 export class User {
     constructor(
-        public name: string,
-        public first_name: string,
-        public last_name: string,
-        public password: string,
-        public role_id: string,
-        public email_address: string,
-        public phone_number: string,
-        public image: string,
-        public person_id: number | null = null) {
-    }
+        public name:        string,
+        public password:    string | null,
+        public roleId:      string,
+        public person:      Person,
+        public role:        UserRole)
+        { }
 }
 
 export enum UserRole {

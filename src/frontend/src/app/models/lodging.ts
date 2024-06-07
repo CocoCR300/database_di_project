@@ -1,15 +1,24 @@
-import { User } from "./user";
+import { Perk } from "./perk";
+import { Person } from "./person";
+import { PhoneNumber } from "./phone_number";
+import { Photo } from "./photo";
+import { Room } from "./room";
+import { RoomType } from "./room_type";
 
 export class Lodging {
     constructor(
-        public lodging_id: number,
-        public lessor_id: number | null,
+        public lodgingId: number,
+        public ownerId: number,
         public name: string,
         public description: string,
-        public image: string,
         public address: string,
-        public lessor: User | null,
-        public per_night_price: number,
-        public available_rooms: number)
+        public type: string,
+        public emailAddress: string,
+        public phoneNumbers: PhoneNumber[],
+        public photos: Photo[],
+        public perks: Perk[],
+        public rooms: Room[],
+        public roomTypes: RoomType[],
+        public owner: Person)
         { }
 }

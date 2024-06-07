@@ -56,7 +56,7 @@ export class UserComponent implements OnInit, AfterViewInit{
 
       this._userService.deleteUser(username).subscribe(
         (response: AppResponse) => {
-          if(AppResponse.success(response)) {
+          if(response.ok) {
               this.users = this.users.pipe(
                 map(users => users.filter(user => user.name !== username))
               );

@@ -105,7 +105,7 @@ export class LodgingComponent implements OnInit {
             endDate);
         const response = await firstValueFrom(this._bookingService.postBooking(booking));
         
-        if (AppResponse.success(response)) {
+        if (response.ok) {
             Swal.fire({
                 icon: "success",
                 title: "La reserva ha sido creada con éxito."
@@ -202,7 +202,7 @@ export class LodgingComponent implements OnInit {
 
         this._lodgingService.deleteLodging(lodgingId).subscribe(
             (response: AppResponse) => {
-                if (AppResponse.success(response)) {
+                if (response.ok) {
                     // lodgings, lodgings, lodgings, lodgings, lodgings
                     this._lodgings = this._lodgings.filter(lodging => lodging.lodging_id !== lodgingId);
                     this.updatePagedList(this.currentPage);

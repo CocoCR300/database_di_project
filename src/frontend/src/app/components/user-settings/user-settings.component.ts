@@ -98,7 +98,7 @@ export class UserSettingsComponent implements OnInit {
 
     this._userService.updateUser(data,userName!).subscribe(
       response => {
-        if(AppResponse.success(response)){
+        if(response.ok){
           Swal.fire({
             icon: "success",
             title: "Se modifico al usuario con exito"

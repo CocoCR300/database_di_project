@@ -9,11 +9,6 @@ export class AppResponse
     )
     { }
 
-    public static success(response: AppResponse): boolean
-    {
-        return response.status >= 200 && response.status <= 299;
-    }
-
     public static *getErrors(response: AppResponse) {
         const errorMessagesByPropertyName = Object.entries(response.errors!);
         for (const [, messages] of errorMessagesByPropertyName) {

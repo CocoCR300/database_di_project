@@ -5,7 +5,7 @@ import { Observable, from } from "rxjs";
 import { BaseService } from "./base.service";
 import { Lessor } from "../models/lessor";
 import { Customer } from "../models/customer";
-import { Administrator } from "../models/administrator";
+import { Person } from "../models/person";
 import { AppResponse } from "../models/app_response";
 import { AppState } from "../models/app_state";
 
@@ -113,7 +113,7 @@ export class UserService extends BaseService{
 
     logOut(){
         this.post(`user/${this._appState.userName}/logout`,true,'').subscribe((response : AppResponse) => {
-            if(AppResponse.success(response)){
+            if(response.ok){
                 console.log('Sesion cerrada con exito');
             }
             console.log(response.message);

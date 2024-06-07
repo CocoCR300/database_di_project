@@ -1,12 +1,18 @@
+import { Lodging } from "./lodging";
+import { Payment } from "./payment";
+import { Person } from "./person";
+import { RoomBooking } from "./room_booking";
+
 export class Booking
 {
     constructor(
-        public booking_id: number,
-        public lodging_id: number,
-        public customer_id: number,
-        public status_id: number,
-        public start_date: string,
-        public end_date: string
+        public id:              number,
+        public lodgingId:       number,
+        public customerId:      number,
+        public roomBookings:    RoomBooking[],
+        public payment:         Payment | null,
+        public customer:        Person,
+        public lodging:         Lodging | null
     ) { }
 }
 
