@@ -5,6 +5,7 @@ using Restify.API.Models;
 using Restify.API.Util;
 
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using Asp.Versioning;
 
 namespace Restify.API.Controllers
@@ -14,10 +15,12 @@ namespace Restify.API.Controllers
     [Route("v{version:apiVersion}/[controller]")]
     public class UserController : BaseController
     {
+        private readonly AuthenticationUtil _authenticationUtil;
         private readonly RestifyDbContext _context;
 
-        public UserController(RestifyDbContext context)
+        public UserController(AuthenticationUtil authenticationUtil, RestifyDbContext context)
         {
+            _authenticationUtil = authenticationUtil;
             _context = context;
         }
 
@@ -49,39 +52,85 @@ namespace Restify.API.Controllers
 
             if (user != null)
             {
-                string[] phoneNumbers = user.Person.PhoneNumbers.Select(p => p.Number).ToArray();
-                
                 return Ok(Models.User.MergeForResponse(user, user.Person));
             }
 
             return NotFound("No existe un usuario con el nombre especificado.");
         }
 
-        [HttpPost]
-        public ObjectResult Post(UserRequestData data)
+        [HttpPost("login")]
+        public ObjectResult LogIn(LoginRequest loginRequest)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                User user = new User
-                {
-                    Name = data.UserName,
-                    Password = DataUtil.GetHash(data.Password),
-                    RoleId = data.RoleId,
-                    Person = new Person
-                    {
-                        FirstName = data.FirstName,
-                        LastName = data.LastName,
-                        EmailAddress = data.EmailAddress
-                    }
-                };
-
-                _context.User.Add(user);
-                _context.SaveChanges();
-
-                return Created(user);
+                return BadRequest(ModelState);
             }
             
-            return BadRequest(ModelState);
+            User? user = _context.Find<User>(loginRequest.UserName);
+
+            if (user == null)
+            {
+                return Unauthorized("Nombre de usuario o contraseña incorrectos.");
+            }
+
+            var result = _authenticationUtil.VerifyPassword(user, loginRequest.Password);
+
+            if (!result)
+            {
+                return Unauthorized("Nombre de usuario o contraseña incorrectos.");
+            }
+
+            _context.Entry(user).Reference(u => u.Role).Load();
+            var token = _authenticationUtil.GenerateJwtToken(user);
+            return Ok(token); 
+        }
+        
+        [HttpPost("signup")]
+        public ObjectResult SignUp(UserRequestData data)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
+            User user = new User
+            {
+                Name = data.UserName,
+                Password = _authenticationUtil.HashPassword(data.Password),
+                RoleId = data.RoleId,
+                Person = new Person
+                {
+                    FirstName = data.FirstName,
+                    LastName = data.LastName,
+                    EmailAddress = data.EmailAddress
+                }
+            };
+            
+            _context.User.Add(user);
+            _context.SaveChanges();
+            
+            var token = _authenticationUtil.GenerateJwtToken(user);
+            return Ok(token);
+        }
+
+        [HttpPost("identity")]
+        public ObjectResult IdentityFromToken([FromBody] string token)
+        {
+            ClaimsPrincipal? claimsPrincipal = _authenticationUtil.ValidateToken(token);
+
+            if (claimsPrincipal == null)
+            {
+                return BadRequest("Token no válido.");
+            }
+
+            Dictionary<string, string> claimsByName = new Dictionary<string, string>();
+
+            foreach (Claim claim in claimsPrincipal.Claims)
+            {
+                claimsByName.Add(claim.Type, claim.Value);
+            }
+
+            return Ok(claimsByName);
         }
 
         [HttpDelete]
@@ -245,7 +294,13 @@ namespace Restify.API.Controllers
         }
     }
 
-
+    public record LoginRequest(
+        [Required]
+        string UserName,
+        [Required]
+        string Password
+    );
+    
     public class UserRequestData
     {
         [Required]

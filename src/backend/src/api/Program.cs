@@ -1,8 +1,11 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Restify.API.Data;
 using Restify.API.Util;
@@ -10,11 +13,38 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddTransient<AuthenticationUtil>();
+builder.Services.AddDbContext<RestifyDbContext>(
+	options =>
+	{
+		string connectionString = "server=localhost;user=root;password=;database=restify";
+		options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+			.LogTo(Console.WriteLine, LogLevel.Information)
+			.EnableSensitiveDataLogging()
+			.EnableDetailedErrors();
+	});
+
 builder.Services.AddControllers()
 	.AddJsonOptions(options =>
 		options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+
+AuthenticationUtil.Initialize(builder.Configuration);
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+	.AddJwtBearer(x =>
+	{
+		x.RequireHttpsMetadata = false;
+		x.SaveToken = false;
+		x.TokenValidationParameters = new TokenValidationParameters {
+			ValidAudience = builder.Configuration["JwtSettings:Audience"],
+			ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+			ValidateIssuerSigningKey = true,
+			IssuerSigningKey = new SymmetricSecurityKey(AuthenticationUtil.IssuerKeyBytes),
+			ValidateIssuer = true,
+			ValidateAudience = true,
+			ClockSkew = TimeSpan.Zero
+		};
+	});
 	
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -36,15 +66,6 @@ builder.Services.AddSwaggerGen(options =>
 
 	options.SwaggerDoc("v2.0", new OpenApiInfo { Title = "Restify", Version = "v2" });	
 });
-builder.Services.AddDbContext<RestifyDbContext>(
-	options =>
-	{
-		string connectionString = "server=localhost;user=root;password=;database=restify";
-		options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
-			.LogTo(Console.WriteLine, LogLevel.Information)
-			.EnableSensitiveDataLogging()
-			.EnableDetailedErrors();
-	});
 
 builder.Services.AddCors(corsOptions =>
 {
@@ -96,7 +117,10 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
+
 app.UseCors();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapDefaultControllerRoute();
