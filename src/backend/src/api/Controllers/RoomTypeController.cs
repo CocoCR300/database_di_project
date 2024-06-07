@@ -37,7 +37,22 @@ public class RoomTypeController : BaseController
         
         _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
         var roomTypes = lodging.RoomTypes
-            .Select(r => new { r.Id, r.Name, r.Capacity, r.PerNightPrice, r.Fees, r.Photos });
+            .Select(r =>
+            {
+                string[] roomTypePhotos = r.Photos
+                    .OrderBy(p => p.Ordering)
+                    .Select(p => p.FileName)
+                    .ToArray();
+                return new
+                {
+                    r.Id,
+                    r.Name,
+                    r.Capacity,
+                    r.PerNightPrice,
+                    r.Fees,
+                    Photos = roomTypePhotos
+                };
+            });
 
         if (minCapacity.HasValue)
         {

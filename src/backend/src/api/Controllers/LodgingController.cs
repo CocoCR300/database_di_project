@@ -37,7 +37,8 @@ public class LodgingController : BaseController
             .Include(l => l.Perks)
             .Include(l => l.PhoneNumbers)
             .Include(l => l.RoomTypes)
-            .Include(l => l.Owner);
+            .Include(l => l.Owner)
+            .ThenInclude(person => person.User);
 
         if (string.IsNullOrWhiteSpace(lodgingName))
         {
@@ -102,6 +103,12 @@ public class LodgingController : BaseController
         
         object[] lodgingObjects = lodgings.Select<Lodging, object>(lodging =>
         {
+            string[] lodgingPhoneNumbers = lodging.PhoneNumbers.Select(p => p.Number).ToArray();
+            string[] lodgingPhotos = lodging.Photos
+                .OrderBy(p => p.Ordering)
+                .Select(p => p.FileName)
+                .ToArray();
+            
             if (!Lodging.OffersRooms(lodging))
             {
                 _context.Entry(lodging).Collection(l => l.RoomTypes);
@@ -120,10 +127,10 @@ public class LodgingController : BaseController
                     lodging.EmailAddress,
                     lodging.Id,
                     lodging.Name,
-                    lodging.Owner,
+                    Owner = Models.User.MergeForResponse(lodging.Owner.User, lodging.Owner),
                     lodging.Perks,
-                    lodging.PhoneNumbers,
-                    lodging.Photos,
+                    PhoneNumbers = lodgingPhoneNumbers,
+                    Photos = lodgingPhotos,
                     lodging.Type,
                     roomType?.PerNightPrice,
                     roomType?.Fees
@@ -137,10 +144,10 @@ public class LodgingController : BaseController
                 lodging.EmailAddress,
                 lodging.Id,
                 lodging.Name,
-                lodging.Owner,
+                Owner = Models.User.MergeForResponse(lodging.Owner.User, lodging.Owner),
                 lodging.Perks,
-                lodging.PhoneNumbers,
-                lodging.Photos,
+                PhoneNumbers = lodgingPhoneNumbers,
+                Photos = lodgingPhotos,
                 lodging.Type
             };
         }).ToArray();
@@ -174,8 +181,13 @@ public class LodgingController : BaseController
             if (lodging.RoomTypes.Count > 0)
             {
                 roomType = lodging.RoomTypes[0];  
-            } 
-            
+            }
+
+            string[] lodgingPhoneNumbers = lodging.PhoneNumbers.Select(p => p.Number).ToArray();
+            string[] lodgingPhotos = lodging.Photos
+                .OrderBy(p => p.Ordering)
+                .Select(p => p.FileName)
+                .ToArray();
             return Ok(new
             {
                 lodging.Address,
@@ -183,10 +195,10 @@ public class LodgingController : BaseController
                 lodging.EmailAddress,
                 lodging.Id,
                 lodging.Name,
-                lodging.Owner,
+                Owner = Models.User.MergeForResponse(lodging.Owner.User, lodging.Owner),
                 lodging.Perks,
-                lodging.PhoneNumbers,
-                lodging.Photos,
+                PhoneNumbers = lodgingPhoneNumbers,
+                Photos = lodgingPhotos,
                 lodging.Type,
                 roomType?.PerNightPrice,
                 roomType?.Fees

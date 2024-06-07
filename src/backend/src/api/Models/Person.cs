@@ -8,6 +8,6 @@ public class Person
 	public string	LastName { get; set; }
 	public string	EmailAddress { get; set; }
 
-	public IList<PersonPhoneNumber>	PhoneNumbers { get; }
+	public List<PersonPhoneNumber>	PhoneNumbers { get; }
 	public User	User { get; }
 }

@@ -6,14 +6,14 @@ public class Booking
 	public uint				CustomerId { get; set; }
 	public uint				LodgingId { get; set; }
 
-	public IList<RoomBooking>	RoomBookings { get; }
+	public List<RoomBooking>	RoomBookings { get; }
 	public Payment?				Payment { get; set; }
 	public Person				Customer { get; }
 	public Lodging				Lodging { get; }
 
 	public Booking() {}
 	
-	public Booking(IList<RoomBooking> roomBookings)
+	public Booking(List<RoomBooking> roomBookings)
 	{
 		RoomBookings = roomBookings;
 	}

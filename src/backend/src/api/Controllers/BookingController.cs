@@ -46,7 +46,7 @@ public class BookingController : BaseController
             bookings = StandardFilters.BookingByDates(bookings, startDate, endDate);
             
             IQueryable<object> bookingsInfo = bookings 
-                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Payment, b.RoomBookings });
+                .Select(b => new { b.Id, b.CustomerId, b.Customer.UserName, b.Payment, b.RoomBookings });
             return Ok(await PaginatedList<object>.CreateAsync(bookingsInfo, page, pageSize));
         }
 
@@ -73,7 +73,7 @@ public class BookingController : BaseController
             bookings = StandardFilters.BookingByDates(bookings, startDate, endDate);
             
             IQueryable<object> bookingsInfo = bookings 
-                .Select(b => new { b.Id, b.CustomerId, b.LodgingId, b.Payment, b.RoomBookings });
+                .Select(b => new { b.Id, b.LodgingId, b.Lodging.Name, b.Payment, b.RoomBookings });
             return Ok(await PaginatedList<object>.CreateAsync(bookingsInfo, page, pageSize));
         }
 

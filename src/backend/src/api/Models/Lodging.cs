@@ -10,11 +10,11 @@ public class Lodging
 	public string	Name { get; set; }
 	public string	EmailAddress { get; set; }
 
-	public IList<LodgingPhoneNumber>	PhoneNumbers { get; }
-	public IList<LodgingPhoto>			Photos { get; }
-	public IList<Perk>					Perks { get; }
-	public IList<Room>					Rooms { get; }
-	public IList<RoomType>				RoomTypes { get; }
+	public List<LodgingPhoneNumber>	PhoneNumbers { get; }
+	public List<LodgingPhoto>			Photos { get; }
+	public List<Perk>					Perks { get; }
+	public List<Room>					Rooms { get; }
+	public List<RoomType>				RoomTypes { get; }
 	public Person						Owner { get; }
 	
 	public Lodging() {}

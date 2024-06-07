@@ -22,20 +22,24 @@ namespace Restify.API.Controllers
         }
 
         [HttpGet("{pageSize}/{page}")]
-        public async Task<ObjectResult> Get(uint? roleId,
+        public ObjectResult Get(uint? roleId,
             [Range(0, int.MaxValue)] int pageSize = 10,
             [Range(0, int.MaxValue)] int page = 1)
         {
-            var users = _context.User
-                .Include(u => u.Person)
-                .Select(u => Models.User.WithoutPassword(u));
+            IQueryable<User> usersQuery = _context.User
+                .Include(u => u.Person);
 
             if (roleId.HasValue)
             {
-                users = users.Where(u => u.RoleId == roleId);
+                usersQuery = usersQuery.Where(u => u.RoleId == roleId);
             }
+
+            object[] users = usersQuery
+                .AsEnumerable()
+                .Select(u => Models.User.MergeForResponse(u, u.Person))
+                .ToArray();
             
-            return Ok(await PaginatedList<User>.CreateAsync(users, page, pageSize));
+            return Ok(PaginatedList<object>.Create(users, users.Length, page, pageSize));
         }
 
         [HttpGet("{userName}")]
@@ -45,18 +49,9 @@ namespace Restify.API.Controllers
 
             if (user != null)
             {
-                return Ok(new
-                {
-                    user.Name,
-                    user.RoleId,
-                    Person = new {
-                        user.Person.Id,
-                        user.Person.FirstName,
-                        user.Person.LastName,
-                        user.Person.EmailAddress,
-                        user.Person.PhoneNumbers
-                    }
-                });
+                string[] phoneNumbers = user.Person.PhoneNumbers.Select(p => p.Number).ToArray();
+                
+                return Ok(Models.User.MergeForResponse(user, user.Person));
             }
 
             return NotFound("No existe un usuario con el nombre especificado.");

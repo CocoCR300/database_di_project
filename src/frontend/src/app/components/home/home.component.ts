@@ -33,8 +33,8 @@ export class HomeComponent implements OnInit
 
   prependImagesRoute(lodging: Lodging) {
     let imageSrc = "";
-    if (lodging.photos != null) {
-      imageSrc = `${server.lodgingImages}${lodging.photos[0]}`;
+    if (lodging.photos!.length > 0) {
+      imageSrc = `${server.lodgingImages}${lodging.photos![0]}`;
     }
 
     return imageSrc;
@@ -45,7 +45,7 @@ export class HomeComponent implements OnInit
   }
 
   async ngOnInit() {
-    const lodgings = await firstValueFrom(this._lodgingService.getLodgings(10, 1));
-    this.lodgings = lodgings.filter(lodging => lodging.photos != null);
+    const lodgings = await firstValueFrom(this._lodgingService.getLodgings(50, 1));
+    this.lodgings = lodgings.filter(lodging => lodging.photos!.length > 0);
   }
 }

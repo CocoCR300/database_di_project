@@ -9,5 +9,5 @@ public class RoomType
     public uint     LodgingId { get; set; }
     public string   Name { get; set; }
     
-    public IList<RoomTypePhoto>	Photos { get; }
+    public List<RoomTypePhoto>	Photos { get; }
 }
