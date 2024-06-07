@@ -137,7 +137,7 @@ export class LodgingInfoComponent implements OnInit
     let observable;
     if (this.create) {
       const response = await firstValueFrom(this._userService.getUser(this._appState.userName!));
-      newLodging.ownerId = response.person!.id;
+      newLodging.ownerId = response.personId;
       observable = this._lodgingService.saveLodging(newLodging);
     }
     else {

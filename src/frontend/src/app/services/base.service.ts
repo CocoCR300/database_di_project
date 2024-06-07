@@ -39,8 +39,9 @@ export class BaseService {
                     }
 
                     throw new Error(response.message);
-                })
-            );
+            }),
+            catchError(this.handleError)
+        );
     }
 
     delete(route: string, requiresToken: boolean, body: any): Observable<AppResponse> {

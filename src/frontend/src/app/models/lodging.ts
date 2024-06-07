@@ -1,9 +1,7 @@
 import { Perk } from "./perk";
-import { Person } from "./person";
-import { PhoneNumber } from "./phone_number";
-import { Photo } from "./photo";
 import { Room } from "./room";
 import { RoomType } from "./room_type";
+import { User } from "./user";
 
 export class Lodging {
     constructor(
@@ -14,11 +12,11 @@ export class Lodging {
         public address:         string,
         public type:            string,
         public emailAddress:    string,
-        public phoneNumbers:    PhoneNumber[] | null,
-        public photos:          Photo[] | null,
+        public phoneNumbers:    string[] | null,
+        public photos:          string[] | null,
         public perks:           Perk[] | null,
         public rooms:           Room[] | null,
         public roomTypes:       RoomType[] | null,
-        public owner:           Person | null)
+        public owner:           User | null)
         { }
 }

@@ -1,5 +1,3 @@
-import { Photo } from "./photo";
-
 export class RoomType
 {
     public constructor(
@@ -9,6 +7,6 @@ export class RoomType
         public capacity:        number,
         public lodgingId:       number,
         public name:            string,
-        public photos:          Photo[]
+        public photos:          string[]
     ) { }
 }

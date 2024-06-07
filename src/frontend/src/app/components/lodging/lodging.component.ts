@@ -256,7 +256,7 @@ export class LodgingComponent implements OnInit {
         if (this.isLessor) {
             this.title = "Mis alojamientos";
             this._userService.getUser(this._appState.userName!).subscribe(user => {
-                this._lodgingService.getLessorLodgings(user.person!.id!).subscribe(lodgings => {
+                this._lodgingService.getLessorLodgings(user.personId).subscribe(lodgings => {
                     this._lodgings = lodgings;
                     this.updatePagedList(0);
                 });

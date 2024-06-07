@@ -33,7 +33,6 @@ public class LodgingController : BaseController
         [Range(0, int.MaxValue)] int page = 1)
     {
         IQueryable<Lodging> lodgingsQuery = _context.Lodging
-            .AsNoTracking()
             .Include(l => l.Perks)
             .Include(l => l.PhoneNumbers)
             .Include(l => l.RoomTypes)

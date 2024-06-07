@@ -1,4 +1,3 @@
-import { Person } from "./person";
 import { UserRole } from "./user_role";
 
 export class User {
@@ -6,11 +5,12 @@ export class User {
         public name:            string,
         public password:        string | null,
         public roleId:          number,
+        public personId:        number,
         public firstName:       string,
         public lastName:        string,
         public emailAddress:    string,
-        public person:          Person | null,
-        public role:            UserRole | null)
+        public role:            UserRole | null,
+        public phoneNumbers:    string[] | null)
         { }
 }
 

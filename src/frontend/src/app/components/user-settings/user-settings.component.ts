@@ -49,7 +49,7 @@ export class UserSettingsComponent implements OnInit {
     if (userName !== null) {
       this.user = await firstValueFrom(this._userService.getUser(userName));
     }
-    this.email.setValue(this.user.person!.emailAddress);
+    this.email.setValue(this.user.emailAddress);
   }
 
   public onSubmitUserSettings(){
