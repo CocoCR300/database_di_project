@@ -106,7 +106,6 @@ namespace Restify.API.Data
 
 				person.Property(p => p.EmailAddress)
 					.IsRequired()
-					.HasAnnotation("EmailAddress", null)
 					.HasMaxLength(150);
 
 				person.HasOne(p => p.User)

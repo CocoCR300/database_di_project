@@ -27,20 +27,20 @@
 
         <div class="lodgings_container">
             <div *ngFor="let lodging of pagedLodgings" class="lodging_card">
-                <img *ngIf="lodging.image != null" loading="lazy" src="{{prependImagesRoute(lodging.image)}}" alt="{{lodging.name}}" class="lodging_image">
+                <img *ngIf="lodging.photos != null" loading="lazy" src="{{prependImagesRoute(lodging)}}" alt="{{lodging.name}}" class="lodging_image">
                 <div class="lodging_info">
                     <h2 class="lodging_name">{{ lodging.name }}</h2>
                     <p class="lodging_address">{{ lodging.address }}</p>
                     <p class="lodging_description">{{ lodging.description }}</p>
-                    <div class="lodging_details">
+                    <!--<div class="lodging_details">
                         <span class="price_per_night">Precio por noche: {{ lodging.per_night_price | currency }}</span>
                         <span class="rooms_available">{{ lodging.available_rooms}} habitaciones disponibles</span>
-                    </div>
+                    </div>-->
                 </div>
                 <div class="buttons_container">
                     <button mat-flat-button *ngIf="canBook" (click)="openBookingDrawer(lodging)">{{ isUserLogged ? "Reserva" : "Registrate para reservar" }}</button>
-                    <button mat-flat-button *ngIf="isLessor" (click)="editLodging(lodging.lodging_id)">Editar</button>
-                    <button mat-flat-button *ngIf="canDelete" (click)="deleteLodging(lodging.lodging_id)">Eliminar</button>
+                    <button mat-flat-button *ngIf="isLessor" (click)="editLodging(lodging.id)">Editar</button>
+                    <button mat-flat-button *ngIf="canDelete" (click)="deleteLodging(lodging.id)">Eliminar</button>
                 </div>
             </div>
         </div>

@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { AppState } from './models/app_state';
 import { NotificationComponent } from './components/notification/notification.component';
 import { UserService } from './services/user.service';
-import { UserRole } from './models/user';
+import { UserRoleEnum } from './models/user';
 
 @Component({
   selector: 'app-root',
@@ -30,7 +30,7 @@ export class AppComponent {
   }
 
   public get isAdmin() {
-    return this.appState.role == UserRole.Administrator;
+    return this.appState.role == UserRoleEnum.Administrator;
   }
 
   public get isUserLogged() {

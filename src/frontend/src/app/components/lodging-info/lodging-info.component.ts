@@ -60,8 +60,8 @@ export class LodgingInfoComponent implements OnInit
 
   prependImagesRoute(lodging: Lodging | null) {
     let imageSrc = "";
-    if (lodging != null) {
-      imageSrc = `${server.lodgingImages}${lodging?.image}`;
+    if (lodging != null && lodging.photos != null) {
+      imageSrc = `${server.lodgingImages}${lodging.photos[0]}`;
     }
 
     return imageSrc;
@@ -85,8 +85,10 @@ export class LodgingInfoComponent implements OnInit
     const lodgingName = this.lodgingFormGroup.get<string>("name")!;
     const address = this.lodgingFormGroup.get<string>("address")!;
     const description = this.lodgingFormGroup.get<string>("description")!;
-    const availableRooms = this.lodgingFormGroup.get<string>("availableRooms")!;
-    const perNightPrice = this.lodgingFormGroup.get<string>("perNightPrice")!;
+    const emailAddress = this.lodgingFormGroup.get<string>("emailAddress")!;
+    const type = this.lodgingFormGroup.get<string>("type")!;
+    const perks = this.lodgingFormGroup.get<string>("perks")!;
+    const phoneNumbers = this.lodgingFormGroup.get<string>("phoneNumbers")!;
 
     if (this.lodgingFormGroup.invalid) {
       if (lodgingName.hasError("required")) {
@@ -98,39 +100,44 @@ export class LodgingInfoComponent implements OnInit
       if (address.hasError("required")) {
         this._notificationService.show("La dirección del alojamiento es obligatoria.");
       }
-      if (availableRooms.hasError("required")) {
-        this._notificationService.show("La cantidad de habitaciones disponibles del alojamiento es obligatoria.");
+      if (emailAddress.hasError("required")) {
+        this._notificationService.show("El correo electrónico del alojamiento es obligatoria.");
       }
-      if (perNightPrice.hasError("required")) {
-        this._notificationService.show("El precio por noche del alojamiento es obligatorio.");
+      if (type.hasError("required")) {
+        this._notificationService.show("El tipo del alojamiento es obligatorio.");
       }
       
       return;
     }
 
+    // TODO
     const newLodging = new Lodging(
       0,
       0,
       lodgingName.value.trim(),
       description.value.trim(),
-      "",
       address.value.trim(),
+      "",
+      "",
       null,
-      parseFloat(perNightPrice.value),
-      parseInt(availableRooms.value)
+      null,
+      null,
+      null,
+      null,
+      null
     );
 
-    if (this.lodging) {
-      newLodging.lodging_id = this.lodging.lodging_id;
-      newLodging.lessor_id = this.lodging.lessor_id;
-      newLodging.image = this.lodging.image;
-      newLodging.lessor = this.lodging.lessor;
-    }
+    //if (this.lodging) {
+    //  newLodging.lodging_id = this.lodging.lodging_id;
+    //  newLodging.lessor_id = this.lodging.lessor_id;
+    //  newLodging.image = this.lodging.image;
+    //  newLodging.lessor = this.lodging.lessor;
+    //}
 
     let observable;
     if (this.create) {
       const response = await firstValueFrom(this._userService.getUser(this._appState.userName!));
-      newLodging.lessor_id = response.person_id;
+      newLodging.ownerId = response.person!.id;
       observable = this._lodgingService.saveLodging(newLodging);
     }
     else {
@@ -166,11 +173,12 @@ export class LodgingInfoComponent implements OnInit
 
   submitLodgingImage() {
     if (this.lodging != null && this.lodgingImageFile != null) {
-      this._lodgingService.saveLodgingImage(this.lodging.lodging_id, this.lodgingImageFile).subscribe(
+      this._lodgingService.saveLodgingImage(this.lodging.id, this.lodgingImageFile).subscribe(
         response => {
           if (response.ok) {
             this.undoImageChange();
-            this.lodging!.image = response.body;
+            // TODO
+            //this.lodging!.image = response.body;
             Swal.fire({
               icon: "success",
               title: "El cambio de imagen se ha realizado con éxito."
@@ -196,8 +204,10 @@ export class LodgingInfoComponent implements OnInit
       name: new FormControl(this.lodging?.name, { nonNullable: true, validators: Validators.required }),
       description: new FormControl(this.lodging?.description, { nonNullable: true, validators: Validators.required }),
       address: new FormControl(this.lodging?.address, { nonNullable: true, validators: Validators.required }),
-      availableRooms: new FormControl(this.lodging?.available_rooms, { nonNullable: true, validators: Validators.required }),
-      perNightPrice: new FormControl(this.lodging?.per_night_price, { nonNullable: true, validators: Validators.required })
+      emailAddress: new FormControl(this.lodging?.emailAddress, { nonNullable: true, validators: Validators.required }),
+      type: new FormControl(this.lodging?.type, { nonNullable: true, validators: Validators.required }),
+      perks: new FormControl(this.lodging?.perks, { nonNullable: true }),
+      phoneNumbers: new FormControl(this.lodging?.phoneNumbers, { nonNullable: true }),
     });
   }
 

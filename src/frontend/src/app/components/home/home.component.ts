@@ -8,7 +8,7 @@ import { Router, RouterLink } from '@angular/router';
 import { server } from '../../services/global';
 import { MatButtonModule } from '@angular/material/button';
 import { AppState } from '../../models/app_state';
-import { UserRole } from '../../models/user';
+import { UserRoleEnum } from '../../models/user';
 
 @Component({
   selector: 'app-home',
@@ -28,13 +28,13 @@ export class HomeComponent implements OnInit
   ) { }
 
   public get isCustomer() {
-    return this._appState.role == UserRole.Customer;
+    return this._appState.role == UserRoleEnum.Customer;
   }
 
-  prependImagesRoute(lodgingImageFileName: string | null) {
+  prependImagesRoute(lodging: Lodging) {
     let imageSrc = "";
-    if (lodgingImageFileName != null) {
-      imageSrc = `${server.lodgingImages}${lodgingImageFileName}`;
+    if (lodging.photos != null) {
+      imageSrc = `${server.lodgingImages}${lodging.photos[0]}`;
     }
 
     return imageSrc;
@@ -46,6 +46,6 @@ export class HomeComponent implements OnInit
 
   async ngOnInit() {
     const lodgings = await firstValueFrom(this._lodgingService.getLodgings(10, 1));
-    this.lodgings = lodgings.filter(lodging => lodging.image != null);
+    this.lodgings = lodgings.filter(lodging => lodging.photos != null);
   }
 }

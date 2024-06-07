@@ -9,7 +9,6 @@ import { MatInputModule } from '@angular/material/input';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButton } from '@angular/material/button';
 import { NotificationService } from '../../services/notification.service';
-import { AppResponse } from '../../models/app_response';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -50,7 +49,7 @@ export class UserSettingsComponent implements OnInit {
     if (userName !== null) {
       this.user = await firstValueFrom(this._userService.getUser(userName));
     }
-    this.email.setValue(this.user.email_address);
+    this.email.setValue(this.user.person!.emailAddress);
   }
 
   public onSubmitUserSettings(){
@@ -75,26 +74,27 @@ export class UserSettingsComponent implements OnInit {
     }
 
     let data = [];
-    if(this.user.first_name===first_name.value){
+    if(this.user.firstName===first_name.value){
       data[0] = '';
     }else{
       data[0] = first_name.value;
     }
-    if(this.user.last_name===last_name.value){
+    if(this.user.lastName===last_name.value){
       data[1] = '';
     }else{
       data[1] = last_name.value;
     }
-    if(this.user.email_address===email_user.value){
+    if(this.user.emailAddress===email_user.value){
       data[2] = '';
     }else{
       data[2] = email_user.value;
     }
-    if(this.user.phone_number===phone_number.value){
-      data[3] = 0;
-    }else{
-      data[3] = phone_number.value;
-    }
+    // TODO
+    //if(this.user.phone_number===phone_number.value){
+    //  data[3] = 0;
+    //}else{
+    //  data[3] = phone_number.value;
+    //}
 
     this._userService.updateUser(data,userName!).subscribe(
       response => {

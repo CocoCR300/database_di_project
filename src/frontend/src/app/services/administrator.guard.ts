@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, RouterStateSnapshot, Router, MaybeAsync, GuardResult } from '@angular/router';
 import { AppState } from '../models/app_state';
-import { UserRole } from '../models/user';
+import { UserRoleEnum } from '../models/user';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +16,6 @@ export class AdministratorGuard {
   canActivate(
     next: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): MaybeAsync<GuardResult> {
-      return this.appState.role == UserRole.Administrator;
+      return this.appState.role == UserRoleEnum.Administrator;
   }
 }

@@ -1,9 +1,8 @@
 export class AppResponse
 {
     constructor(
-        public body: any,
+        public body: ResponseBody | any,
         public errors: any[] | null,
-        public message: string,
         public ok: boolean,
         public status: number,
     )
@@ -17,4 +16,12 @@ export class AppResponse
             }
         }
     }
+}
+
+export class ResponseBody
+{
+    public constructor(
+        message: string | null,
+        values: any
+    ) { }
 }

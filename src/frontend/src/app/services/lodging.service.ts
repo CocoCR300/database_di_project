@@ -35,27 +35,25 @@ export class LodgingService extends BaseService
     }
 
     saveLodging(lodging: Lodging): Observable<AppResponse> {
+        // TODO
         const lodgingTrimmed = {
-            lodging_id: lodging.lodging_id,
-            lessor_id: lodging.lessor_id,
+            lodging_id: lodging.id,
+            ownerId: lodging.ownerId,
             address: lodging.address,
             name: lodging.name,
             description: lodging.description,
-            available_rooms: lodging.available_rooms,
-            per_night_price: lodging.per_night_price
         };
 
         return this.post("lodging", true, lodgingTrimmed);
     }
 
     updateLodging(lodging: Lodging): Observable<AppResponse> {
+        // TODO
         const lodgingTrimmed = {
-            lodging_id: lodging.lodging_id,
+            lodging_id: lodging.id,
             address: lodging.address,
             name: lodging.name,
             description: lodging.description,
-            available_rooms: lodging.available_rooms,
-            per_night_price: lodging.per_night_price
         };
 
         return this.put("lodging", true, lodgingTrimmed);

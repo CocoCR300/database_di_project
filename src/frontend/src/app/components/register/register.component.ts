@@ -23,34 +23,36 @@ export class RegisterComponent {
     private _notificationService: NotificationService,
     private _router: Router
   ) {
-    this.user = new User("", "", "", "", "", "", "", "");
+    this.user = new User("", "", 0, "", "", "", null, null);
   }
   
 
 
   onSubmit() {
     if (this.isFormValid()) {
-      this._userService.register(this.user).subscribe(
-        response => {
+      this._userService.register(this.user).subscribe({
+        next: response => {
           this._notificationService.show("Registro exitoso");
           this._router.navigate(['/login']);
         },
-        error => {
+        error: error => {
           this._notificationService.show("Error en el registro");
           console.error(error);
         }
-      );
+      });
     } else {
       this._notificationService.show("Por favor, complete todos los campos requeridos");
     }
   }
   isFormValid(): boolean {
-    return this.user.name.trim() !== '' &&
-           this.user.email_address.trim() !== '' &&
-           this.user.password.trim() !== '' &&
-           this.user.first_name.trim() !== '' &&
-           this.user.last_name.trim() !== '' &&
-           this.user.phone_number.trim() !== '' &&
-           this.user.role_id.trim() !== '';
+    // TODO
+    return false;
+    //return this.user.name.trim() !== '' &&
+    //       this.user.emailAddress.trim() !== '' &&
+    //       this.user.password!.trim() !== '' &&
+    //       this.user.firstName.trim() !== '' &&
+    //       this.user.lastName.trim() !== '' &&
+    //       //this.user.phone_number.trim() !== '' &&
+    //       this.user.roleId.trim() !== '';
   }
 }

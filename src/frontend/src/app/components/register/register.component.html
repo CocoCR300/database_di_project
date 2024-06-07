@@ -10,7 +10,7 @@
 
         <div class="input-field">
           <i class="fas fa-envelope"></i>
-          <input type="email" placeholder="Correo electrónico" name="email_address" #email_address="ngModel" [(ngModel)]="user.email_address" required>
+          <input type="email" placeholder="Correo electrónico" name="email_address" #email_address="ngModel" [(ngModel)]="user.emailAddress" required>
         </div>
 
         <div class="input-field">
@@ -20,26 +20,26 @@
         
         <div class="input-field">
           <i class="fas fa-user"></i>
-          <input type="text" placeholder="Nombre" name="first_name" #first_name="ngModel" [(ngModel)]="user.first_name" required>
+          <input type="text" placeholder="Nombre" name="first_name" #first_name="ngModel" [(ngModel)]="user.firstName" required>
         </div>
         
         <div class="input-field">
           <i class="fas fa-user"></i>
-          <input type="text" placeholder="Apellido" name="last_name" #last_name="ngModel" [(ngModel)]="user.last_name" required>
+          <input type="text" placeholder="Apellido" name="last_name" #last_name="ngModel" [(ngModel)]="user.lastName" required>
         </div>
         
-        <div class="input-field">
+        <!--<div class="input-field">
           <i class="fas fa-address-book"></i>
           <input type="text" placeholder="Número de teléfono" name="phone_number" #phone_number="ngModel" [(ngModel)]="user.phone_number" required>
-        </div>
+        </div>-->
       </div>
 
       <div class="role-selection">
         <label>
-          <input type="radio" name="role" value="2" role="ngModel" [(ngModel)]="user.role_id" required> Cliente
+          <input type="radio" name="role" value="2" role="ngModel" [(ngModel)]="user.roleId" required> Cliente
         </label>
         <label>
-          <input type="radio" name="role" value="3" role="ngModel" [(ngModel)]="user.role_id" required> Arrendador
+          <input type="radio" name="role" value="3" role="ngModel" [(ngModel)]="user.roleId" required> Arrendador
         </label>
       </div>
 

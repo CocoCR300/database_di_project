@@ -73,7 +73,7 @@ export class UserComponent implements OnInit, AfterViewInit{
               Swal.fire({
                 icon: "error",
                 "title": "Ha ocurrido un error",
-                "text": response.message
+                "text": response.body.message
               })
           }
         }

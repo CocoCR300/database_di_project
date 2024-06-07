@@ -1,11 +1,8 @@
 import { HttpHeaders } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { User } from "../models/user";
-import { Observable, from } from "rxjs";
+import { Observable } from "rxjs";
 import { BaseService } from "./base.service";
-import { Lessor } from "../models/lessor";
-import { Customer } from "../models/customer";
-import { Person } from "../models/person";
 import { AppResponse } from "../models/app_response";
 import { AppState } from "../models/app_state";
 
@@ -14,58 +11,14 @@ import { AppState } from "../models/app_state";
 })
 export class UserService extends BaseService{
     private users!: User[];
-    private lessors!: Lessor[];
-    private administrators!: Administrator[];
-    private customers!: Customer[];
     protected override _appState!: AppState;
 
     
-    async initializeArray(){
-        await Promise.all([
-            this.get<User[]>("user").toPromise(),
-            this.get<Lessor[]>("lessor").toPromise(),
-            this.get<Administrator[]>("administrator").toPromise(),
-            this.get<Customer[]>("customer").toPromise()
-        ]).then((values) =>{
-                this.users = values[0] as User[];
-                this.lessors = values[1] as Lessor[];
-                this.administrators = values[2] as Administrator[];
-                this.customers = values[3] as Customer[];
-            })
-            this.users.forEach(user => {
-                if(parseInt(user.role_id) === 1){
-                    let administratorAux = this.administrators.find(administratorAux => administratorAux.user_name === user.name);
-                    if(administratorAux){
-                        user.first_name = administratorAux.first_name;
-                        user.last_name = administratorAux.last_name;
-                        user.phone_number = administratorAux.phone_number;
-                        user.role_id = 'Administrador';
-                    }
-                }else if(parseInt(user.role_id) === 2){
-                    let customerAux = this.customers.find(customerAux => customerAux.user_name === user.name);
-                    if(customerAux){
-                        user.first_name = customerAux.first_name;
-                        user.last_name = customerAux.last_name;
-                        user.phone_number = customerAux.phone_number;
-                        user.role_id = 'Cliente';
-                    }
-                }else if(parseInt(user.role_id) === 3){
-                    let customerAux = this.lessors.find(customerAux => customerAux.user_name === user.name);
-                    if(customerAux){
-                        user.first_name = customerAux.first_name;
-                        user.last_name = customerAux.last_name;
-                        user.phone_number = customerAux.phone_number;
-                        user.role_id = 'Arrendador';
-                    }
-                }
-            });
+    async initializeArray() {
     }
 
     getUsers(): Observable<User[]> {
-        return from(this.initializeArray().then(() => {
-            console.log(this.users);
-            return this.users;
-        }));
+        return this.get<User[]>("user");
     }
 
     getUser(name: string): Observable<User> {
@@ -116,7 +69,7 @@ export class UserService extends BaseService{
             if(response.ok){
                 console.log('Sesion cerrada con exito');
             }
-            console.log(response.message);
+            console.log(response.body.message);
         })
         this._appState.logOut();
     }

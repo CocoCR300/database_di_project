@@ -10,7 +10,7 @@
         <c-carousel>
             <c-carousel-inner *ngIf="lodgings != null">
                 <c-carousel-item *ngFor="let lodging of lodgings">
-                    <img class="lodging_image" alt="{{lodging.name}}" loading="lazy" src="{{prependImagesRoute(lodging.image)}}">
+                    <img class="lodging_image" alt="{{lodging.name}}" loading="lazy" src="{{prependImagesRoute(lodging)}}">
                     <c-carousel-caption>
                         <h3>{{lodging.name}}</h3>
                         <p>{{lodging.description}}</p>

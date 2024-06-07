@@ -11,7 +11,7 @@ import { MatSidenavModule, MatDrawer } from '@angular/material/sidenav';
 import { provideMomentDateAdapter } from '@angular/material-moment-adapter';
 import Swal from 'sweetalert2';
 import { AppState } from '../../models/app_state';
-import { UserRole } from '../../models/user';
+import { UserRoleEnum } from '../../models/user';
 import { UserService } from '../../services/user.service';
 import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BookingService } from '../../services/booking.service';
@@ -67,10 +67,10 @@ export class LodgingComponent implements OnInit {
     ) {
     }
 
-    prependImagesRoute(lodgingImageFileName: string) {
+    prependImagesRoute(lodging: Lodging) {
         let imageSrc = "";
-        if (lodgingImageFileName != null) {
-            imageSrc = `${server.lodgingImages}${lodgingImageFileName}`;
+        if (lodging.photos != null) {
+            imageSrc = `${server.lodgingImages}${lodging.photos[0]}`;
         }
 
         return imageSrc;
@@ -85,38 +85,38 @@ export class LodgingComponent implements OnInit {
     }
 
     public async submitBooking() {
-        if (!this.bookingForm.valid) {
-            return;
-        }
-
-        const startDateMoment = this.bookingFormGroup.get("startDate")?.value as moment.Moment;
-        const endDateMoment = this.bookingFormGroup.get("endDate")?.value as moment.Moment;
-        let startDate = startDateMoment.format("yyyy-MM-DD");
-        let endDate = endDateMoment.format("yyyy-MM-DD");
-        
-        const user = await firstValueFrom(this._userService.getUser(this._appState.userName!));
-
-        const booking = new Booking(
-            0,
-            this.selectedLodging!.lodging_id,
-            user.person_id!,
-            BookingStatus.Created,
-            startDate,
-            endDate);
-        const response = await firstValueFrom(this._bookingService.postBooking(booking));
-        
-        if (response.ok) {
-            Swal.fire({
-                icon: "success",
-                title: "La reserva ha sido creada con éxito."
-            });
-            this.sidebar.close();
-        }
-        else {
-            for (const message of AppResponse.getErrors(response)) {
-                this._notificationService.show(message);
-            }
-        }
+    //    if (!this.bookingForm.valid) {
+    //        return;
+    //    }
+    //
+    //    const startDateMoment = this.bookingFormGroup.get("startDate")?.value as moment.Moment;
+    //    const endDateMoment = this.bookingFormGroup.get("endDate")?.value as moment.Moment;
+    //    let startDate = startDateMoment.format("yyyy-MM-DD");
+    //    let endDate = endDateMoment.format("yyyy-MM-DD");
+    //    
+    //    const user = await firstValueFrom(this._userService.getUser(this._appState.userName!));
+    //
+    //    const booking = new Booking(
+    //        0,
+    //        this.selectedLodging!.lodging_id,
+    //        user.person_id!,
+    //        BookingStatus.Created,
+    //        startDate,
+    //        endDate);
+    //    const response = await firstValueFrom(this._bookingService.postBooking(booking));
+    //    
+    //    if (response.ok) {
+    //        Swal.fire({
+    //            icon: "success",
+    //            title: "La reserva ha sido creada con éxito."
+    //        });
+    //        this.sidebar.close();
+    //    }
+    //    else {
+    //        for (const message of AppResponse.getErrors(response)) {
+    //            this._notificationService.show(message);
+    //        }
+    //    }
     }
 
     public openBookingDrawer(lodging: Lodging) {
@@ -183,7 +183,7 @@ export class LodgingComponent implements OnInit {
                 "Este alojamiento aún tiene reservas pendientes. Si continua, las reservas serán borradas ¿Desea continuar?");
             if (proceed) {
                 try {
-                    await firstValueFrom(this._lodgingService.deleteBookings(lodgingBookings.map(booking => booking.booking_id)));
+                    await firstValueFrom(this._lodgingService.deleteBookings(lodgingBookings.map(booking => booking.id)));
                 }
                 catch (error: any) {
                     console.log(error);
@@ -204,7 +204,7 @@ export class LodgingComponent implements OnInit {
             (response: AppResponse) => {
                 if (response.ok) {
                     // lodgings, lodgings, lodgings, lodgings, lodgings
-                    this._lodgings = this._lodgings.filter(lodging => lodging.lodging_id !== lodgingId);
+                    this._lodgings = this._lodgings.filter(lodging => lodging.id == lodgingId);
                     this.updatePagedList(this.currentPage);
 
                     Swal.fire({
@@ -217,7 +217,7 @@ export class LodgingComponent implements OnInit {
                     Swal.fire({
                         icon: "error",
                         "title": "Ha ocurrido un error",
-                        "text": response.message
+                        "text": response.body.message
                     });
                 }
             });
@@ -226,12 +226,14 @@ export class LodgingComponent implements OnInit {
     private updatePagedList(pageIndex: number) {
         let startIndex = pageIndex * this.pageSize;
         let endIndex = startIndex + this.pageSize;
-        if(endIndex > this._lodgings.length){
+        if(endIndex > this._lodgings.length) {
+          // TODO: Get more lodgings, if available
           endIndex = this._lodgings.length;
         }
 
         let lodgings = this._lodgings;
         if (this._filteredLodgings != null) {
+            // TODO: Filtering should be done in the API now, it's missing filtering by address though
             lodgings = this._filteredLodgings;
         }
 
@@ -246,15 +248,15 @@ export class LodgingComponent implements OnInit {
 
         this.isUserLogged = this._appState.isUserLogged;
         if(this.isUserLogged) {
-            this.isLessor = this._appState.role == UserRole.Lessor;
-            this.canDelete = this._appState.role == UserRole.Administrator || this.isLessor;
+            this.isLessor = this._appState.role == UserRoleEnum.Lessor;
+            this.canDelete = this._appState.role == UserRoleEnum.Administrator || this.isLessor;
         }
-        this.canBook = !this.isUserLogged || this._appState.role == UserRole.Customer;
+        this.canBook = !this.isUserLogged || this._appState.role == UserRoleEnum.Customer;
 
         if (this.isLessor) {
             this.title = "Mis alojamientos";
             this._userService.getUser(this._appState.userName!).subscribe(user => {
-                this._lodgingService.getLessorLodgings(user.person_id!).subscribe(lodgings => {
+                this._lodgingService.getLessorLodgings(user.person!.id!).subscribe(lodgings => {
                     this._lodgings = lodgings;
                     this.updatePagedList(0);
                 });

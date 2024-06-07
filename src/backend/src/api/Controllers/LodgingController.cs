@@ -25,6 +25,8 @@ public class LodgingController : BaseController
     [HttpGet("{pageSize}/{page}")]
     public ObjectResult Index(
         [FromQuery] string? lodgingName,
+        [FromQuery] string? description,
+        [FromQuery] string? address,
         [FromQuery] string? lodgingTypes,
         [FromQuery] string? perkIds,
         [Range(0, int.MaxValue)] int pageSize = 10,
@@ -37,11 +39,24 @@ public class LodgingController : BaseController
             .Include(l => l.RoomTypes)
             .Include(l => l.Owner);
 
-        if (!string.IsNullOrWhiteSpace(lodgingName))
+        if (string.IsNullOrWhiteSpace(lodgingName))
         {
-            lodgingsQuery = lodgingsQuery.Where(l => l.Name.Contains(lodgingName));
+            lodgingName = string.Empty;
+        }
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            description = string.Empty;
+        }
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            address = string.Empty;
         }
 
+        lodgingsQuery = lodgingsQuery.Where(l =>
+            l.Name.Contains(lodgingName)
+            || l.Description.Contains(description)
+            || l.Address.Contains(address));
+        
         if (!string.IsNullOrWhiteSpace(lodgingTypes))
         {
             LodgingType[] lodgingTypeValues = Enum.GetValues<LodgingType>();
