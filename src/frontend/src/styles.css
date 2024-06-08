@@ -1,4 +1,6 @@
 :root {
+    --border-radius: 20px;
+
     --color-primary: #0D1F23;
     --color-secondary: #132E35;
     --color-accent: #2D4A53;

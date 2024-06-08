@@ -40,7 +40,7 @@ input[type="text"], input[type="password"], input[type="email"] {
   margin: 10px 0;
   border: none;
   border-bottom: 2px solid #AFB2B7;
-  border-radius: 20px;
+  border-radius: var(--border-radius);
   color: #000000;
   font-size: 16px;
 }

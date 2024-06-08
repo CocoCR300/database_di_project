@@ -1,3 +1,8 @@
+mat-chip-grid {
+    max-height: 6em;
+    overflow: scroll;
+}
+
 #lodging_info_main {
     display: flex;
     height: 100%;
@@ -25,7 +30,7 @@
 }
 
 #lodging_form_input_container {
-    column-gap: 2em;
+    column-gap: 1em;
     display: grid;
     grid-template-columns: repeat(2, auto);
     grid-template-rows: repeat(4, 1fr);
@@ -51,10 +56,14 @@
 }
 
 #lodging_image {
-    clip-path: rect(0px 0px 100% 100% round 0.5em);
+    clip-path: rect(0px 0px 100% 100% round var(--border-radius));
     max-height: 15em;
     object-fit: cover;
     width: 25em;
+}
+
+#perkChipsInput {
+    grid-row: 3 / span 2;
 }
 
 .buttons_container > button {

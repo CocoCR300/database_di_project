@@ -20,12 +20,34 @@
                         <input matInput formControlName="name">
                     </mat-form-field>
                     <mat-form-field class="lodging_form_first_column lodging_form_input_shrink">
-                        <mat-label>Habitaciones disponibles</mat-label>
-                        <input matInput type="number" formControlName="availableRooms">
+                        <mat-label>Tipo de alojamiento</mat-label>
+                        <mat-select formControlName="lodgingType">
+                        @for (lodgingType of lodgingTypes; track lodging) {
+                            <mat-option [value]="lodgingType[0]">{{lodgingType[1]}}</mat-option>
+                        }
+                        </mat-select>
                     </mat-form-field>
-                    <mat-form-field class="lodging_form_first_column lodging_form_input_shrink">
-                        <mat-label>Precio por noche</mat-label>
-                        <input matInput type="number" formControlName="perNightPrice">
+                    <mat-form-field id="perkChipsInput">
+                        <mat-label>Beneficios adicionales</mat-label>
+                        <mat-chip-grid #perkChipGrid aria-label="Elige los beneficios adicionales del alojamiento">
+                        @for (perk of selectedPerks; track perk) {
+                            <mat-chip-row (removed)="removePerk(perk)">
+                                {{perk.name}}
+                                <button matChipRemove [attr.aria-label]="'remove ' + perk.name">
+                                    <mat-icon>cancel</mat-icon>
+                                </button>
+                            </mat-chip-row>
+                        }
+                        </mat-chip-grid>
+                        <input placeholder="Beneficio adicional..." #perkInput formControlName="perkName"
+                            [matChipInputFor]="perkChipGrid" [matAutocomplete]="auto"
+                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                            (matChipInputTokenEnd)="addPerk($event)"/>
+                        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="perkAutoCompleteSelected($event)">
+                        @for (perk of filteredPerks | async; track perk) {
+                            <mat-option [value]="perk">{{perk.name}}</mat-option>
+                        }
+                        </mat-autocomplete>
                     </mat-form-field>
                     <mat-form-field id="description_field" class="lodging_form_second_column">
                         <mat-label>Descripción</mat-label>

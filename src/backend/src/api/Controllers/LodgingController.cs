@@ -158,15 +158,12 @@ public class LodgingController : BaseController
     public ObjectResult Get(uint lodgingId)
     {
         var lodging = _context.Lodging
-            .AsNoTracking()
             .Where(l => l.Id == lodgingId)
             .Include(l => l.Owner)
-            .Select(l => new
-            {
-                l.Address, l.Description, l.EmailAddress, l.Id, l.Name,
-                l.Owner, l.Perks, l.PhoneNumbers, l.Photos, l.Type,
-                l.RoomTypes
-            }).SingleOrDefault();
+            .ThenInclude(p => p.User)
+            .Include(lodging => lodging.RoomTypes)
+            .Include(lodging => lodging.Perks)
+            .SingleOrDefault();
 
         if (lodging == null)
         {
@@ -187,6 +184,7 @@ public class LodgingController : BaseController
                 .OrderBy(p => p.Ordering)
                 .Select(p => p.FileName)
                 .ToArray();
+            
             return Ok(new
             {
                 lodging.Address,

@@ -15,6 +15,7 @@ $my-theme: mat.define-dark-theme((
 
 @include mat.core-theme($my-theme);
 @include mat.button-theme($my-theme);
+@include mat.chips-theme($my-theme);
 @include mat.datepicker-theme($my-theme);
 @include mat.form-field-theme($my-theme);
 @include mat.input-theme($my-theme);
@@ -30,11 +31,21 @@ mat-paginator {
   background-color: transparent !important;
 }
 
+.mat-mdc-autocomplete-panel {
+  background-color: var(--color-primary) !important;
+  border-radius: var(--border-radius) !important;
+}
+
 .mat-mdc-paginator-container {
   margin: auto;
   width: auto !important;
 }
 
+.mat-mdc-select-panel {
+  background-color: var(--color-primary) !important;
+  border-radius: var(--border-radius) !important;
+}
+
 .mdc-text-field--outlined {
-  --mdc-outlined-text-field-container-shape: 28px !important;
+  --mdc-outlined-text-field-container-shape: var(--border-radius) !important;
 }

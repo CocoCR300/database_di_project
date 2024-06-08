@@ -4,12 +4,17 @@ import { BaseService } from "./base.service";
 import { Lodging } from "../models/lodging";
 import { AppResponse } from "../models/app_response";
 import { Booking } from "../models/booking";
+import { Perk } from "../models/perk";
 
 @Injectable({
     providedIn:'root'
 })
 export class LodgingService extends BaseService
 {
+    getPerks() {
+        return this.get<Perk[]>("perk");
+    }
+
     getLodgingBookings(lodgingId: number): Observable<Booking[]> {
         return this.get(`lodging/${lodgingId}/booking`, true);
     }

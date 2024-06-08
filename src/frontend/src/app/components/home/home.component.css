@@ -1,5 +1,5 @@
 c-carousel {
-    clip-path: rect(0 0 100% 100% round 1em);
+    clip-path: rect(0 0 100% 100% round var(--border-radius));
     width: 40em;
 }
 

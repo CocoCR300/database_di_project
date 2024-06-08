@@ -1,10 +1,14 @@
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { Component, OnInit, ViewChild } from '@angular/core';
+import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { Lodging } from '../../models/lodging';
 import { LodgingService } from '../../services/lodging.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AsyncPipe, NgIf } from '@angular/common';
-import { firstValueFrom } from 'rxjs';
+import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { Observable, firstValueFrom, map, of, startWith } from 'rxjs';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NotificationService } from '../../services/notification.service';
 import { AppResponse } from '../../models/app_response';
@@ -13,22 +17,42 @@ import { MatButtonModule } from '@angular/material/button';
 import { server } from '../../services/global';
 import { UserService } from '../../services/user.service';
 import { AppState } from '../../models/app_state';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { Perk } from '../../models/perk';
 
 @Component({
   selector: 'app-lodging-info',
   standalone: true,
-  imports: [AsyncPipe, FormsModule, MatButtonModule, MatInputModule, NgIf, ReactiveFormsModule],
+  imports: [AsyncPipe, FormsModule, MatAutocompleteModule, MatButtonModule, MatChipsModule, MatIconModule, MatInputModule, MatOptionModule, MatSelectModule, NgFor, NgIf, ReactiveFormsModule],
   templateUrl: './lodging-info.component.html',
   styleUrl: './lodging-info.component.css'
 })
 export class LodgingInfoComponent implements OnInit
 {
+  lodgingTypes = [
+      [0, "Apartmento"],
+      [1, "Casa de invitados"],
+      [2, "Hotel"],
+      [3, "Albergue"],
+      [4, "Casa de huéspedes"],
+      [5, "Alquiler vacacional"]
+  ];
+
+  separatorKeysCodes: number[] = [ENTER, COMMA];
   create = true;
   emptyTitle!: string;
   lodgingImageFile!: File | null;
   lodgingImageData: any; 
   lodgingFormGroup: FormGroup = this.buildFormGroup();
   lodging!: Lodging | null;
+  perks: Perk[] = [];
+  perksToAdd: Perk[] = [];
+  perksToDelete: Perk[] = [];
+  filteredPerks: Observable<Perk[]> = of<Perk[]>([]);
+  selectedPerks: Perk[] = [];
+  selectedPerkIds: number[] = [];
+  _filteredPerks: Perk[] = [];
 
   public constructor(
     private _appState: AppState,
@@ -37,8 +61,7 @@ export class LodgingInfoComponent implements OnInit
     private _notificationService: NotificationService,
     private _router: Router,
     private _userService: UserService
-  )
-  { }
+  ) { }
 
   get newLodgingImageSubmitted() {
     return this.lodgingImageData != null;
@@ -76,6 +99,48 @@ export class LodgingInfoComponent implements OnInit
     reader.readAsDataURL(this.lodgingImageFile!);
   }
 
+  addPerk(event: MatChipInputEvent) {
+    const value = (event.value || '').trim();
+
+    // Add our fruit
+    if (value) {
+      const perk = this._filteredPerks.find(perk => perk.name === value);
+
+      if (perk && !this.selectedPerkIds.includes(perk.id)) {
+        this.selectedPerkIds.push(perk.id);
+        this.selectedPerks.push(perk);
+        this.perksToAdd.push(perk);
+      }
+    }
+
+    event.chipInput!.clear();
+
+    this.lodgingFormGroup.get("perkName")!.setValue(null);
+  }
+
+  perkAutoCompleteSelected(event: MatAutocompleteSelectedEvent) {
+    const perk = event.option.value as Perk;
+
+    if (!this.selectedPerkIds.includes(perk.id)) {
+      this.selectedPerkIds.push(perk.id)
+      this.selectedPerks.push(perk);
+      this.perksToAdd.push(perk);
+    }
+
+    //this.lodgingFormGroup.get("perkName")!.nativeElement.value = '';
+    this.lodgingFormGroup.get("perkName")!.setValue(null);
+  }
+
+  removePerk(perk: Perk) {
+    const index = this.selectedPerkIds.indexOf(perk.id);
+
+    if (index >= 0) {
+      this.selectedPerkIds.splice(index, 1);
+      const perks = this.selectedPerks.splice(index, 1);
+      this.perksToDelete.push(perks[0]);
+    }
+  }
+
   undoImageChange() {
     this.lodgingImageFile = null;
     this.lodgingImageData = null;
@@ -86,8 +151,7 @@ export class LodgingInfoComponent implements OnInit
     const address = this.lodgingFormGroup.get<string>("address")!;
     const description = this.lodgingFormGroup.get<string>("description")!;
     const emailAddress = this.lodgingFormGroup.get<string>("emailAddress")!;
-    const type = this.lodgingFormGroup.get<string>("type")!;
-    const perks = this.lodgingFormGroup.get<string>("perks")!;
+    const type = this.lodgingFormGroup.get<string>("lodgingType")!;
     const phoneNumbers = this.lodgingFormGroup.get<string>("phoneNumbers")!;
 
     if (this.lodgingFormGroup.invalid) {
@@ -127,12 +191,11 @@ export class LodgingInfoComponent implements OnInit
       null
     );
 
-    //if (this.lodging) {
-    //  newLodging.lodging_id = this.lodging.lodging_id;
-    //  newLodging.lessor_id = this.lodging.lessor_id;
-    //  newLodging.image = this.lodging.image;
-    //  newLodging.lessor = this.lodging.lessor;
-    //}
+    if (this.lodging) {
+      newLodging.id = this.lodging.id;
+      newLodging.ownerId = this.lodging.ownerId;
+      newLodging.owner = this.lodging.owner;
+    }
 
     let observable;
     if (this.create) {
@@ -197,29 +260,69 @@ export class LodgingInfoComponent implements OnInit
 
   resetForm() {
     this.lodgingFormGroup.reset();
+    
+    if (this.create) {
+      this.selectedPerks = [];
+    }
+    else {
+      this.selectedPerks = this.lodging!.perks!.slice();
+    }
+
+    this.perksToAdd = [];
+    this.perksToDelete = [];
+  }
+
+  private filterPerks(value: Perk | string): Perk[] {
+    if (!(value instanceof String)) { // Don't know why this happens
+      return [];
+    }
+
+    const filterValue = value.toLowerCase();
+
+    const filteredPerks: Perk[] = this.perks.filter(perk => perk.name.toLowerCase().includes(filterValue));
+    return filteredPerks;
   }
 
   private buildFormGroup() {
-    return new FormGroup({
+    const formGroup = new FormGroup({
       name: new FormControl(this.lodging?.name, { nonNullable: true, validators: Validators.required }),
       description: new FormControl(this.lodging?.description, { nonNullable: true, validators: Validators.required }),
       address: new FormControl(this.lodging?.address, { nonNullable: true, validators: Validators.required }),
       emailAddress: new FormControl(this.lodging?.emailAddress, { nonNullable: true, validators: Validators.required }),
-      type: new FormControl(this.lodging?.type, { nonNullable: true, validators: Validators.required }),
-      perks: new FormControl(this.lodging?.perks, { nonNullable: true }),
+      lodgingType: new FormControl(this.lodging?.type, { nonNullable: true, validators: Validators.required }),
       phoneNumbers: new FormControl(this.lodging?.phoneNumbers, { nonNullable: true }),
+      perkName: new FormControl(""),
     });
+
+    this.filteredPerks = formGroup.get("perkName")!.valueChanges.pipe(
+      startWith(null),
+      map((perkName: string | null) => {
+        if (perkName) {
+          this._filteredPerks = this.filterPerks(perkName);
+        }
+        else {
+          this._filteredPerks = this.perks.slice();
+        }
+
+        return this._filteredPerks;
+      }),
+    );
+
+    return formGroup;
   }
 
   async ngOnInit() {
     this.emptyTitle = "Nuevo alojamiento";
 
+    this._lodgingService.getPerks().subscribe(perks => this.perks = perks);
     const lodgingIdString = this._route.snapshot.paramMap.get("id");
     if (lodgingIdString !== null) {
       this.create = false;
       this.emptyTitle = "Alojamiento";
       const lodgingId = parseInt(lodgingIdString);
       this.lodging = await firstValueFrom(this._lodgingService.getLodging(lodgingId));
+
+      this.selectedPerks = this.lodging.perks!.slice();
     }
 
     this.lodgingFormGroup = this.buildFormGroup();
