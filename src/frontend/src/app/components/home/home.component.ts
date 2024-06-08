@@ -45,9 +45,8 @@ export class HomeComponent implements OnInit
   }
 
   async ngOnInit() {
-    const lodgings = this._lodgingService.getLodgings(50, 1).subscribe(lodgings =>
+    this._lodgingService.getLodgings(50, 1).subscribe(lodgings =>
       this.lodgings = lodgings.filter(lodging => lodging.photos!.length > 0)
     );
-    //this.lodgings = lodgings.filter(lodging => lodging.photos!.length > 0);
   }
 }

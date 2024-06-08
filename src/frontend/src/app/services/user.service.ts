@@ -5,6 +5,7 @@ import { Observable } from "rxjs";
 import { BaseService } from "./base.service";
 import { AppResponse } from "../models/app_response";
 import { AppState } from "../models/app_state";
+import { TokenIdentity } from "../models/token_identity";
 
 @Injectable({
     providedIn: 'root'
@@ -48,12 +49,12 @@ export class UserService extends BaseService{
         return this._http.post(this.urlAPI + 'user/login', params, options)
     }
 
-    getIdentityFromApi(token: string): Observable<any> {
+    getIdentityFromApi(token: string): Observable<TokenIdentity> {
         let headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
         headers = headers.set('Authorization', `Bearer ${token}`);
 
         const options = { headers };
-        return this._http.get(this.urlAPI + 'user/identity', options);
+        return this.get(this.urlAPI + 'user/identity', true);
     }
 
     deleteUser(userName: string): Observable<AppResponse>{

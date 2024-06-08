@@ -67,6 +67,14 @@ export class LodgingComponent implements OnInit {
     ) {
     }
 
+    hasPhotos(lodging: Lodging) {
+        return lodging.photos!.length > 0;
+    }
+
+    hasRoomTypes(lodging: Lodging) {
+        return lodging.roomTypes && lodging.roomTypes.length > 0;
+    }
+
     prependImagesRoute(lodging: Lodging) {
         let imageSrc = "";
         if (lodging.photos != null) {
@@ -264,6 +272,24 @@ export class LodgingComponent implements OnInit {
         }
         else {
             this._lodgingService.getLodgings(100, 1).subscribe(lodgings => {
+                lodgings.forEach(lodging => {
+                    if (lodging.roomTypes) {
+                        let min = Infinity, max = 0;
+                        
+                        for (const roomType of lodging.roomTypes) {
+                            if (min > roomType.perNightPrice) {
+                                min = roomType.perNightPrice;
+                            }
+
+                            if (max < roomType.perNightPrice) {
+                                max = roomType.perNightPrice;
+                            }
+                        }
+
+                        lodging.roomTypeMaxPrice = max;
+                        lodging.roomTypeMinPrice = min;
+                    }
+                });
                 this._lodgings = lodgings;
                 this.updatePagedList(0);
             });

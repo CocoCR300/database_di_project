@@ -57,6 +57,27 @@ namespace Restify.API.Controllers
 
             return NotFound("No existe un usuario con el nombre especificado.");
         }
+        
+        [HttpGet("identity")]
+        public ObjectResult IdentityFromToken([FromBody] string token)
+        {
+            ClaimsPrincipal? claimsPrincipal = _authenticationUtil.ValidateToken(token);
+
+            if (claimsPrincipal == null)
+            {
+                return BadRequest("Token no válido.");
+            }
+
+            Dictionary<string, string> claimsByName = new Dictionary<string, string>();
+
+            foreach (Claim claim in claimsPrincipal.Claims)
+            {
+                claimsByName.Add(claim.Type, claim.Value);
+            }
+
+            return Ok(claimsByName);
+        }
+
 
         [HttpPost("login")]
         public ObjectResult LogIn(LoginRequest loginRequest)
@@ -111,26 +132,6 @@ namespace Restify.API.Controllers
             
             var token = _authenticationUtil.GenerateJwtToken(user);
             return Ok(token);
-        }
-
-        [HttpPost("identity")]
-        public ObjectResult IdentityFromToken([FromBody] string token)
-        {
-            ClaimsPrincipal? claimsPrincipal = _authenticationUtil.ValidateToken(token);
-
-            if (claimsPrincipal == null)
-            {
-                return BadRequest("Token no válido.");
-            }
-
-            Dictionary<string, string> claimsByName = new Dictionary<string, string>();
-
-            foreach (Claim claim in claimsPrincipal.Claims)
-            {
-                claimsByName.Add(claim.Type, claim.Value);
-            }
-
-            return Ok(claimsByName);
         }
 
         [HttpDelete]

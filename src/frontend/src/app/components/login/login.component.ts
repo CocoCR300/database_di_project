@@ -36,7 +36,7 @@ export class LoginComponent {
         const token = response;
         try {
           const identity = await firstValueFrom(this._userService.getIdentityFromApi(token));
-          this._appState.logIn(token, identity.iss, parseInt(identity.role_id));
+          this._appState.logIn(token, identity.userName, identity.roleId);
         } catch (error) {
           console.log('Error al obtener la identidad', error);
         }

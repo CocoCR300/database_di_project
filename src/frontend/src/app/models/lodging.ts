@@ -4,6 +4,9 @@ import { RoomType } from "./room_type";
 import { User } from "./user";
 
 export class Lodging {
+    public roomTypeMaxPrice: number | null = null;
+    public roomTypeMinPrice: number | null = null;
+
     constructor(
         public id:              number,
         public ownerId:         number,

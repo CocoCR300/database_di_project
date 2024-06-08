@@ -11,6 +11,7 @@ public class AuthenticationUtil
 {
     public const string PersonIdClaimName = "personId";
     public const string RoleClaimName = "role";
+    public const string RoleIdClaimName = "roleId";
     public const string UserNameClaimName = "userName";
 
     private readonly ILogger<AuthenticationUtil> _logger;
@@ -71,6 +72,7 @@ public class AuthenticationUtil
     public string GenerateJwtToken(User user) {
         var claims = new List<Claim> {
             new Claim(UserNameClaimName, user.Name),
+            new Claim(RoleIdClaimName, user.RoleId.ToString()),
             new Claim(RoleClaimName, user.Role.Type),
             new Claim(PersonIdClaimName, user.Person.Id.ToString())
         };
