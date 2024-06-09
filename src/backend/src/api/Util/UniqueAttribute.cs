@@ -7,18 +7,29 @@ namespace Restify.API.Util
 {
 	public class UniqueAttribute<T> : ValidationAttribute where T : class
 	{
+		public string? PropertyName { get; init; }
+
 		protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
 		{
 			if (value == null)
 			{
 				return ValidationResult.Success;
 			}
+
+			string propertyName;
+			if (!string.IsNullOrEmpty(PropertyName))
+			{
+				propertyName = PropertyName;
+			}
+			else
+			{
+				propertyName = validationContext.MemberName;
+			}
 			
-			Expression	parameter	= Expression.Parameter(typeof(T), "entity"),
-						property	= Expression.Property(parameter, typeof(T), validationContext.MemberName),
+			Expression	parameter = Expression.Parameter(typeof(T), "entity"),
+						property = Expression.Property(parameter, typeof(T), propertyName),
 						equals = Expression.Equal(property, Expression.Constant(value));
-			
-			Expression<Func<T, bool>> predicate = (Expression<Func<T, bool>>) Expression.Lambda(equals);
+			Expression<Func<T, bool>> predicate = (Expression<Func<T, bool>>) Expression.Lambda(equals, parameter as ParameterExpression);
 			
 			RestifyDbContext context = validationContext.GetRequiredService<RestifyDbContext>();
 			T? entity = context.Set<T>().Where(predicate).FirstOrDefault();

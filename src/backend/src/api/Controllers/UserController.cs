@@ -307,11 +307,11 @@ namespace Restify.API.Controllers
         [Required]
         [MaxLength(200)]
         [EmailAddress]
-        [Unique<User>]
+        [Unique<Person>]
         public string   EmailAddress { get; set; }
         [Required]
         [MaxLength(50)]
-        [Unique<User>]
+        [Unique<User>(PropertyName = nameof(Models.User.Name))]
         public string   UserName { get; set; }
         [Required]
         [MaxLength(50)]
