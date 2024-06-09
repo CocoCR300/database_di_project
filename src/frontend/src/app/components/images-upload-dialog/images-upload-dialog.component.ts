@@ -17,11 +17,13 @@ export class ImagesUploadDialogComponent
   images: DialogImageData[] = [];
   newImages: any[] = [];
   imagesToDelete: string[] = [];
+  title: string;
 
   public constructor(
     public dialogRef: MatDialogRef<ImagesUploadDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ImagesUploadDialogData
   ) {
+    this.title = data.title;
     for (const fileName of data.imageFileNames) {
       this.images.push(new DialogImageData(fileName, null));
     }
@@ -88,6 +90,7 @@ export class ImagesUploadDialogData
 {
   public constructor(
     public edit: boolean,
+    public title: string,
     public imageFileNames: string[]
   ) { }
 }

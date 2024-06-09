@@ -38,7 +38,7 @@ body {
     grid-row: 3;
 }
 
-app-booking, app-error, app-home, app-lodging, app-lodging-info, app-user, app-user-settings {
+app-booking, app-error, app-home, app-lodging, app-lodging-info, app-lodging-rooms, app-user, app-user-settings {
     backdrop-filter: blur(15px) brightness(40%);
     color: white;
 }

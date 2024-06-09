@@ -105,7 +105,7 @@ export class LodgingInfoComponent implements OnInit
     const images: string[] = this.lodging?.photos?.slice() ?? [];
 
     this._dialog.open(ImagesUploadDialogComponent,
-      { data: new ImagesUploadDialogData(false, images) })
+      { data: new ImagesUploadDialogData(false, "Fotos del alojamiento", images) })
       .afterClosed().subscribe(
         async (dialogResult: ImagesUploadDialogResult) => {
           if (dialogResult.confirmed) {

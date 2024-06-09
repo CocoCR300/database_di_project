@@ -1,0 +1,147 @@
+<div>
+    <h1 id="lodging_title">{{ lodgingName }}</h1>
+    <div id="lodging_info_main">
+        <div id="lodging_info_left_section">
+            <h3>Habitaciones</h3>
+            <button mat-flat-button>Agregar</button>
+            <div id="room_types_container">
+                <div class="room_type_item" *ngFor="let roomType of roomTypes">
+                    <img class="room_type_item_image" *ngIf="!hasPhotos(roomType)" src="https://brecknetwork.com/wp-content/uploads/2018/07/BSWinPool2-web-1536x1024.jpg">
+                    <div>
+                        <h4 class="text_align_start">{{ roomType.name }}</h4>
+                        <p class="text_align_start">Precio por noche: {{ roomType.perNightPrice }}</p>
+                        <p class="text_align_start">Capacidad {{ roomType.capacity }}</p>
+                    </div>
+                    <button mat-flat-button (click)="editRoomType(roomType)">Editar</button>
+                </div>
+            </div>
+        </div>
+        <div id="lodging_info_right_section">
+            <h3>Información de la habitación</h3>
+            <div class="buttons_container">
+                <button mat-flat-button class="button" (click)="openImagesDialog()">Editar fotos</button>
+            </div>
+            <div id="room_type_image_container">
+                <c-carousel>
+                    <c-carousel-inner *ngIf="selectedRoomTypeHasPhotos">
+                        <c-carousel-item *ngFor="let photo of selectedRoomType.photos">
+                            <img class="room_type_image" alt="{{selectedRoomType.name}}" loading="lazy" src="{{prependImagesRoute(photo)}}">
+                        </c-carousel-item>
+                    </c-carousel-inner>
+                    <c-carousel-control [routerLink] caption=" " direction="prev"></c-carousel-control>
+                    <c-carousel-control [routerLink] caption=" " direction="next"></c-carousel-control>
+                </c-carousel>
+            </div>
+            <form id="room_type_form" #roomTypeForm>
+                <div id="room_type_input_container">
+                    <mat-form-field>
+                        <mat-label>Nombre de la habitación</mat-label>
+                        <input matInput formControlName="name">
+                    </mat-form-field>
+                    <mat-form-field>
+                        <mat-label>Precio por noche</mat-label>
+                        <input matInput formControlName="name">
+                    </mat-form-field>
+                    <mat-form-field>
+                        <mat-label>Impuesto aplicado</mat-label>
+                        <input matInput formControlName="name">
+                    </mat-form-field>
+                    <mat-form-field>
+                        <mat-label>Capacidad</mat-label>
+                        <input matInput formControlName="name">
+                    </mat-form-field>
+                </div>
+            </form>
+            <mat-form-field id="phone_numbers_field" class="lodging_form_first_column">
+                <mat-label>Números de habitación</mat-label>
+                <mat-chip-grid #phoneNumberGrid aria-label="Habitaciones del alojamiento">
+                @for (room of rooms; track room) {
+                    <mat-chip-row (removed)="removeRoom(room)">
+                        {{ room.roomNumber }}
+                        <button matChipRemove [attr.aria-label]="'remove ' + room">
+                            <mat-icon>cancel</mat-icon>
+                        </button>
+                    </mat-chip-row>
+                }
+                </mat-chip-grid>
+                <input placeholder="Números de habitación..." #phoneNumberInput formControlName="phoneNumber"
+                    [matChipInputFor]="phoneNumberGrid"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    (matChipInputTokenEnd)="addRoom($event)"/>
+            </mat-form-field>
+            <!--<form id="lodging_form" #lodgingForm="ngForm" [formGroup]="lodgingFormGroup" (ngSubmit)="submitLodging()">
+                <div id="lodging_form_input_container">
+                    <mat-form-field class="lodging_form_first_column">
+                        <mat-label>Nombre</mat-label>
+                        <input matInput formControlName="name">
+                    </mat-form-field>
+                    <mat-form-field class="lodging_form_second_column lodging_form_input_shrink">
+                        <mat-label>Tipo de alojamiento</mat-label>
+                        <mat-select [compareWith]="compareLodgingTypes" formControlName="lodgingType">
+                        @for (lodgingType of lodgingTypes; track lodging) {
+                            <mat-option [value]="lodgingType.number">{{ lodgingType.name }}</mat-option>
+                        }
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field id="perk_chips_field">
+                        <mat-label>Beneficios adicionales</mat-label>
+                        <mat-chip-grid #perkChipGrid aria-label="Elige los beneficios adicionales del alojamiento">
+                        @for (perk of selectedPerks; track perk) {
+                            <mat-chip-row (removed)="removePerk(perk)">
+                                {{perk.name}}
+                                <button matChipRemove [attr.aria-label]="'remove ' + perk.name">
+                                    <mat-icon>cancel</mat-icon>
+                                </button>
+                            </mat-chip-row>
+                        }
+                        </mat-chip-grid>
+                        <input placeholder="Beneficio adicional..." #perkInput formControlName="perkName"
+                            [matChipInputFor]="perkChipGrid" [matAutocomplete]="auto"
+                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                            (matChipInputTokenEnd)="addPerk($event)"/>
+                        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="perkAutoCompleteSelected($event)">
+                        @for (perk of filteredPerks | async; track perk) {
+                            <mat-option [value]="perk">{{perk.name}}</mat-option>
+                        }
+                        </mat-autocomplete>
+                    </mat-form-field>
+                    <mat-form-field id="address_field" class="lodging_form_second_column textarea_field">
+                        <mat-label>Dirección</mat-label>
+                        <textarea matInput formControlName="address"></textarea>
+                    </mat-form-field>
+                    <mat-form-field id="phone_numbers_field" class="lodging_form_first_column">
+                        <mat-label>Números de teléfono</mat-label>
+                        <mat-chip-grid #phoneNumberGrid aria-label="Números de teléfono del alojamiento">
+                        @for (phoneNumber of phoneNumbers; track phoneNumber) {
+                            <mat-chip-row (removed)="removePhoneNumber(phoneNumber)">
+                                {{ phoneNumber }}
+                                <button matChipRemove [attr.aria-label]="'remove ' + phoneNumber">
+                                    <mat-icon>cancel</mat-icon>
+                                </button>
+                            </mat-chip-row>
+                        }
+                        </mat-chip-grid>
+                        <input placeholder="Número de teléfono..." #phoneNumberInput formControlName="phoneNumber"
+                            [matChipInputFor]="phoneNumberGrid"
+                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                            (matChipInputTokenEnd)="addPhoneNumber($event)"/>
+                    </mat-form-field>
+                    <mat-form-field id="description_field" class="lodging_form_second_column textarea_field">
+                        <mat-label>Descripción</mat-label>
+                        <textarea matInput formControlName="description"></textarea>
+                    </mat-form-field>
+                    <mat-form-field class="lodging_form_first_column">
+                        <mat-label>Correo electrónico</mat-label>
+                        <input matInput formControlName="emailAddress">
+                    </mat-form-field>
+                    <button id="rooms_button" mat-stroked-button type="button">Habitaciones</button>
+                </div>
+
+                <div class="buttons_container">
+                    <button mat-flat-button type="submit">Guardar cambios</button>
+                    <button *ngIf="!create" [disabled]="!lodgingFormGroup.dirty" mat-flat-button type="button" (click)="resetForm()">Borrar cambios</button>
+                </div>
+            </form>-->
+        </div>
+    </div>
+</div>

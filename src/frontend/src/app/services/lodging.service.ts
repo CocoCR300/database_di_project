@@ -5,6 +5,8 @@ import { Lodging } from "../models/lodging";
 import { AppResponse } from "../models/app_response";
 import { Booking } from "../models/booking";
 import { Perk } from "../models/perk";
+import { RoomType } from "../models/room_type";
+import { Room } from "../models/room";
 
 @Injectable({
     providedIn:'root'
@@ -17,6 +19,14 @@ export class LodgingService extends BaseService
 
     getLodgingBookings(lodgingId: number): Observable<Booking[]> {
         return this.get(`lodging/${lodgingId}/booking`, true);
+    }
+
+    getLodgingRooms(lodgingId: number): Observable<Room[]> {
+        return this.get(`room/${lodgingId}`, false);
+    }
+
+    getLodgingRoomTypes(lodgingId: number): Observable<RoomType[]> {
+        return this.get(`roomtype/${lodgingId}`, false);
     }
 
     deleteBookings(bookingIds: number[]): Observable<AppResponse> {

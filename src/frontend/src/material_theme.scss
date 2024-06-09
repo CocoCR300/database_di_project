@@ -20,6 +20,7 @@ $my-theme: mat.define-dark-theme((
 @include mat.dialog-theme($my-theme);
 @include mat.form-field-theme($my-theme);
 @include mat.input-theme($my-theme);
+@include mat.list-theme($my-theme);
 @include mat.paginator-theme($my-theme);
 @include mat.sidenav-theme($my-theme);
 @include mat.tooltip-theme($my-theme);

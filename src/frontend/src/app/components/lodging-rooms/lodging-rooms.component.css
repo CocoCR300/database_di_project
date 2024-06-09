@@ -1,0 +1,137 @@
+c-carousel {
+    clip-path: rect(0 0 100% 100% round var(--border-radius));
+    margin: auto;
+    width: 25em;
+}
+
+mat-chip-grid {
+    max-height: 6em;
+    overflow: scroll;
+}
+
+#lodging_title {
+    margin: 0.5em 0px 0px 0px;
+}
+#lodging_info_main {
+    display: flex;
+    height: 100%;
+}
+
+#lodging_info_left_section {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    row-gap: 1em;
+}
+
+#lodging_info_right_section {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#lodging_form {
+    align-self: stretch;
+}
+
+#lodging_form_input_container {
+    column-gap: 1em;
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    grid-template-rows: repeat(6, 1fr);
+    padding: 2em 2em 0px 2em;
+    row-gap: 0.5em;
+}
+
+#buttons_container {
+    gap: 2em;
+}
+
+#description_field {
+    grid-row: 4 / span 2;
+}
+
+#address_field {
+    grid-row: 2 / span 2;
+}
+
+#room_type_image_container {
+    height: 12em;
+    width: 20em;
+}
+
+#perk_chips_field {
+    grid-row: 2 / span 2;
+}
+
+#phone_numbers_field {
+    grid-row: 4 / span 2;
+}
+
+#rooms_button {
+    align-self: stretch;
+}
+
+#room_type_form {
+    width: 100%
+}
+
+#room_type_input_container {
+    display: grid;
+    column-gap: 1em;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    margin: 0px 2em;
+}
+
+#room_types_container {
+    max-height: 60vh;
+    overflow: scroll;
+}
+
+.buttons_container > button {
+    margin: 0px 0.3em;
+}
+
+.lodging_form_input_shrink {
+    align-self: start;
+    justify-self: start;
+}
+
+.lodging_form_first_column {
+    grid-column: 1;
+    min-width: 16.5em;
+}
+
+.lodging_form_second_column {
+    grid-column: 2;
+    min-width: 19em;
+}
+
+.text_align_start {
+    text-align: start;
+}
+
+.room_type_image {
+    clip-path: rect(0px 0px 100% 100% round var(--border-radius));
+    display: block;
+    height: 10em;
+    object-fit: cover;
+    width: 100%;
+}
+
+.room_type_item {
+    align-items: center;
+    display: flex;
+    column-gap: 1em;
+}
+
+.room_type_item_image {
+    border-radius: var(--border-radius);
+    object-fit: cover;
+    height: 6em;
+}
