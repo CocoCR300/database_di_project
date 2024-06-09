@@ -53,7 +53,7 @@ export class UserSettingsComponent implements OnInit {
   }
 
   public onSubmitUserSettings(){
-    let userName = this._route.snapshot.paramMap.get('name');
+    let userName = this._route.snapshot.paramMap.get('userName');
     let first_name = this.userModifyFormGroup.get<string>("first_name")!;
     let last_name = this.userModifyFormGroup.get<string>("last_name")!;
     let email_user = this.userModifyFormGroup.get<string>("email")!;

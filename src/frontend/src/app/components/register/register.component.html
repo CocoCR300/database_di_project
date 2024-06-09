@@ -5,7 +5,7 @@
       <div class="form-grid">
         <div class="input-field">
           <i class="fas fa-user"></i>
-          <input type="text" placeholder="Nombre de usuario" name="name" #name="ngModel" [(ngModel)]="user.name" required>
+          <input type="text" placeholder="Nombre de usuario" name="name" #name="ngModel" [(ngModel)]="user.userName" required>
         </div>
 
         <div class="input-field">
@@ -28,10 +28,6 @@
           <input type="text" placeholder="Apellido" name="last_name" #last_name="ngModel" [(ngModel)]="user.lastName" required>
         </div>
         
-        <!--<div class="input-field">
-          <i class="fas fa-address-book"></i>
-          <input type="text" placeholder="Número de teléfono" name="phone_number" #phone_number="ngModel" [(ngModel)]="user.phone_number" required>
-        </div>-->
       </div>
 
       <div class="role-selection">

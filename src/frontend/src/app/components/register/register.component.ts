@@ -30,7 +30,7 @@ export class RegisterComponent {
 
   onSubmit() {
     if (this.isFormValid()) {
-      this._userService.register(this.user).subscribe({
+      this._userService.signup(this.user).subscribe({
         next: response => {
           this._notificationService.show("Registro exitoso");
           this._router.navigate(['/login']);
@@ -44,15 +44,16 @@ export class RegisterComponent {
       this._notificationService.show("Por favor, complete todos los campos requeridos");
     }
   }
+
   isFormValid(): boolean {
+    
     // TODO
-    return false;
+    return true;
     //return this.user.name.trim() !== '' &&
     //       this.user.emailAddress.trim() !== '' &&
     //       this.user.password!.trim() !== '' &&
     //       this.user.firstName.trim() !== '' &&
     //       this.user.lastName.trim() !== '' &&
-    //       //this.user.phone_number.trim() !== '' &&
     //       this.user.roleId.trim() !== '';
   }
 }

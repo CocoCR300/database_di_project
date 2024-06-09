@@ -2,7 +2,7 @@ import { UserRole } from "./user_role";
 
 export class User {
     constructor(
-        public name:            string,
+        public userName:        string,
         public password:        string | null,
         public roleId:          number,
         public personId:        number,

@@ -26,11 +26,9 @@ export class UserService extends BaseService{
         return this.get(`user/${name}`);
     }
     
-    register(user: User): Observable<any> {
-        let userJson = JSON.stringify(user);
-        let params = 'data=' + userJson;
-        let headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
-        return this._http.post(this.urlAPI + 'user', params, { headers });
+    signup(user: User): Observable<any> {
+        let headers = new HttpHeaders().set('Content-Type', 'application/json');
+        return this._http.post(this.urlAPI + 'User/signup', user, {headers})
       }
     
       uploadProfilePhoto(file: File, userName: string): Observable<any> {
@@ -40,13 +38,8 @@ export class UserService extends BaseService{
       }
 
     login(user: User): Observable<any> {
-        let userJson = JSON.stringify(user);
-        let params = 'data=' + userJson
-        let headers = new HttpHeaders().set('Content-type', 'application/x-www-form-urlencoded')
-        let options = {
-            headers
-        }
-        return this._http.post(this.urlAPI + 'user/login', params, options)
+        let headers = new HttpHeaders().set('Content-Type', 'application/json');
+        return this._http.post(this.urlAPI + 'User/login', user, {headers})
     }
 
     getIdentityFromApi(token: string): Observable<TokenIdentity> {

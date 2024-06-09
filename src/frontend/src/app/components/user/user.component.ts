@@ -58,7 +58,7 @@ export class UserComponent implements OnInit, AfterViewInit{
         (response: AppResponse) => {
           if(response.ok) {
               this.users = this.users.pipe(
-                map(users => users.filter(user => user.name !== username))
+                map(users => users.filter(user => user.userName !== username))
               );
               
               Swal.fire({
