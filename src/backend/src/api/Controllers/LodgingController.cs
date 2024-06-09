@@ -461,9 +461,9 @@ public class LodgingController : BaseController
             return NotFound("No existe un alojamiento con el identificador especificado.");
         }
 
-        if (files.Count > 10)
+        if (files.Count > 50)
         {
-            return NotAcceptable("Puede agregar un máximo de 10 fotos por solicitud.");
+            return NotAcceptable("Puede agregar un máximo de 50 fotos por solicitud.");
         }
 
         if (lodging.Photos.Count == 100)
@@ -515,6 +515,32 @@ public class LodgingController : BaseController
         await Task.WhenAll(tasks);
 
         return Created(path, fileNames);
+    }
+    
+    [HttpPatch("{lodgingId}/photo")]
+    public ObjectResult ModifyPhotos(uint lodgingId, ImageData[] images)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
+        Lodging? lodging = _context.Find<Lodging>(lodgingId);
+
+        if (lodging == null)
+        {
+            return NotFound("No existe un alojamiento con el identificador especificado.");
+        }
+
+        foreach (ImageData image in images)
+        {
+            LodgingPhoto? photo = lodging.Photos.Find(p => p.FileName == image.FileName);
+            photo.Ordering = image.Ordering;
+        }
+
+        _context.SaveChanges();
+        
+        return Ok("Las fotos han sido modificadas con éxito.");
     }
     
     [HttpPatch("{lodgingId}")]
@@ -588,4 +614,12 @@ public class LodgingPatchRequestData
     public string?   EmailAddress { get; set; }
     [Exists<Person>(ErrorMessage = "No existe un arrendador con el identificador especificado.")]
     public uint?    OwnerId { get; set; }
+}
+
+public class ImageData
+{
+    [Required]
+    public string FileName { get; init; }
+    [Required]
+    public byte Ordering { get; init; }
 }

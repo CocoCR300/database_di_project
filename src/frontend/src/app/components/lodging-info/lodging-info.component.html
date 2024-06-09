@@ -3,13 +3,18 @@
     <div id="lodging_info_main">
         <div *ngIf="!create" id="lodging_info_left_section">
             <div id="lodging_image_container">
-                <img id="lodging_image" src="{{ lodgingImageData ?? prependImagesRoute(lodging) }}">
+                <c-carousel>
+                    <c-carousel-inner *ngIf="hasPhotos">
+                        <c-carousel-item *ngFor="let photo of lodging!.photos">
+                            <img class="lodging_image" alt="{{lodging!.name}}" loading="lazy" src="{{prependImagesRoute(photo)}}">
+                        </c-carousel-item>
+                    </c-carousel-inner>
+                    <c-carousel-control [routerLink] caption=" " direction="prev"></c-carousel-control>
+                    <c-carousel-control [routerLink] caption=" " direction="next"></c-carousel-control>
+                </c-carousel>
             </div>
-            <input #lodgingImageInput hidden="true" type="file" name="file" id="lodgingImageInput" title="Seleccionar imagen" (change)="onLodgingImageChanged($event)" />
             <div class="buttons_container">
-                <button mat-flat-button class="button" (click)="lodgingImageInput.click()">{{ newLodgingImageSubmitted ? "Elegir otra imagen" : "Cambiar imagen" }}</button>
-                <button [disabled]="!newLodgingImageSubmitted" mat-flat-button class="button" (click)="submitLodgingImage()">Confirmar</button>
-                <button [disabled]="!newLodgingImageSubmitted" mat-flat-button class="button" (click)="undoImageChange()">Deshacer</button>
+                <button mat-flat-button class="button" (click)="openImagesDialog()">Editar fotos</button>
             </div>
         </div>
         <div id="lodging_info_right_section">

@@ -17,6 +17,7 @@ $my-theme: mat.define-dark-theme((
 @include mat.button-theme($my-theme);
 @include mat.chips-theme($my-theme);
 @include mat.datepicker-theme($my-theme);
+@include mat.dialog-theme($my-theme);
 @include mat.form-field-theme($my-theme);
 @include mat.input-theme($my-theme);
 @include mat.paginator-theme($my-theme);

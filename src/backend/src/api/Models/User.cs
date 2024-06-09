@@ -15,7 +15,7 @@ public class User
 		
 		return new
 		{
-			user.Name,
+			UserName = user.Name,
 			user.RoleId,
 			PersonId = person.Id,
 			person.FirstName,

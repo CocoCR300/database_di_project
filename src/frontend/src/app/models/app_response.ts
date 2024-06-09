@@ -2,14 +2,15 @@ export class AppResponse
 {
     constructor(
         public body: ResponseBody | any,
-        public errors: any[] | null,
+        public error: any,
         public ok: boolean,
         public status: number,
     )
     { }
 
     public static *getErrors(response: AppResponse) {
-        const errorMessagesByPropertyName = Object.entries(response.errors!);
+        const error = response.error;
+        const errorMessagesByPropertyName = Object.entries<any>(error.errors);
         for (const [, messages] of errorMessagesByPropertyName) {
             for (const message of messages) {
                 yield message;

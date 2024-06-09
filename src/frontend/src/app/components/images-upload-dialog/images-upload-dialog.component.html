@@ -1,0 +1,17 @@
+<h2 mat-dialog-title>Fotos del alojamiento</h2>
+<mat-dialog-content>
+    <div id="images_container" cdkDropListGroup>
+        <div cdkDropList [cdkDropListData]="i" *ngFor="let image of images; let i = index;">
+            <div cdkDrag [cdkDragData]="i" (cdkDragEntered)="dropListItemDropped($event)">
+                <img src="{{ prepareDataForDisplay(image) }}">
+                <button class="image_delete_button" mat-raised-button (click)="deleteImage(image)">Eliminar</button>
+            </div>
+        </div>
+    </div>
+    <input #lodgingImageInput hidden="true" multiple="true" type="file" name="file" id="lodgingImageInput" title="Seleccionar imagen" (change)="onFilesSelected($event)" />
+</mat-dialog-content>
+<mat-dialog-actions>
+    <button mat-button (click)="lodgingImageInput.click()">Agregar más imagenes</button>
+    <button mat-button (click)="cancelUpload()">Cancelar</button>
+    <button mat-button (click)="confirmUpload()">Aceptar</button>
+</mat-dialog-actions>

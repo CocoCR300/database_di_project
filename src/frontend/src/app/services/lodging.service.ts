@@ -66,8 +66,16 @@ export class LodgingService extends BaseService
         return this.patch(`lodging/${lodging.id}`, true, lodgingTrimmed);
     }
 
-    saveLodgingImage(lodgingId: number, imageFile: File) {
-        return this.postFile(`lodging/${lodgingId}/image`, true, imageFile);
+    saveLodgingImages(lodgingId: number, images: File[]) {
+        return this.postFiles(`lodging/${lodgingId}/photo`, true, images);
+    }
+
+    modifyLodgingImages(lodgingId: number, imagesData: any) {
+        return this.patch(`lodging/${lodgingId}/photo`, true, imagesData);
+    }
+
+    deleteLodgingImages(lodgingId: number, imageFileNames: string[]) {
+        return this.deleteImages(`lodging/${lodgingId}/photo`, true, imageFileNames);
     }
 
     addPerks(lodgingId: number, perkIds: number[]) {

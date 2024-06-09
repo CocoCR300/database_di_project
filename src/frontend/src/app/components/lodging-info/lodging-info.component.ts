@@ -6,7 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { Lodging } from '../../models/lodging';
 import { LodgingService } from '../../services/lodging.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { Observable, firstValueFrom, map, of, startWith } from 'rxjs';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -20,11 +20,17 @@ import { AppState } from '../../models/app_state';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { Perk } from '../../models/perk';
+import { CarouselModule } from '@coreui/angular';
+import { MatDialog } from '@angular/material/dialog';
+import { ImagesUploadDialogComponent, ImagesUploadDialogData, ImagesUploadDialogResult } from '../images-upload-dialog/images-upload-dialog.component';
+import { AppImageData } from '../../models/app_image_data';
 
 @Component({
   selector: 'app-lodging-info',
   standalone: true,
-  imports: [AsyncPipe, FormsModule, MatAutocompleteModule, MatButtonModule, MatChipsModule, MatIconModule, MatInputModule, MatOptionModule, MatSelectModule, NgFor, NgIf, ReactiveFormsModule],
+  imports: [AsyncPipe, CarouselModule, FormsModule, MatAutocompleteModule, MatButtonModule,
+    MatChipsModule, MatIconModule, MatInputModule, MatOptionModule, MatSelectModule, NgFor,
+    NgIf, ReactiveFormsModule, RouterLink],
   templateUrl: './lodging-info.component.html',
   styleUrl: './lodging-info.component.css'
 })
@@ -41,9 +47,10 @@ export class LodgingInfoComponent implements OnInit
 
   separatorKeysCodes: number[] = [ENTER, COMMA];
   create = true;
+  hasPhotos = false;
   emptyTitle!: string;
-  lodgingImageFile!: File | null;
-  lodgingImageData: any; 
+  lodgingImageFiles!: File[] | null;
+  lodgingImagesData: any[] = []; 
   lodgingFormGroup: FormGroup = this.buildFormGroup();
   lodging!: Lodging | null;
   phoneNumbers: string[] = [];
@@ -59,6 +66,7 @@ export class LodgingInfoComponent implements OnInit
 
   public constructor(
     private _appState: AppState,
+    private _dialog: MatDialog,
     private _route: ActivatedRoute,
     private _lodgingService: LodgingService,
     private _notificationService: NotificationService,
@@ -67,7 +75,7 @@ export class LodgingInfoComponent implements OnInit
   ) { }
 
   get newLodgingImageSubmitted() {
-    return this.lodgingImageData != null;
+    return this.lodgingImageFiles != null;
   }
 
   get lodgingName() {
@@ -84,22 +92,87 @@ export class LodgingInfoComponent implements OnInit
     return lodgingName;
   }
 
-  prependImagesRoute(lodging: Lodging | null) {
+  prependImagesRoute(imageFileName: string | null) {
     let imageSrc = "";
-    if (lodging != null && lodging.photos != null) {
-      imageSrc = `${server.lodgingImages}${lodging.photos[0]}`;
+    if (imageFileName) {
+      imageSrc = `${server.lodgingImages}${imageFileName}`;
     }
 
     return imageSrc;
   }
 
-  onLodgingImageChanged(event: any) {
-    this.lodgingImageFile = event.target.files[0];
+  openImagesDialog() {
+    const images: string[] = this.lodging?.photos?.slice() ?? [];
 
-    const reader = new FileReader();
-    reader.onload = e => this.lodgingImageData = reader.result;
+    this._dialog.open(ImagesUploadDialogComponent,
+      { data: new ImagesUploadDialogData(false, images) })
+      .afterClosed().subscribe(
+        async (dialogResult: ImagesUploadDialogResult) => {
+          if (dialogResult.confirmed) {
+            if (dialogResult.imagesToDelete.length > 0) {
+              const deletedImagesResponse = await firstValueFrom(this._lodgingService.deleteLodgingImages(this.lodging!.id, dialogResult.imagesToDelete));
 
-    reader.readAsDataURL(this.lodgingImageFile!);
+              if (!deletedImagesResponse.ok) {
+                Swal.fire({
+                  icon: "error",
+                  title: "Ha ocurrido un error al eliminar las imagenes",
+                });
+
+                return;
+              }
+            }
+            
+            let newImagesFileNames: string[];
+            if (dialogResult.newImages.length > 0) {
+              const savedImagesResponse = await firstValueFrom(this._lodgingService.saveLodgingImages(this.lodging!.id, dialogResult.newImages));
+
+              if (savedImagesResponse.ok) {
+                newImagesFileNames = savedImagesResponse.body;
+              }
+              else {
+                Swal.fire({
+                  icon: "error",
+                  title: "Ha ocurrido un error al subir las imagenes",
+                });
+
+                return;
+              }
+            }
+
+            const updatedImagesData: AppImageData[] = [];
+            let updatedImagesOrder = 0;
+            let newImagesIndex = 0;
+            for (let image of dialogResult.updatedImages) {
+              let fileName = image.fileName;
+
+              if (!fileName) {
+                fileName = newImagesFileNames![newImagesIndex]; 
+                newImagesIndex += 1;
+              }
+
+              updatedImagesData.push(new AppImageData(fileName, updatedImagesOrder));
+              updatedImagesOrder += 1;
+            }
+
+            const updatedImagesResponse = await firstValueFrom(this._lodgingService.modifyLodgingImages(this.lodging!.id, updatedImagesData));
+
+            if (updatedImagesResponse.ok) {
+              await Swal.fire({
+                icon: "success",
+                title: "Las fotos han sido modificadas con éxito"
+              });
+
+              window.location.reload();
+            }
+            else {
+              Swal.fire({
+                icon: "error",
+                title: "Ha ocurrido un error al modificar las fotos"
+              });
+            }
+          }
+        }
+      );
   }
 
   addPerk(event: MatChipInputEvent) {
@@ -165,8 +238,8 @@ export class LodgingInfoComponent implements OnInit
   }
 
   undoImageChange() {
-    this.lodgingImageFile = null;
-    this.lodgingImageData = null;
+    this.lodgingImageFiles = null;
+    this.lodgingImagesData = [];
   }
 
   async submitLodging() {
@@ -214,8 +287,8 @@ export class LodgingInfoComponent implements OnInit
       lodgingName.value.trim(),
       description.value.trim(),
       address.value.trim(),
-      type.value,
       emailAddress.value.trim(),
+      null,
       null,
       null,
       null,
@@ -322,26 +395,27 @@ export class LodgingInfoComponent implements OnInit
   }
 
   submitLodgingImage() {
-    if (this.lodging != null && this.lodgingImageFile != null) {
-      this._lodgingService.saveLodgingImage(this.lodging.id, this.lodgingImageFile).subscribe(
-        response => {
-          if (response.ok) {
-            this.undoImageChange();
-            // TODO
-            //this.lodging!.image = response.body;
-            Swal.fire({
-              icon: "success",
-              title: "El cambio de imagen se ha realizado con éxito."
-            });
-          }
-          else {
-            Swal.fire({
-              icon: "error",
-              title: "Ha ocurrido un error"
-            });
-          }
-        }
-      )
+    if (this.lodging != null && this.lodgingImageFiles != null) {
+      // TODO
+      //this._lodgingService.saveLodgingImage(this.lodging.id, this.lodgingImageFile).subscribe(
+      //  response => {
+      //    if (response.ok) {
+      //      this.undoImageChange();
+      //      // TODO
+      //      //this.lodging!.image = response.body;
+      //      Swal.fire({
+      //        icon: "success",
+      //        title: "El cambio de imagen se ha realizado con éxito."
+      //      });
+      //    }
+      //    else {
+      //      Swal.fire({
+      //        icon: "error",
+      //        title: "Ha ocurrido un error"
+      //      });
+      //    }
+      //  }
+      //)
     }
   }
 
@@ -384,7 +458,7 @@ export class LodgingInfoComponent implements OnInit
       name: new FormControl(this.lodging?.name, { nonNullable: true, validators: Validators.required }),
       description: new FormControl(this.lodging?.description, { nonNullable: true, validators: Validators.required }),
       address: new FormControl(this.lodging?.address, { nonNullable: true, validators: Validators.required }),
-      emailAddress: new FormControl(this.lodging?.emailAddress, { nonNullable: true, validators: Validators.required }),
+      emailAddress: new FormControl(this.lodging?.emailAddress, { nonNullable: true, validators: [Validators.required, Validators.email] }),
       lodgingType: new FormControl(this.lodging?.type, { nonNullable: true, validators: Validators.required }),
       phoneNumber: new FormControl(""),
       perkName: new FormControl(""),
@@ -418,6 +492,7 @@ export class LodgingInfoComponent implements OnInit
       const lodgingId = parseInt(lodgingIdString);
       this.lodging = await firstValueFrom(this._lodgingService.getLodging(lodgingId));
 
+      this.hasPhotos = this.lodging.photos!.length > 0;
       this.selectedPerks = this.lodging.perks!.slice();
       this.selectedPerkIds = this.lodging.perks!.map(perk => perk.id);
       this.phoneNumbers = this.lodging.phoneNumbers!.slice();

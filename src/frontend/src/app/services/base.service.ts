@@ -80,6 +80,34 @@ export class BaseService {
         );
     }
 
+    postFiles(route: string, requiresToken: boolean, files: File[]): Observable<AppResponse> {
+        let headers = new HttpHeaders();
+        headers = this.appendTokenIfNeeded(requiresToken, headers);
+
+        const formData: FormData = new FormData();
+        
+        for (const file of files) {
+            formData.append("files", file);
+        }
+
+        const options = { headers, observe: "response" as "body" };
+        return this._http.post<any>(this.urlAPI + route, formData, options).pipe(
+            map(this.handleAppResponse),
+            catchError(this.handleError)
+        );
+    }
+
+    deleteImages(route: string, requiresToken: boolean, imageFileNames: string[]): Observable<AppResponse> {
+        let headers = new HttpHeaders();
+        headers = this.appendTokenIfNeeded(requiresToken, headers);
+
+        const options = { headers, body: imageFileNames, observe: "response" as "body" };
+        return this._http.delete<any>(this.urlAPI + route, options).pipe(
+            map(this.handleAppResponse),
+            catchError(this.handleError)
+        );
+    }
+
     patch(route: string, requiresToken: boolean, body: any): Observable<AppResponse> {
         let headers = new HttpHeaders();
         headers = this.appendTokenIfNeeded(requiresToken, headers);

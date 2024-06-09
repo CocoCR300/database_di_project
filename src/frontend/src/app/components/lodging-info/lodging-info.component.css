@@ -1,3 +1,9 @@
+c-carousel {
+    clip-path: rect(0 0 100% 100% round var(--border-radius));
+    margin: auto;
+    width: 25em;
+}
+
 mat-chip-grid {
     max-height: 6em;
     overflow: scroll;
@@ -58,13 +64,6 @@ mat-chip-grid {
     width: 100%;
 }
 
-#lodging_image {
-    clip-path: rect(0px 0px 100% 100% round var(--border-radius));
-    max-height: 15em;
-    object-fit: cover;
-    width: 25em;
-}
-
 #perk_chips_field {
     grid-row: 2 / span 2;
 }
@@ -94,4 +93,12 @@ mat-chip-grid {
 .lodging_form_second_column {
     grid-column: 2;
     min-width: 19em;
+}
+
+.lodging_image {
+    clip-path: rect(0px 0px 100% 100% round var(--border-radius));
+    display: block;
+    height: 15em;
+    object-fit: cover;
+    width: 100%;
 }

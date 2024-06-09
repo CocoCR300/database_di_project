@@ -25,11 +25,11 @@ namespace Restify.API.Util
 			{
 				propertyName = validationContext.MemberName;
 			}
-			
-			Expression	parameter = Expression.Parameter(typeof(T), "entity"),
-						property = Expression.Property(parameter, typeof(T), propertyName),
+
+			ParameterExpression parameter = Expression.Parameter(typeof(T), "entity");
+			Expression	property = Expression.Property(parameter, typeof(T), propertyName),
 						equals = Expression.Equal(property, Expression.Constant(value));
-			Expression<Func<T, bool>> predicate = (Expression<Func<T, bool>>) Expression.Lambda(equals, parameter as ParameterExpression);
+			Expression<Func<T, bool>> predicate = (Expression<Func<T, bool>>) Expression.Lambda(equals, parameter);
 			
 			RestifyDbContext context = validationContext.GetRequiredService<RestifyDbContext>();
 			T? entity = context.Set<T>().Where(predicate).FirstOrDefault();
