@@ -62,7 +62,15 @@ export class UserService extends BaseService{
     }
 
     updateUser(data:string[], username:string): Observable<AppResponse>{
-        return this.patch(`user/${username}`,true,username,data[0],data[1],data[2],parseInt(data[3]));
+        const user = {
+            userName: username,
+            firsName: data[0],
+            lastName: data[1],
+            emailAddress: data[2],
+            phoneNumber: data[3]
+        }
+
+        return this.patch(`user/${username}`, true, user);
     }
 
     logOut(){

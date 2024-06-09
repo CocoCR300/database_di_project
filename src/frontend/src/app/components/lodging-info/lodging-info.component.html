@@ -1,5 +1,5 @@
 <div>
-    <h1>{{ lodgingName }}</h1>
+    <h1 id="lodging_title">{{ lodgingName }}</h1>
     <div id="lodging_info_main">
         <div *ngIf="!create" id="lodging_info_left_section">
             <div id="lodging_image_container">
@@ -19,15 +19,15 @@
                         <mat-label>Nombre</mat-label>
                         <input matInput formControlName="name">
                     </mat-form-field>
-                    <mat-form-field class="lodging_form_first_column lodging_form_input_shrink">
+                    <mat-form-field class="lodging_form_second_column lodging_form_input_shrink">
                         <mat-label>Tipo de alojamiento</mat-label>
-                        <mat-select formControlName="lodgingType">
+                        <mat-select [compareWith]="compareLodgingTypes" formControlName="lodgingType">
                         @for (lodgingType of lodgingTypes; track lodging) {
-                            <mat-option [value]="lodgingType[0]">{{lodgingType[1]}}</mat-option>
+                            <mat-option [value]="lodgingType.number">{{ lodgingType.name }}</mat-option>
                         }
                         </mat-select>
                     </mat-form-field>
-                    <mat-form-field id="perkChipsInput">
+                    <mat-form-field id="perk_chips_field">
                         <mat-label>Beneficios adicionales</mat-label>
                         <mat-chip-grid #perkChipGrid aria-label="Elige los beneficios adicionales del alojamiento">
                         @for (perk of selectedPerks; track perk) {
@@ -49,14 +49,36 @@
                         }
                         </mat-autocomplete>
                     </mat-form-field>
-                    <mat-form-field id="description_field" class="lodging_form_second_column">
-                        <mat-label>Descripción</mat-label>
-                        <textarea matInput formControlName="description"></textarea>
-                    </mat-form-field>
                     <mat-form-field id="address_field" class="lodging_form_second_column textarea_field">
                         <mat-label>Dirección</mat-label>
                         <textarea matInput formControlName="address"></textarea>
                     </mat-form-field>
+                    <mat-form-field id="phone_numbers_field" class="lodging_form_first_column">
+                        <mat-label>Números de teléfono</mat-label>
+                        <mat-chip-grid #phoneNumberGrid aria-label="Números de teléfono del alojamiento">
+                        @for (phoneNumber of phoneNumbers; track phoneNumber) {
+                            <mat-chip-row (removed)="removePhoneNumber(phoneNumber)">
+                                {{ phoneNumber }}
+                                <button matChipRemove [attr.aria-label]="'remove ' + phoneNumber">
+                                    <mat-icon>cancel</mat-icon>
+                                </button>
+                            </mat-chip-row>
+                        }
+                        </mat-chip-grid>
+                        <input placeholder="Número de teléfono..." #phoneNumberInput formControlName="phoneNumber"
+                            [matChipInputFor]="phoneNumberGrid"
+                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                            (matChipInputTokenEnd)="addPhoneNumber($event)"/>
+                    </mat-form-field>
+                    <mat-form-field id="description_field" class="lodging_form_second_column textarea_field">
+                        <mat-label>Descripción</mat-label>
+                        <textarea matInput formControlName="description"></textarea>
+                    </mat-form-field>
+                    <mat-form-field class="lodging_form_first_column">
+                        <mat-label>Correo electrónico</mat-label>
+                        <input matInput formControlName="emailAddress">
+                    </mat-form-field>
+                    <button id="rooms_button" mat-stroked-button type="button">Habitaciones</button>
                 </div>
 
                 <div class="buttons_container">

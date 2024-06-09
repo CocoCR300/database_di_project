@@ -1,5 +1,5 @@
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -31,12 +31,12 @@ import { Perk } from '../../models/perk';
 export class LodgingInfoComponent implements OnInit
 {
   lodgingTypes = [
-      [0, "Apartmento"],
-      [1, "Casa de invitados"],
-      [2, "Hotel"],
-      [3, "Albergue"],
-      [4, "Casa de huéspedes"],
-      [5, "Alquiler vacacional"]
+      { number: 0, name: "Apartmento" },
+      { number: 1, name: "Casa de invitados" },
+      { number: 2, name: "Hotel" },
+      { number: 3, name: "Albergue" },
+      { number: 4, name: "Casa de huéspedes" },
+      { number: 5, name: "Alquiler vacacional" }
   ];
 
   separatorKeysCodes: number[] = [ENTER, COMMA];
@@ -46,6 +46,9 @@ export class LodgingInfoComponent implements OnInit
   lodgingImageData: any; 
   lodgingFormGroup: FormGroup = this.buildFormGroup();
   lodging!: Lodging | null;
+  phoneNumbers: string[] = [];
+  phoneNumbersToAdd: string[] = [];
+  phoneNumbersToDelete: string[] = [];
   perks: Perk[] = [];
   perksToAdd: Perk[] = [];
   perksToDelete: Perk[] = [];
@@ -102,7 +105,6 @@ export class LodgingInfoComponent implements OnInit
   addPerk(event: MatChipInputEvent) {
     const value = (event.value || '').trim();
 
-    // Add our fruit
     if (value) {
       const perk = this._filteredPerks.find(perk => perk.name === value);
 
@@ -114,7 +116,6 @@ export class LodgingInfoComponent implements OnInit
     }
 
     event.chipInput!.clear();
-
     this.lodgingFormGroup.get("perkName")!.setValue(null);
   }
 
@@ -127,7 +128,6 @@ export class LodgingInfoComponent implements OnInit
       this.perksToAdd.push(perk);
     }
 
-    //this.lodgingFormGroup.get("perkName")!.nativeElement.value = '';
     this.lodgingFormGroup.get("perkName")!.setValue(null);
   }
 
@@ -138,6 +138,29 @@ export class LodgingInfoComponent implements OnInit
       this.selectedPerkIds.splice(index, 1);
       const perks = this.selectedPerks.splice(index, 1);
       this.perksToDelete.push(perks[0]);
+      this.lodgingFormGroup.markAsDirty();
+    }
+  }
+
+  addPhoneNumber(event: MatChipInputEvent) {
+    const phoneNumber = event.value as string; 
+
+    if (!this.phoneNumbers.includes(phoneNumber)) {
+      this.phoneNumbers.push(phoneNumber);
+      this.phoneNumbersToAdd.push(phoneNumber);
+    }
+
+    event.chipInput!.clear();
+    this.lodgingFormGroup.get("phoneNumber")!.setValue(null);
+  }
+
+  removePhoneNumber(phoneNumber: string) {
+    const index = this.phoneNumbers.indexOf(phoneNumber);
+    
+    if (index >= 0) {
+      const phoneNumber = this.phoneNumbers.splice(index, 1);
+      this.phoneNumbersToDelete.push(phoneNumber[0]);
+      this.lodgingFormGroup.markAsDirty();
     }
   }
 
@@ -152,7 +175,6 @@ export class LodgingInfoComponent implements OnInit
     const description = this.lodgingFormGroup.get<string>("description")!;
     const emailAddress = this.lodgingFormGroup.get<string>("emailAddress")!;
     const type = this.lodgingFormGroup.get<string>("lodgingType")!;
-    const phoneNumbers = this.lodgingFormGroup.get<string>("phoneNumbers")!;
 
     if (this.lodgingFormGroup.invalid) {
       if (lodgingName.hasError("required")) {
@@ -174,16 +196,26 @@ export class LodgingInfoComponent implements OnInit
       return;
     }
 
-    // TODO
+    const lodgingType = this.lodgingTypes.find(lodgingType => lodgingType.number === type.value);
+    if (!lodgingType) {
+      Swal.fire({
+        icon: "error",
+        title: "Ha ocurrido un error",
+        text: "El tipo de alojamiento es inválido",
+      })
+
+      return;
+    }
+
     const newLodging = new Lodging(
       0,
       0,
+      lodgingType.number,
       lodgingName.value.trim(),
       description.value.trim(),
       address.value.trim(),
-      "",
-      "",
-      null,
+      type.value,
+      emailAddress.value.trim(),
       null,
       null,
       null,
@@ -191,47 +223,102 @@ export class LodgingInfoComponent implements OnInit
       null
     );
 
-    if (this.lodging) {
+    if (!this.create && this.lodging) {
       newLodging.id = this.lodging.id;
       newLodging.ownerId = this.lodging.ownerId;
       newLodging.owner = this.lodging.owner;
+      newLodging.photos = this.lodging.photos;
     }
 
-    let observable;
     if (this.create) {
       const response = await firstValueFrom(this._userService.getUser(this._appState.userName!));
       newLodging.ownerId = response.personId;
-      observable = this._lodgingService.saveLodging(newLodging);
-    }
-    else {
-      observable = this._lodgingService.updateLodging(newLodging);
-    }
+      this._lodgingService.saveLodging(newLodging).subscribe(async response => {
+        if (response.ok) {
+          if (this.create) {
+            await Swal.fire({
+              icon: "success",
+              title: "El alojamiento ha sido creado con éxito."
+            });
 
-    observable.subscribe(async response => {
-      if (response.ok) {
-        if (this.create) {
-          await Swal.fire({
-            icon: "success",
-            title: "El alojamiento ha sido creado con éxito."
-          });
-
-          this._router.navigate(["lodging", response.body!.lodging_id]);
+            this._router.navigate(["lodging", response.body!.id]);
+          }
+          else {
+            this.lodging = newLodging;
+            this.lodgingFormGroup = this.buildFormGroup();
+            Swal.fire({
+              icon: "success",
+              title: "El alojamiento ha sido modificado con éxito."
+            });
+          }
         }
         else {
+          for (const message of AppResponse.getErrors(response)) {
+              this._notificationService.show(message);
+          }
+        }
+      });
+
+    }
+    else {
+      let perksAddedPromise: Promise<AppResponse> | null = null;
+      let perksRemovedPromise: Promise<AppResponse> | null = null;
+      let phoneNumbersAddedPromise: Promise<AppResponse> | null = null;
+      let phoneNumbersRemovedPromise: Promise<AppResponse> | null = null;
+
+      const updateLodgingPromise = firstValueFrom(this._lodgingService.updateLodging(newLodging));
+
+      if (this.perksToAdd.length > 0) {
+        perksAddedPromise = firstValueFrom(this._lodgingService.addPerks(newLodging.id, this.perksToAdd.map(perk => perk.id)));
+      }
+      if (this.perksToDelete.length > 0) {
+        perksRemovedPromise = firstValueFrom(this._lodgingService.removePerks(newLodging.id, this.perksToDelete.map(perk => perk.id)));
+      }
+
+      if (this.phoneNumbersToAdd.length > 0) {
+        phoneNumbersAddedPromise = firstValueFrom(this._lodgingService.addPhoneNumbers(newLodging.id, this.phoneNumbersToAdd));
+      }
+      if (this.phoneNumbersToDelete.length > 0) {
+        phoneNumbersRemovedPromise = firstValueFrom(this._lodgingService.removePhoneNumbers(newLodging.id, this.phoneNumbersToDelete));
+      }
+
+
+      try {
+        const aggregatePromise = Promise.all([updateLodgingPromise, perksAddedPromise, perksRemovedPromise, phoneNumbersAddedPromise, phoneNumbersRemovedPromise]);
+
+        const responses = await aggregatePromise;
+        let failingResponse: AppResponse;
+        let allOk = true;
+
+        for (const response of responses) {
+          if (response && !response.ok) {
+            allOk = false;
+            failingResponse = response;
+          }
+        }
+
+        if (allOk) {
           this.lodging = newLodging;
           this.lodgingFormGroup = this.buildFormGroup();
+
           Swal.fire({
             icon: "success",
             title: "El alojamiento ha sido modificado con éxito."
           });
         }
-      }
-      else {
-        for (const message of AppResponse.getErrors(response)) {
-            this._notificationService.show(message);
+        else {
+          for (const message of AppResponse.getErrors(failingResponse!)) {
+              this._notificationService.show(message);
+          }
         }
       }
-    });
+      catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Ha ocurrido un error"
+        });
+      }
+    }
   }
 
   submitLodgingImage() {
@@ -258,18 +345,27 @@ export class LodgingInfoComponent implements OnInit
     }
   }
 
+  compareLodgingTypes(type0: number | null, type1: number | null): boolean {
+    return type0 === type1;
+  }
+
   resetForm() {
     this.lodgingFormGroup.reset();
     
     if (this.create) {
       this.selectedPerks = [];
+      this.phoneNumbers = [];
     }
     else {
       this.selectedPerks = this.lodging!.perks!.slice();
+      this.selectedPerkIds = this.lodging!.perks!.map(perk => perk.id);
+      this.phoneNumbers = this.lodging!.phoneNumbers!.slice();
     }
 
     this.perksToAdd = [];
     this.perksToDelete = [];
+    this.phoneNumbersToAdd = [];
+    this.phoneNumbersToDelete = [];
   }
 
   private filterPerks(value: Perk | string): Perk[] {
@@ -290,7 +386,7 @@ export class LodgingInfoComponent implements OnInit
       address: new FormControl(this.lodging?.address, { nonNullable: true, validators: Validators.required }),
       emailAddress: new FormControl(this.lodging?.emailAddress, { nonNullable: true, validators: Validators.required }),
       lodgingType: new FormControl(this.lodging?.type, { nonNullable: true, validators: Validators.required }),
-      phoneNumbers: new FormControl(this.lodging?.phoneNumbers, { nonNullable: true }),
+      phoneNumber: new FormControl(""),
       perkName: new FormControl(""),
     });
 
@@ -323,6 +419,8 @@ export class LodgingInfoComponent implements OnInit
       this.lodging = await firstValueFrom(this._lodgingService.getLodging(lodgingId));
 
       this.selectedPerks = this.lodging.perks!.slice();
+      this.selectedPerkIds = this.lodging.perks!.map(perk => perk.id);
+      this.phoneNumbers = this.lodging.phoneNumbers!.slice();
     }
 
     this.lodgingFormGroup = this.buildFormGroup();

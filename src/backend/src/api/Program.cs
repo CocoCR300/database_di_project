@@ -29,6 +29,7 @@ builder.Services.AddControllers()
 		options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
 AuthenticationUtil.Initialize(builder.Configuration);
+JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 	.AddJwtBearer(x =>
 	{
@@ -73,7 +74,7 @@ builder.Services.AddCors(corsOptions =>
 	{
 		corsBuilder.AllowAnyOrigin()
 			.AllowAnyHeader()
-			.AllowAnyHeader();
+			.AllowAnyMethod();
 	});
 });
 
@@ -102,7 +103,8 @@ Values.StoragePath = Path.Combine(builder.Environment.ContentRootPath, "storage"
 Directory.CreateDirectory(Values.StoragePath);
 app.UseStaticFiles(new StaticFileOptions 
 {
-	FileProvider = new PhysicalFileProvider(Values.StoragePath)
+	FileProvider = new PhysicalFileProvider(Values.StoragePath),
+	RequestPath = "/storage"
 });
 
 if (app.Environment.IsDevelopment())
@@ -117,11 +119,9 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
-JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
-
-app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCors();
 
 app.MapDefaultControllerRoute();
 

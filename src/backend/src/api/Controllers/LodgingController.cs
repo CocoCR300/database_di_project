@@ -400,6 +400,8 @@ public class LodgingController : BaseController
 
         if (lodging != null)
         {
+            _context.Entry(lodging).Collection(l => l.Perks).Load();
+            
             bool noneExists = true;
             IEnumerable<Perk> perks = _context.Perks.Where(p => perkIds.Contains(p.Id)).AsEnumerable();
             foreach (Perk perk in perks)
@@ -516,7 +518,7 @@ public class LodgingController : BaseController
     }
     
     [HttpPatch("{lodgingId}")]
-    public ObjectResult Update(string lodgingId, LodgingPatchRequestData data)
+    public ObjectResult Update(uint lodgingId, LodgingPatchRequestData data)
     {
         if (!ModelState.IsValid)
         {

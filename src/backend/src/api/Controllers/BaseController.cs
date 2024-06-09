@@ -23,7 +23,7 @@ public class BaseController : Controller
     }
     
     [NonAction]
-    public ObjectResult Created(string storageSubPath, object value)
+    public new ObjectResult Created(string storageSubPath, object value)
     {
         return base.Created(Path.Combine(Values.StoragePath, storageSubPath), value);
     }
@@ -41,6 +41,12 @@ public class BaseController : Controller
     public NotFoundObjectResult NotFound(string message)
     {
         return new NotFoundObjectResult(new Response(message));
+    }
+
+    [NonAction]
+    public ObjectResult Ok(string message)
+    {
+        return Ok(new Response(message));
     }
 
     protected bool TryParseCommaSeparatedList<T>(string parameter, ParseFunction<T> parseFunction, [NotNullWhen(true)] out T[]? values)

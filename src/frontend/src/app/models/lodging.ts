@@ -10,10 +10,10 @@ export class Lodging {
     constructor(
         public id:              number,
         public ownerId:         number,
+        public type:            number,
         public name:            string,
         public description:     string,
         public address:         string,
-        public type:            string,
         public emailAddress:    string,
         public phoneNumbers:    string[] | null,
         public photos:          string[] | null,

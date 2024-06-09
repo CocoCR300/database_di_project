@@ -45,14 +45,8 @@ export class BaseService {
     }
 
     delete(route: string, requiresToken: boolean, body: any): Observable<AppResponse> {
-        let headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
+        let headers = new HttpHeaders();
         headers = this.appendTokenIfNeeded(requiresToken, headers);
-
-        if (body != null) {
-            const jsonBody = JSON.stringify(body);
-            body = new URLSearchParams();
-            body.set("data", jsonBody);
-        }
 
         const options = { headers, body, observe: "response" as "body" };
         return this._http.delete<any>(this.urlAPI + route, options).pipe(
@@ -62,14 +56,11 @@ export class BaseService {
     }
     
     post(route: string, requiresToken: boolean, body: any): Observable<AppResponse> {
-        let headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
+        let headers = new HttpHeaders();
         headers = this.appendTokenIfNeeded(requiresToken, headers);
 
-        const realBody = new URLSearchParams();
-        realBody.set("data", JSON.stringify(body));
-
         const options = { headers, observe: "response" as "body" };
-        return this._http.post<any>(this.urlAPI + route, realBody, options).pipe(
+        return this._http.post<any>(this.urlAPI + route, body, options).pipe(
             map(this.handleAppResponse),
             catchError(this.handleError)
         );
@@ -89,11 +80,22 @@ export class BaseService {
         );
     }
 
+    patch(route: string, requiresToken: boolean, body: any): Observable<AppResponse> {
+        let headers = new HttpHeaders();
+        headers = this.appendTokenIfNeeded(requiresToken, headers);
+
+        const options = { headers, observe: "response" as "body" };
+        return this._http.patch<any>(this.urlAPI + route, body, options).pipe(
+            map(this.handleAppResponse),
+            catchError(this.handleError)
+        );
+    }
+
     put(route: string, requiresToken: boolean, body: any): Observable<AppResponse> {
         let headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded'});
         headers = this.appendTokenIfNeeded(requiresToken, headers);
 
-        const realBody = new URLSearchParams()
+        const realBody = new URLSearchParams();
         realBody.set("data", JSON.stringify(body));
 
         const options = { headers, observe: "response" as "body" };
@@ -103,42 +105,9 @@ export class BaseService {
         );
     }
 
-    patch(route: string, requiresToken: boolean, username:string,
-        first_name = '', last_name = '', email_address = '',
-        phone_number = 0
-    ){
-        let headers = new HttpHeaders({ 'Content-Type':'application/x-www-form-urlencoded' });
-        headers = this.appendTokenIfNeeded(requiresToken,headers);
-        
-        let realBody: URLSearchParams[] = []
-        const bodyAux = new URLSearchParams();
-        bodyAux.set("name", JSON.stringify(username));
-        realBody.push(bodyAux);
-        if(first_name!=''){
-            bodyAux.set("first_name", JSON.stringify(first_name));
-            realBody.push(bodyAux);
-        }
-        if(last_name!=''){
-            bodyAux.set("last_name", JSON.stringify(last_name));
-            realBody.push(bodyAux);
-        }
-        if(email_address!=''){
-            bodyAux.set("email_address", JSON.stringify(email_address));
-            realBody.push(bodyAux);
-        }
-        if(phone_number!=0){
-            bodyAux.set("phone_number", JSON.stringify(phone_number));
-            realBody.push(bodyAux);
-        }
-
-        const options = { headers, observe: "response" as "body" };
-        return this._http.patch<any>(this.urlAPI + route, realBody, options).pipe(
-            map(this.handleAppResponse),
-            catchError(this.handleError)
-        )
-    }
-
     private handleAppResponse<T>(response: any) {
+        response.ok = response.status >= 200 && response.status <= 299;
+
         if (response.ok) {
             return response;
         }
@@ -148,7 +117,7 @@ export class BaseService {
 
     private handleError<T>(response: any, caught: Observable<T>) {
         // TODO: What if it's a 500 error?
-        return of(response.error as T);
+        return of(response as T);
     }
 
     private appendTokenIfNeeded(requiresToken: boolean, headers: HttpHeaders): HttpHeaders
