@@ -329,7 +329,7 @@ namespace Restify.API.Controllers
     
     public class UserPatchRequestData
     {
-        [Unique<User>]
+        [Unique<Person>]
         [NotEmptyOrWhiteSpace]
         [MaxLength(200)]
         [EmailAddress]
