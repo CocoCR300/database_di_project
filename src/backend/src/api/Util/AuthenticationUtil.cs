@@ -47,7 +47,7 @@ public class AuthenticationUtil
     public string HashPassword(string password)
     {
         byte[] keyBytes = Encoding.UTF8.GetBytes(_configuration["JwtSettings:SigningKey"]);
-        byte[] passwordBytes = Convert.FromBase64String(password);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
         byte[] hashBytes = HMACSHA256.HashData(keyBytes, passwordBytes);
         string hash = Convert.ToBase64String(hashBytes);
 
