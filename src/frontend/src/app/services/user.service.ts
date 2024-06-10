@@ -37,18 +37,16 @@ export class UserService extends BaseService{
         return this._http.post(`${this.urlAPI}user/${userName}/image`, formData);
       }
 
-    login(user: User): Observable<any> {
+      login(user: User): Observable<any> {
         let headers = new HttpHeaders().set('Content-Type', 'application/json');
-        return this._http.post(this.urlAPI + 'User/login', user, {headers})
-    }
+        return this._http.post<any>(this.urlAPI + 'User/login', user, { headers });
+      }
+      
 
-    getIdentityFromApi(token: string): Observable<TokenIdentity> {
-        let headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
-        headers = headers.set('Authorization', `Bearer ${token}`);
-
-        const options = { headers };
-        return this.get(this.urlAPI + 'user/identity', true);
-    }
+      getIdentityFromApi(token: string): Observable<TokenIdentity> {
+        let headers = new HttpHeaders().set('Content-Type', 'application/json');
+        return this._http.post<TokenIdentity>(this.urlAPI + 'User/identity', { token }, { headers });
+      }
 
     deleteUser(userName: string): Observable<AppResponse>{
         return this.delete(`user/${userName}`, true, null);
