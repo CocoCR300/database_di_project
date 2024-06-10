@@ -134,7 +134,7 @@ namespace Restify.API.Controllers
             return Ok(token);
         }
 
-        [HttpDelete]
+        [HttpDelete("{userName}")]
         public ObjectResult Delete(string userName)
         {
             User? user = _context.Find<User>(userName);

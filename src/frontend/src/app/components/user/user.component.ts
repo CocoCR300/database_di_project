@@ -40,6 +40,19 @@ export class UserComponent implements OnInit, AfterViewInit{
   updateTable(){
     this._userService.getUsers().subscribe((result: User[]) => {
       this.usersTable = result
+      this.usersTable.forEach((user: User) => {
+        if(user.userName === "root" || user.userName === "generic_customer" || user.userName === "generic_lessor"){
+          this.usersTable = this.usersTable.filter((userAux => user.userName !== userAux.userName));
+        }
+
+        if(user.roleId === 1) {
+          user.roleName = "Administrador";
+        }else if(user.roleId === 2){
+          user.roleName = "Cliente";
+        }else {
+          user.roleName = "Arrendador";
+        }
+      })
       this.dataSource.data = this.usersTable;
     });
   }
