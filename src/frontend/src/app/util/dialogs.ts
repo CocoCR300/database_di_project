@@ -7,8 +7,8 @@ export class Dialogs
         text: string
     ): Promise<boolean> {
         const result = await Swal.fire({
-            title: "¿Está seguro de que desea eliminar este alojamiento?",
-            text: "Está acción no se puede revertir.",
+            title: title,
+            text: text,
             showCancelButton: true,
             showConfirmButton: true,
             cancelButtonText: "No",
