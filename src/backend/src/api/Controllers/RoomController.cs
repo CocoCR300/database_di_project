@@ -103,6 +103,7 @@ public class RoomController : BaseController
             return result;
         }
         
+        _context.Entry(lodging).Collection(l => l.Rooms).Load();
         uint[] roomsNumbersOrdered = lodging.Rooms
             .Select(r => r.Number)
             .OrderBy(r => r)
@@ -124,7 +125,7 @@ public class RoomController : BaseController
                 
             int roomNumberIndex = Array.BinarySearch(roomsNumbersOrdered, room.Number);
 
-            if (roomNumberIndex >= 0)
+            if (roomNumberIndex < 0)
             {
                 lodging.Rooms.Add(new Room
                 {

@@ -176,10 +176,13 @@ public class RoomTypeController : BaseController
         {
             return result;
         }
-
+        
+        _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
+        
+        List<RoomType> newRoomTypes = new List<RoomType>(roomTypes.Length);
         foreach (RoomTypeRequestData roomType in roomTypes)
         {
-            lodging.RoomTypes.Add(new RoomType 
+            newRoomTypes.Add(new RoomType 
             {
                 LodgingId = lodging.Id,
                 Name = roomType.Name,
@@ -188,6 +191,8 @@ public class RoomTypeController : BaseController
                 Fees = roomType.Fees
             });
         }
+        
+        lodging.RoomTypes.AddRange(newRoomTypes);
 
         try
         {
@@ -195,7 +200,7 @@ public class RoomTypeController : BaseController
             _context.SaveChanges();
             _context.Database.CommitTransaction();
                     
-            return Created();
+            return Created(newRoomTypes);
         }
         catch (Exception)
         {
@@ -285,7 +290,7 @@ public class RoomTypeController : BaseController
     }
     
     [HttpPatch("{lodgingId}/{roomTypeId}")]
-    public ObjectResult Update(string lodgingId, uint roomTypeId, RoomTypePatchRequestData data)
+    public ObjectResult Update(uint lodgingId, uint roomTypeId, RoomTypePatchRequestData data)
     {
         if (!ModelState.IsValid)
         {

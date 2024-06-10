@@ -147,6 +147,7 @@ public class LodgingController : BaseController
                 lodging.Perks,
                 PhoneNumbers = lodgingPhoneNumbers,
                 Photos = lodgingPhotos,
+                lodging.RoomTypes,
                 lodging.Type
             };
         }).ToArray();
@@ -190,7 +191,9 @@ public class LodgingController : BaseController
         {
             return NotFound("No existe un alojamiento con el identificador especificado.");
         }
-        
+
+        string[]    lodgingPhoneNumbers,
+                    lodgingPhotos;
         if (!Lodging.TypeOffersRooms(lodging.Type))
         {
             RoomType? roomType = null;
@@ -200,8 +203,8 @@ public class LodgingController : BaseController
                 roomType = lodging.RoomTypes[0];  
             }
 
-            string[] lodgingPhoneNumbers = lodging.PhoneNumbers.Select(p => p.Number).ToArray();
-            string[] lodgingPhotos = lodging.Photos
+            lodgingPhoneNumbers = lodging.PhoneNumbers.Select(p => p.Number).ToArray();
+            lodgingPhotos = lodging.Photos
                 .OrderBy(p => p.Ordering)
                 .Select(p => p.FileName)
                 .ToArray();
@@ -223,7 +226,25 @@ public class LodgingController : BaseController
             });
         }
 
-        return Ok(lodging);
+        lodgingPhoneNumbers = lodging.PhoneNumbers.Select(p => p.Number).ToArray();
+        lodgingPhotos = lodging.Photos
+            .OrderBy(p => p.Ordering)
+            .Select(p => p.FileName)
+            .ToArray();
+        
+        return Ok(new
+        {
+            lodging.Address,
+            lodging.Description,
+            lodging.EmailAddress,
+            lodging.Id,
+            lodging.Name,
+            Owner = Models.User.MergeForResponse(lodging.Owner.User, lodging.Owner),
+            lodging.Perks,
+            PhoneNumbers = lodgingPhoneNumbers,
+            Photos = lodgingPhotos,
+            lodging.Type
+        });
     }
 
     [HttpGet("type")]
@@ -246,7 +267,7 @@ public class LodgingController : BaseController
         List<RoomType> roomTypes = null;
         if (!Lodging.TypeOffersRooms(data.Type))
         {
-            if (!data.PerNightPrice.HasValue || !data.Fees.HasValue)
+            if (!data.Capacity.HasValue || !data.PerNightPrice.HasValue || !data.Fees.HasValue)
             {
                 return NotAcceptable(
                     "El costo por noche y el impuesto es obligatorio para el tipo de alojamiento especificado.");
@@ -254,10 +275,13 @@ public class LodgingController : BaseController
 
             decimal perNightPrice = data.PerNightPrice.Value,
                     fees = data.Fees.Value;
+            uint capacity = data.Capacity.Value;
+            
             roomTypes = new List<RoomType>
             {
                 new RoomType
                 {
+                    Capacity = capacity,
                     PerNightPrice = perNightPrice,
                     Fees = fees
                 }
@@ -592,6 +616,19 @@ public class LodgingController : BaseController
         if (data.EmailAddress != null)
             lodging.EmailAddress = data.EmailAddress;
 
+        if (!Lodging.OffersRooms(lodging))
+        {
+            _context.Entry(lodging).Collection(l => l.RoomTypes);
+            RoomType roomType = lodging.RoomTypes[0];
+
+            if (data.Capacity.HasValue)
+                roomType.Capacity = data.Capacity.Value;
+            if (data.Fees.HasValue)
+                roomType.Fees = data.Fees.Value;
+            if (data.PerNightPrice.HasValue)
+                roomType.PerNightPrice = data.PerNightPrice.Value;
+        }
+
         _context.SaveChanges();
         return Ok("La modificación del alojamiento ha sido realizada con éxito.");
     }
@@ -617,6 +654,7 @@ public class LodgingRequestData
     [Required(ErrorMessage = "El identificador del arrendador es obligatorio.")]
     [Exists<Person>(ErrorMessage = "No existe un arrendador con el identificador especificado.")]
     public uint     OwnerId { get; set; }
+    public uint?    Capacity { get; set; }
     public decimal? Fees { get; set; }
     public decimal? PerNightPrice { get; set; }
 }
@@ -635,6 +673,9 @@ public class LodgingPatchRequestData
     public string?   EmailAddress { get; set; }
     [Exists<Person>(ErrorMessage = "No existe un arrendador con el identificador especificado.")]
     public uint?    OwnerId { get; set; }
+    public uint?    Capacity { get; set; }
+    public decimal? Fees { get; set; }
+    public decimal? PerNightPrice { get; set; }
 }
 
 public class ImageData
