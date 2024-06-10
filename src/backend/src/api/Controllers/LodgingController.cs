@@ -183,6 +183,7 @@ public class LodgingController : BaseController
             .Where(l => l.Id == lodgingId)
             .Include(l => l.Owner)
             .ThenInclude(p => p.User)
+            .Include(lodging => lodging.Rooms)
             .Include(lodging => lodging.RoomTypes)
             .Include(lodging => lodging.Perks)
             .SingleOrDefault();
@@ -222,7 +223,8 @@ public class LodgingController : BaseController
                 Photos = lodgingPhotos,
                 lodging.Type,
                 roomType?.PerNightPrice,
-                roomType?.Fees
+                roomType?.Fees,
+                roomType?.Capacity
             });
         }
 
@@ -241,6 +243,8 @@ public class LodgingController : BaseController
             lodging.Name,
             Owner = Models.User.MergeForResponse(lodging.Owner.User, lodging.Owner),
             lodging.Perks,
+            lodging.Rooms,
+            lodging.RoomTypes,
             PhoneNumbers = lodgingPhoneNumbers,
             Photos = lodgingPhotos,
             lodging.Type
