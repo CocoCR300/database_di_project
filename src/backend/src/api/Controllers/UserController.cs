@@ -118,7 +118,7 @@ namespace Restify.API.Controllers
             {
                 return BadRequest(ModelState);
             }
-            
+
             User user = new User
             {
                 Name = data.UserName,

@@ -7,6 +7,7 @@ import { AppState } from '../../models/app_state';
 import { firstValueFrom } from 'rxjs';
 import { NotificationService } from '../../services/notification.service';
 
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -15,6 +16,8 @@ import { NotificationService } from '../../services/notification.service';
   styleUrls: ['./login.component.css'],
   providers: [UserService]
 })
+
+
 export class LoginComponent {
   public status: number;
   public user: User;
@@ -27,6 +30,7 @@ export class LoginComponent {
     this.status = -1;
     this.user = new User("","",0,0,"","","","",null,null);
   }
+
 
   async onsubmit(form: any) {
     let response: any;

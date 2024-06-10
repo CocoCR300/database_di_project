@@ -1,0 +1,12 @@
+<mat-card class="dialog-container">
+    <h1 mat-dialog-title>Acciones de Reserva</h1>
+    <mat-card-content>
+      <p>¿Qué acción desea realizar?</p>
+    </mat-card-content>
+    <mat-card-actions class="dialog-actions">
+      <button mat-button class="action-button" (click)="onPay()">Realizar Pago</button>
+      <button mat-button class="action-button cancel-button" (click)="onCancel()">Eliminar Reserva</button>
+      <button mat-button class="action-button close-button" (click)="onClose()">Cerrar</button>
+    </mat-card-actions>
+  </mat-card>
+  

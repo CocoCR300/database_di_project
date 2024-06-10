@@ -1,11 +1,11 @@
 <div class="container">
 
   <div class="login-container">
+    
     <h2>Iniciar Sesión</h2>
+
     <form #loginForm="ngForm" (ngSubmit)="onsubmit(loginForm)">
-
       <i class="fas fa-user"></i>
-
       <div class="input-field">
         <input type="text" placeholder="Usuario" name="userName" #name="ngModel" [(ngModel)]="user.userName" required >
       </div>
@@ -21,7 +21,8 @@
         <button type="button" [routerLink]="['/register']"> Registrarse</button>  
       </div>
 
-    </form>
+      </form>
+    
   </div>
 <router-outlet></router-outlet>
 </div>

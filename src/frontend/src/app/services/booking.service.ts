@@ -19,7 +19,7 @@ export class BookingService extends BaseService
     public postBooking(booking: Booking): Observable<AppResponse> {
         return this.post("booking", true, booking); 
     } 
-    public getBookingsByPersonId(personId: string): Observable<Booking[]> {
-        return this.get<Booking[]>(`/booking/${personId}`, true);
+    public getBookingsByPersonId(userName: string): Observable<Booking[]> {
+        return this.get<Booking[]>(`Booking/user/${userName}/10/1`, true);
       }
 }

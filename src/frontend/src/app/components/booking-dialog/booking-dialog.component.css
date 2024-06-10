@@ -1,0 +1,32 @@
+.dialog-container {
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+  }
+  
+  .dialog-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  
+  .action-button {
+    min-width: 100px;
+    padding: 10px;
+    border-radius: 4px;
+  }
+  
+  .action-button.cancel-button {
+    background-color: #132E35;
+    color: white;
+  }
+  
+  .action-button.close-button {
+    background-color: #9e9e9e;
+    color: white;
+  }
+  
+  .action-button:hover {
+    opacity: 0.8;
+  }
+  
