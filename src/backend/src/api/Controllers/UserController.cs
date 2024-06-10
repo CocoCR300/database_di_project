@@ -58,13 +58,8 @@ namespace Restify.API.Controllers
             return NotFound("No existe un usuario con el nombre especificado.");
         }
         
-        public class TokenRequest
-        {
-            public string Token { get; set; }
-        }
-
         [HttpPost("identity")]
-        public ObjectResult IdentityFromToken([FromBody] TokenRequest request)
+        public ObjectResult IdentityFromToken(TokenRequest request)
         {
             ClaimsPrincipal? claimsPrincipal = _authenticationUtil.ValidateToken(request.Token);
 
@@ -108,7 +103,7 @@ namespace Restify.API.Controllers
 
             _context.Entry(user).Reference(u => u.Role).Load();
             var token = _authenticationUtil.GenerateJwtToken(user);
-            return Ok(new { token }); // Asegúrate de devolver un objeto JSON con el token
+            return Ok(token);
         }
         
         [HttpPost("signup")]
@@ -364,4 +359,9 @@ namespace Restify.API.Controllers
         [MaxLength(50)]
         public string NewPasswordConfirmation { get; set; }
     }
+}
+
+public class TokenRequest
+{
+    public string Token { get; set; }
 }

@@ -36,9 +36,8 @@ export class LoginComponent {
     let response: any;
     try {
       response = await firstValueFrom(this._userService.login(this.user));
-      if (response.token) {
-        const token = response.token; 
-        sessionStorage.setItem('authToken', token);  
+      const token = response.message;
+      if (token) {
         try {
           const identity = await firstValueFrom(this._userService.getIdentityFromApi(token));
           this._appState.logIn(token, identity.userName, identity.roleId);
