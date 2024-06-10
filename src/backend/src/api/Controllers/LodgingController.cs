@@ -286,8 +286,9 @@ public class LodgingController : BaseController
                 new RoomType
                 {
                     Capacity = capacity,
+                    Fees = fees,
+                    Name = "Automatically created room",
                     PerNightPrice = perNightPrice,
-                    Fees = fees
                 }
             };
             rooms = new List<Room>
