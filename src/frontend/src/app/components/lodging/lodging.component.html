@@ -8,11 +8,35 @@
                     <input matStartDate formControlName="startDate" placeholder="Inicio" required>
                     <input matEndDate formControlName="endDate" placeholder="Finalización" required>
                 </mat-date-range-input>
-                <mat-error *ngIf="bookingFormGroup.errors?['required'] : true">La fecha es obligatoria.</mat-error>
-
+                <mat-error *ngIf="bookingFormGroup.get('startDate')?.hasError('required')">La fecha es obligatoria.</mat-error>
+                <mat-error *ngIf="bookingFormGroup.get('endDate')?.hasError('required')">La fecha es obligatoria.</mat-error>
                 <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-date-range-picker #picker></mat-date-range-picker>
             </mat-form-field>
+
+            <ng-container *ngIf="offersRoomTypes(selectedLodging?.type)">
+                <mat-form-field>
+                    <mat-label>Tipo de habitación</mat-label>
+                    <mat-select formControlName="roomTypeId" required>
+                        <mat-option *ngIf="selectedLodging?.roomTypes?.length === 0" disabled>
+                            No hay habitaciones disponibles
+                        </mat-option>
+                        <mat-option *ngFor="let roomType of selectedLodging?.roomTypes" [value]="roomType.id">
+                            {{ roomType.name }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="bookingFormGroup.get('roomTypeId')?.hasError('required')">El tipo de habitación es obligatorio.</mat-error>
+                </mat-form-field>
+            </ng-container>
+
+            <div *ngIf="selectedRoomTypePrice">
+                <p>Precio por noche: {{ selectedRoomTypePrice | currency }}</p>
+              </div>
+              <div *ngIf="selectedTotalPrice">
+                <p>Precio total: {{ selectedTotalPrice | currency }}</p>
+            </div>
+            
+
             <button mat-flat-button class="button" type="submit">Realizar reserva</button>
         </form>
     </mat-drawer>

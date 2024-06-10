@@ -8,7 +8,10 @@ mat-chip-grid {
     max-height: 6em;
     overflow: scroll;
 }
-
+mat-drawer[_ngcontent-ng-c1646113714] {
+    background-color: var(--color-secondary);
+    padding: 7em;
+}
 #lodging_title {
     margin: 0.5em 0px 0px 0px;
 }

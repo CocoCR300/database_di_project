@@ -1,6 +1,7 @@
 mat-drawer {
     background-color: var(--color-secondary);
     padding: 2em;
+    width: 40em;
 }
 
 mat-drawer-content {
@@ -19,6 +20,7 @@ mat-paginator {
 .button {
     display: block;
     margin: auto;
+    margin-top: 0.2rem;
 }
 
 .buttons_container {

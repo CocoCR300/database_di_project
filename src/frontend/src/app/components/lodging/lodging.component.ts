@@ -1,3 +1,4 @@
+import moment from 'moment';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { LodgingService } from '../../services/lodging.service';
 import { Dialogs } from '../../util/dialogs';
@@ -23,14 +24,15 @@ import { server } from '../../services/global';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
     selector: 'app-lodging',
     standalone: true,
-    imports: [AsyncPipe, CurrencyPipe, FormsModule, NgFor, NgIf, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatInputModule, MatPaginatorModule, MatSidenavModule, ReactiveFormsModule],
+    imports: [MatSelectModule, AsyncPipe, CurrencyPipe, FormsModule, NgFor, NgIf, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatInputModule, MatPaginatorModule, MatSidenavModule, ReactiveFormsModule],
     providers: [provideMomentDateAdapter()],
     templateUrl: './lodging.component.html',
-    styleUrl: './lodging.component.scss'
+    styleUrls: ['./lodging.component.scss']
 })
 export class LodgingComponent implements OnInit {
     private _lodgings!: Lodging[];
@@ -56,6 +58,8 @@ export class LodgingComponent implements OnInit {
     title: string = "Alojamientos";
     searchTerm = "";
     searchTermCurrentTimeout!: any;
+    selectedRoomTypePrice: number = 0;
+    selectedTotalPrice: number = 0;
 
     public constructor(
         private _appState: AppState,
@@ -64,8 +68,7 @@ export class LodgingComponent implements OnInit {
         private _notificationService: NotificationService,
         private _userService: UserService,
         private router: Router
-    ) {
-    }
+    ) {}
 
     hasPhotos(lodging: Lodging) {
         return lodging.photos!.length > 0;
@@ -92,47 +95,56 @@ export class LodgingComponent implements OnInit {
         this.router.navigate(["lodging", lodgingId]);
     }
 
+    public offersRoomTypes(lodgingType: number | undefined): boolean {
+        if (!lodgingType) {
+            return false;
+        }
+
+        return lodgingType === 2 || lodgingType === 3 || lodgingType === 4; // Lodging types that offer room types (Hotel, Lodge, Motel)
+    }
+
     public async submitBooking() {
-    //    if (!this.bookingForm.valid) {
-    //        return;
-    //    }
-    //
-    //    const startDateMoment = this.bookingFormGroup.get("startDate")?.value as moment.Moment;
-    //    const endDateMoment = this.bookingFormGroup.get("endDate")?.value as moment.Moment;
-    //    let startDate = startDateMoment.format("yyyy-MM-DD");
-    //    let endDate = endDateMoment.format("yyyy-MM-DD");
-    //    
-    //    const user = await firstValueFrom(this._userService.getUser(this._appState.userName!));
-    //
-    //    const booking = new Booking(
-    //        0,
-    //        this.selectedLodging!.lodging_id,
-    //        user.person_id!,
-    //        BookingStatus.Created,
-    //        startDate,
-    //        endDate);
-    //    const response = await firstValueFrom(this._bookingService.postBooking(booking));
-    //    
-    //    if (response.ok) {
-    //        Swal.fire({
-    //            icon: "success",
-    //            title: "La reserva ha sido creada con éxito."
-    //        });
-    //        this.sidebar.close();
-    //    }
-    //    else {
-    //        for (const message of AppResponse.getErrors(response)) {
-    //            this._notificationService.show(message);
-    //        }
-    //    }
+        //    if (!this.bookingForm.valid) {
+        //        return;
+        //    }
+        //
+        //    const startDateMoment = this.bookingFormGroup.get("startDate")?.value as moment.Moment;
+        //    const endDateMoment = this.bookingFormGroup.get("endDate")?.value as moment.Moment;
+        //    let startDate = startDateMoment.format("yyyy-MM-DD");
+        //    let endDate = endDateMoment.format("yyyy-MM-DD");
+        //    
+        //    const user = await firstValueFrom(this._userService.getUser(this._appState.userName!));
+        //
+        //    const booking = new Booking(
+        //        0,
+        //        this.selectedLodging!.lodging_id,
+        //        user.person_id!,
+        //        BookingStatus.Created,
+        //        startDate,
+        //        endDate);
+        //    const response = await firstValueFrom(this._bookingService.postBooking(booking));
+        //    
+        //    if (response.ok) {
+        //        Swal.fire({
+        //            icon: "success",
+        //            title: "La reserva ha sido creada con éxito."
+        //        });
+        //        this.sidebar.close();
+        //    }
+        //    else {
+        //        for (const message of AppResponse.getErrors(response)) {
+        //            this._notificationService.show(message);
+        //        }
+        //    }
     }
 
     public openBookingDrawer(lodging: Lodging) {
         if (this.isUserLogged) {
-            this.selectedLodging = lodging;
-            this.sidebar.open();
-        }
-        else {
+            this._lodgingService.getLodging(lodging.id).subscribe(data => {
+                this.selectedLodging = data;
+                this.sidebar.open();
+            });
+        } else {
             this.router.navigate(["login"]);
         }
     }
@@ -251,15 +263,29 @@ export class LodgingComponent implements OnInit {
     ngOnInit(): void {
         this.bookingFormGroup = new FormGroup({
             startDate: new FormControl<Date | null>(null, Validators.required),
-            endDate: new FormControl<Date | null>(null, Validators.required)
+            endDate: new FormControl<Date | null>(null, Validators.required),
+            roomTypeId: new FormControl<number | null>(null, Validators.required),
+        });
+
+        // Suscripción a los cambios del valor de roomTypeId
+        this.bookingFormGroup.get('roomTypeId')?.valueChanges.subscribe((value) => {
+            this.updatePrices();
+        });
+
+        // Suscripción a los cambios de las fechas
+        this.bookingFormGroup.get('startDate')?.valueChanges.subscribe(() => {
+            this.updatePrices();
+        });
+        this.bookingFormGroup.get('endDate')?.valueChanges.subscribe(() => {
+            this.updatePrices();
         });
 
         this.isUserLogged = this._appState.isUserLogged;
-        if(this.isUserLogged) {
-            this.isLessor = this._appState.role == UserRoleEnum.Lessor;
-            this.canDelete = this._appState.role == UserRoleEnum.Administrator || this.isLessor;
+        if (this.isUserLogged) {
+            this.isLessor = this._appState.role === UserRoleEnum.Lessor;
+            this.canDelete = this._appState.role === UserRoleEnum.Administrator || this.isLessor;
         }
-        this.canBook = !this.isUserLogged || this._appState.role == UserRoleEnum.Customer;
+        this.canBook = !this.isUserLogged || this._appState.role === UserRoleEnum.Customer;
 
         if (this.isLessor) {
             this.title = "Mis alojamientos";
@@ -269,13 +295,12 @@ export class LodgingComponent implements OnInit {
                     this.updatePagedList(0);
                 });
             });
-        }
-        else {
+        } else {
             this._lodgingService.getLodgings(100, 1).subscribe(lodgings => {
                 lodgings.forEach(lodging => {
                     if (lodging.roomTypes) {
                         let min = Infinity, max = 0;
-                        
+
                         for (const roomType of lodging.roomTypes) {
                             if (min > roomType.perNightPrice) {
                                 min = roomType.perNightPrice;
@@ -293,6 +318,28 @@ export class LodgingComponent implements OnInit {
                 this._lodgings = lodgings;
                 this.updatePagedList(0);
             });
+        }
+    }
+
+    private updatePrices(): void {
+        const roomTypeId = this.bookingFormGroup.get('roomTypeId')?.value;
+        if (this.selectedLodging?.roomTypes && roomTypeId) {
+            const selectedRoomType = this.selectedLodging.roomTypes.find(roomType => roomType.id === roomTypeId);
+            this.selectedRoomTypePrice = selectedRoomType ? selectedRoomType.perNightPrice : 0;
+
+            const startDateValue = this.bookingFormGroup.get('startDate')?.value;
+            const endDateValue = this.bookingFormGroup.get('endDate')?.value;
+            if (startDateValue && endDateValue) {
+                const startDate = moment(startDateValue);
+                const endDate = moment(endDateValue);
+                const days = endDate.diff(startDate, 'days');
+                this.selectedTotalPrice = days > 0 ? days * this.selectedRoomTypePrice : 0;
+            } else {
+                this.selectedTotalPrice = 0;
+            }
+        } else {
+            this.selectedRoomTypePrice = 0;
+            this.selectedTotalPrice = 0;
         }
     }
 }
