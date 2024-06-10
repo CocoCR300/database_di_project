@@ -9,6 +9,7 @@ export class User {
         public firstName:       string,
         public lastName:        string,
         public emailAddress:    string,
+        public roleName:         string,
         public role:            UserRole | null,
         public phoneNumbers:    string[] | null)
         { }

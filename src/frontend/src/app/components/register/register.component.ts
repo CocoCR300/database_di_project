@@ -23,7 +23,7 @@ export class RegisterComponent {
     private _notificationService: NotificationService,
     private _router: Router
   ) {
-    this.user = new User("", "", 0, 0, "", "", "", null, null);
+    this.user = new User("", "", 0, 0, "", "", "", "", null, null);
   }
   
 

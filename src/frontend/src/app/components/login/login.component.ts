@@ -25,7 +25,7 @@ export class LoginComponent {
     private _notificationService: NotificationService
   ) {
     this.status = -1;
-    this.user = new User("", "", 0, 0, "", "", "", null, null);
+    this.user = new User("","",0,0,"","","","",null,null);
   }
 
   async onsubmit(form: any) {

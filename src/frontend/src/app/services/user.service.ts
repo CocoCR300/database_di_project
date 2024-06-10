@@ -19,7 +19,7 @@ export class UserService extends BaseService{
     }
 
     getUsers(): Observable<User[]> {
-        return this.get<User[]>("user");
+        return this.get<User[]>("User/1000/1");
     }
 
     getUser(name: string): Observable<User> {
