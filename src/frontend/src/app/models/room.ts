@@ -5,9 +5,9 @@ export class Room
 {
     public constructor(
         public lodgingId:   number,
-        public roomNumber:  number,
+        public number:  number,
         public typeId:      number,
-        public lodging:     Lodging,
-        public type:        RoomType
+        public lodging:     Lodging | null,
+        public type:        RoomType | null
     ) { }
 }

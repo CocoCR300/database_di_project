@@ -9,10 +9,13 @@
                     <img class="room_type_item_image" *ngIf="hasPhotos(roomType)" src="{{ prependImagesRoute(roomType.photos[0]) }}">
                     <div class="flex_grow">
                         <h4 class="text_align_start">{{ roomType.name }}</h4>
-                        <p class="text_align_start">Precio por noche: {{ roomType.perNightPrice }}</p>
+                        <p class="text_align_start">Precio por noche: {{ roomType.perNightPrice | currency }}</p>
                         <p class="text_align_start">Capacidad: {{ roomType.capacity }} personas</p>
                     </div>
-                    <button mat-flat-button (click)="editRoomType(roomType)">Editar</button>
+                    <div class="room_type_item_buttons">
+                        <button mat-flat-button (click)="editRoomType(roomType)">Editar</button>
+                        <button mat-flat-button (click)="deleteRoomType(roomType)">Eliminar</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -33,14 +36,19 @@
                     <mat-form-field>
                         <mat-label>Precio por noche</mat-label>
                         <input matInput formControlName="perNightPrice">
+                        <span matTextPrefix>$&nbsp;</span>
+                        <span matTextSuffix>.00</span>
                     </mat-form-field>
                     <mat-form-field>
                         <mat-label>Impuesto aplicado</mat-label>
                         <input matInput formControlName="fees">
+                        <span matTextPrefix>$&nbsp;</span>
+                        <span matTextSuffix>.00</span>
                     </mat-form-field>
                     <mat-form-field>
                         <mat-label>Capacidad</mat-label>
                         <input matInput formControlName="capacity">
+                        <span matTextSuffix>personas</span>
                     </mat-form-field>
                     <mat-form-field id="room_numbers_field" class="lodging_form_first_column">
                         <mat-label>Números de habitación</mat-label>

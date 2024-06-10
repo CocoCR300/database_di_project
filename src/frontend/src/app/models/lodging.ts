@@ -15,6 +15,9 @@ export class Lodging {
         public description:     string,
         public address:         string,
         public emailAddress:    string,
+        public perNightPrice:   number | null,
+        public fees:            number | null,
+        public capacity:        number | null,
         public phoneNumbers:    string[] | null,
         public photos:          string[] | null,
         public perks:           Perk[] | null,
@@ -23,4 +26,22 @@ export class Lodging {
         public owner:           User | null,
         public perNightPrice:   number | null)
         { }
+
+    public static offersRooms(lodging: Lodging) {
+        return this.typeOffersRooms(lodging.type);
+    }
+
+    public static typeOffersRooms(lodgingType: number) {
+        return lodgingType != LodgingType.Apartment && lodgingType != LodgingType.VacationRental;
+    }
+}
+
+export enum LodgingType
+{
+	Apartment,
+	GuestHouse,
+	Hotel,
+	Lodge,
+	Motel,
+	VacationRental
 }

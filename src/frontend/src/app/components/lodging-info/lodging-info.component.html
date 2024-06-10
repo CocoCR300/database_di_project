@@ -83,7 +83,24 @@
                         <mat-label>Correo electrónico</mat-label>
                         <input matInput formControlName="emailAddress">
                     </mat-form-field>
-                    <button id="rooms_button" mat-stroked-button type="button">Habitaciones</button>
+                    <mat-form-field *ngIf="!lodgingOffersRooms" class="lodging_form_second_column">
+                        <mat-label>Capacidad</mat-label>
+                        <input matInput formControlName="capacity">
+                        <span matTextSuffix>personas</span>
+                    </mat-form-field>
+                    <mat-form-field *ngIf="!lodgingOffersRooms" class="lodging_form_first_column">
+                        <mat-label>Precio por noche</mat-label>
+                        <input matInput formControlName="perNightPrice">
+                        <span matTextPrefix>$&nbsp;</span>
+                        <span matTextSuffix>.00</span>
+                    </mat-form-field>
+                    <mat-form-field *ngIf="!lodgingOffersRooms" class="lodging_form_second_column">
+                        <mat-label>Impuesto aplicado</mat-label>
+                        <input matInput formControlName="fees">
+                        <span matTextPrefix>$&nbsp;</span>
+                        <span matTextSuffix>.00</span>
+                    </mat-form-field>
+                    <button *ngIf="!create && lodgingOffersRooms" id="rooms_button" mat-stroked-button type="button" (click)="goToRooms()">Habitaciones</button>
                 </div>
 
                 <div class="buttons_container">

@@ -1,18 +1,17 @@
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { Component, OnInit } from '@angular/core';
-import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Lodging } from '../../models/lodging';
 import { LodgingService } from '../../services/lodging.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
-import { Observable, firstValueFrom, map, of, startWith } from 'rxjs';
+import { AsyncPipe, CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NotificationService } from '../../services/notification.service';
-import { AppResponse } from '../../models/app_response';
 import Swal from 'sweetalert2';
 import { MatButtonModule } from '@angular/material/button';
 import { server } from '../../services/global';
@@ -24,14 +23,13 @@ import { Perk } from '../../models/perk';
 import { CarouselModule } from '@coreui/angular';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogImageData, ImagesUploadDialogComponent, ImagesUploadDialogData, ImagesUploadDialogResult } from '../images-upload-dialog/images-upload-dialog.component';
-import { AppImageData } from '../../models/app_image_data';
 import { RoomType } from '../../models/room_type';
 import { Room } from '../../models/room';
 
 @Component({
   selector: 'app-lodging-rooms',
   standalone: true,
-  imports: [AsyncPipe, CarouselModule, FormsModule, MatAutocompleteModule, MatButtonModule,
+  imports: [AsyncPipe, CarouselModule, CurrencyPipe, FormsModule, MatAutocompleteModule, MatButtonModule,
     MatChipsModule, MatIconModule, MatInputModule, MatListModule, MatOptionModule, MatSelectModule, NgFor,
     NgIf, ReactiveFormsModule, RouterLink],
   templateUrl: './lodging-rooms.component.html',
@@ -49,6 +47,8 @@ export class LodgingRoomsComponent implements OnInit
   lodging!: Lodging | null;
   _filteredPerks: Perk[] = [];
   roomNumbers: number[] = [];
+  roomNumbersToDelete: number[] = [];
+  newRoomNumbers: number[] = [];
   roomTypes: RoomType[] = [];
   selectedRoomType: RoomType | null = null;
   selectedRoomTypePhotos: DialogImageData[] = [];
@@ -112,10 +112,15 @@ export class LodgingRoomsComponent implements OnInit
   createRoomType() {
     this.inputDisabled = false;
     this.create = true;
+    this.roomTypeFormGroup = this.buildFormGroup();
   }
 
   addRoom(event: any) {
     if (!this.roomNumbers.includes(event.value)) {
+      if (!this.lodging!.rooms!.find(room => room.number == event.value)) {
+        this.newRoomNumbers.push(event.value);
+      }
+
       this.roomNumbers.push(event.value);
     }
 
@@ -134,12 +139,33 @@ export class LodgingRoomsComponent implements OnInit
     this.roomTypeFormGroup = this.buildFormGroup();
   }
 
+  async deleteRoomType(roomType: RoomType) {
+    const response = await firstValueFrom(this._lodgingService.deleteRoomTypes(this.lodging!.id, [ roomType.id ]));
+
+    if (!response.ok) {
+      Swal.fire({
+        icon: "error",
+        title: "Ha ocurrido un error al eliminar el tipo de habitación"
+      });
+
+      return;
+    }
+
+    const index = this.roomTypes.findIndex(roomType1 => roomType1.id == roomType.id);
+
+    if (index >= 0) {
+      this.roomTypes.splice(index, 1);
+    }
+
+    this._notificationService.show("Habitación eliminada con éxito.");
+  }
+
   async saveRoomType() {
     const roomTypeName = this.roomTypeFormGroup.get<string>("roomTypeName")!;
     const perNightPrice = this.roomTypeFormGroup.get<string>("perNightPrice")!;
-    const capacity = this.roomTypeFormGroup.get<string>("roomTypeName")!;
+    const capacity = this.roomTypeFormGroup.get<string>("capacity")!;
     const fees = this.roomTypeFormGroup.get<string>("fees")!;
-    const roomNumbers = this.roomNumbers;
+    const roomNumbers = this.newRoomNumbers;
 
     if (this.roomTypeFormGroup.invalid) {
       if (roomTypeName.hasError("required")) {
@@ -168,26 +194,23 @@ export class LodgingRoomsComponent implements OnInit
       []
     );
 
-    if (this.create && this.selectedRoomType != null) {
+    if (!this.create && this.selectedRoomType) {
       roomType.id = this.selectedRoomType.id;
       roomType.photos = this.selectedRoomType.photos;
     }
 
     if (this.create) {
-      const addRoomTypeResponse = await firstValueFrom(this._lodgingService.addRoomType(this.lodging!.id, roomType));
-
-      if (addRoomTypeResponse.ok) {
-        await Swal.fire({
-          icon: "success",
-          title: "La habitación ha sido creada con éxito"
-        });
-      }
+      const addRoomTypeResponse = await firstValueFrom(this._lodgingService.addRoomTypes(this.lodging!.id, [ roomType ]));
+      const newRoomType = addRoomTypeResponse.body[0] as RoomType;
 
       let allOk = true;
       if (this.newRoomTypeImages.length > 0) {
-        const response = await firstValueFrom(this._lodgingService.addRoomTypePhotos(this.lodging!.id, roomType.id, this.newRoomTypeImages));
+        const response = await firstValueFrom(this._lodgingService.addRoomTypePhotos(this.lodging!.id, newRoomType.id, this.newRoomTypeImages));
 
-        if (!response.ok) {
+        if (response.ok) {
+          this.newRoomTypeImages = [];
+        }
+        else {
           allOk = false;
           Swal.fire({
             icon: "error",
@@ -196,12 +219,80 @@ export class LodgingRoomsComponent implements OnInit
         }
       }
 
+      if (roomNumbers.length > 0) {
+        const rooms = roomNumbers.map(roomNumber => new Room(this.lodging!.id, roomNumber, newRoomType.id, null, null));
+        const response = await firstValueFrom(this._lodgingService.addRooms(this.lodging!.id, newRoomType.id, rooms));
+
+        if (response.ok) {
+          this.newRoomNumbers = [];
+        }
+        else {
+          allOk = false;
+          Swal.fire({
+            icon: "error",
+            title: "Ha ocurrido un error al registrar los números de la habitación"
+          });
+        }
+      }
+
+      if (this.roomNumbersToDelete.length > 0) {
+        const rooms = this.roomNumbersToDelete;
+        const response = await firstValueFrom(this._lodgingService.deleteRooms(this.lodging!.id, newRoomType.id, rooms));
+
+        if (response.ok) {
+          this.roomNumbersToDelete = [];
+        }
+        else {
+          allOk = false;
+          Swal.fire({
+            icon: "error",
+            title: "Ha ocurrido un error al registrar los números de la habitación"
+          });
+        }
+      }
+
       if (allOk) {
-        this.roomTypes.push(roomType);
-        this.resetForm();
+        await Swal.fire({
+          icon: "success",
+          title: "La habitación ha sido creada con éxito"
+        });
+
+        window.location.reload();
       }
     }
     else {
+      if (roomNumbers.length > 0) {
+        const roomTypeId = this.selectedRoomType!.id;
+        const rooms = roomNumbers.map(roomNumber => new Room(this.lodging!.id, roomNumber, roomTypeId, null, null));
+        const response = await firstValueFrom(this._lodgingService.addRooms(this.lodging!.id, roomTypeId, rooms));
+
+        if (!response.ok) {
+          Swal.fire({
+            icon: "error",
+            title: "Ha ocurrido un error al registrar los números de la habitación"
+          });
+
+          return;
+        }
+      }
+
+      if (this.roomNumbersToDelete.length > 0) {
+        const rooms = this.roomNumbersToDelete;
+        const response = await firstValueFrom(this._lodgingService.deleteRooms(this.lodging!.id, roomType.id, rooms));
+
+        if (response.ok) {
+          this.roomNumbersToDelete = [];
+        }
+        else {
+          Swal.fire({
+            icon: "error",
+            title: "Ha ocurrido un error al registrar los números de la habitación"
+          });
+
+          return;
+        }
+      }
+
       if (this.roomTypeImagesToDelete.length > 0) {
         const response = await firstValueFrom(this._lodgingService.deleteRoomTypePhotos(this.lodging!.id, roomType.id, this.roomTypeImagesToDelete));
 
@@ -255,11 +346,19 @@ export class LodgingRoomsComponent implements OnInit
 
   removeRoom(roomNumber: number) {
     const index = this.roomNumbers.indexOf(roomNumber);
-    this.roomNumbers.splice(index, 1);
+    
+    if (index >= 0) {
+      this.roomNumbers.splice(index, 1);
+      
+      if (!this.roomNumbersToDelete.includes(roomNumber)) {
+        this.roomNumbersToDelete.push(roomNumber)
+      }
+    }
+
   }
 
   openImagesDialog() {
-    const images: string[] = this.selectedRoomType?.photos?.slice() ?? [];
+    const images: string[] = this.selectedRoomTypePhotos.map(room => room.fileName!);
 
     this._dialog.open(ImagesUploadDialogComponent,
       { data: new ImagesUploadDialogData(false, "Fotos de la habitación", server.roomTypeImages, images) })
@@ -270,12 +369,8 @@ export class LodgingRoomsComponent implements OnInit
               this.roomTypeImagesToDelete.push(image);
             }
 
-            this.newRoomTypeImages = [];
             for (const imageFile of dialogResult.newImages) {
-              const imageFileName = imageFile.name;
-              if (dialogResult.updatedImages.find(image => image.fileName === imageFileName)) {
-                this.newRoomTypeImages.push(imageFile);
-              }
+              this.newRoomTypeImages.push(imageFile);
             }
           }
         }
@@ -285,11 +380,12 @@ export class LodgingRoomsComponent implements OnInit
   resetForm() {
     this.inputDisabled = true;
     this.selectedRoomType = null;
-    this.selectedRoomTypePhotos = [];
     this.roomTypeFormGroup = this.buildFormGroup();
     
     this.roomTypeImagesToDelete = [];
     this.newRoomTypeImages = [];
+    this.newRoomNumbers = [];
+    this.roomNumbersToDelete = [];
     if (this.create) {
     }
     else {
@@ -299,19 +395,23 @@ export class LodgingRoomsComponent implements OnInit
   private buildFormGroup() {
     const disabled = this.inputDisabled;
     this.roomTypeFormGroup = new FormGroup({
-      roomTypeName: new FormControl({ disabled: disabled, value: this.selectedRoomType?.name }, { nonNullable: true, validators: Validators.required }),
-      capacity: new FormControl({ disabled: disabled, value: this.selectedRoomType?.capacity }, { nonNullable: true, validators: Validators.required }),
-      perNightPrice: new FormControl({ disabled: disabled, value: this.selectedRoomType?.perNightPrice }, { nonNullable: true, validators: Validators.required }),
-      fees: new FormControl({ disabled: disabled , value: this.selectedRoomType?.fees }, { nonNullable: true, validators: Validators.required }),
-      roomNumber: new FormControl({ disabled: disabled, value: "" }, { nonNullable: true, validators: Validators.required }),
+      roomTypeName: new FormControl({ disabled: disabled, value: this.selectedRoomType?.name ?? "" }, { nonNullable: true, validators: Validators.required }),
+      capacity: new FormControl<number>({ disabled: disabled, value: this.selectedRoomType?.capacity ?? 1 }, { nonNullable: true, validators: Validators.required }),
+      perNightPrice: new FormControl<number>({ disabled: disabled, value: this.selectedRoomType?.perNightPrice ?? 50 }, { nonNullable: true, validators: Validators.required }),
+      fees: new FormControl<number>({ disabled: disabled , value: this.selectedRoomType?.fees ?? 10 }, { nonNullable: true, validators: Validators.required }),
+      roomNumber: new FormControl<string>({ disabled: disabled, value: "" }),
     });
 
-    if (this.lodging && !disabled) {
+    if (this.lodging && this.selectedRoomType) {
       if (this.lodging.rooms) {
-        this.roomNumbers = this.lodging!.rooms!.filter(room => room.typeId == this.selectedRoomType!.id).map(room => room.roomNumber);
+        this.roomNumbers = this.lodging!.rooms!.filter(room => room.typeId == this.selectedRoomType!.id).map(room => room.number);
       }
 
       this.selectedRoomTypePhotos = this.selectedRoomType!.photos.map(photo => new DialogImageData(photo, null));
+    }
+    else {
+      this.selectedRoomTypePhotos = [];
+      this.roomNumbers = [];
     }
 
     return this.roomTypeFormGroup;
@@ -323,8 +423,9 @@ export class LodgingRoomsComponent implements OnInit
     if (lodgingIdString !== null) {
       const lodgingId = parseInt(lodgingIdString);
       this.lodging = await firstValueFrom(this._lodgingService.getLodging(lodgingId));
+      this.lodging.rooms = await firstValueFrom(this._lodgingService.getLodgingRooms(this.lodging.id));
       this.roomTypes = await firstValueFrom(this._lodgingService.getLodgingRoomTypes(lodgingId));
-      this.roomNumbers = (await firstValueFrom(this._lodgingService.getLodgingRooms(lodgingId))).map(room => room.roomNumber);
+      this.roomNumbers = (await firstValueFrom(this._lodgingService.getLodgingRooms(lodgingId))).map(room => room.number);
     }
 
     this.roomTypeFormGroup = this.buildFormGroup();

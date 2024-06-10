@@ -45,7 +45,7 @@ mat-drawer[_ngcontent-ng-c1646113714] {
     column-gap: 1em;
     display: grid;
     grid-template-columns: repeat(2, auto);
-    grid-template-rows: repeat(6, 1fr);
+    grid-template-rows: repeat(6, 3em);
     padding: 2em 2em 0px 2em;
     row-gap: 0.5em;
 }

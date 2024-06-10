@@ -12,11 +12,13 @@ import { LogInGuard } from './services/login.guard';
 import { LodgingInfoComponent } from './components/lodging-info/lodging-info.component';
 import { UserSettingsComponent } from './components/user-settings/user-settings.component';
 import { BookingComponent } from './components/booking/booking.component';
+import { LodgingRoomsComponent } from './components/lodging-rooms/lodging-rooms.component';
 
 export const routes: Routes = [
     {path: 'lodging', component: LodgingComponent},
     {path: 'lodging/create', component: LodgingInfoComponent, canActivate: [LogInGuard]},
-    {path: 'lodging/:id', component: LodgingInfoComponent, canActivate: [LogInGuard]},
+    {path: 'lodging/edit/:id', component: LodgingInfoComponent, canActivate: [LogInGuard]},
+    {path: 'lodging/:id/rooms', component: LodgingRoomsComponent, canActivate: [LogInGuard]},
     {path: 'login', component: LoginComponent, canActivate: [AlreadyLoggedInGuard]},
     {path: 'register', component: RegisterComponent, canActivate: [AlreadyLoggedInGuard]},
     {path: 'home', component: HomeComponent},

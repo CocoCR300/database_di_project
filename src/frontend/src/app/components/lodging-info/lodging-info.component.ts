@@ -48,6 +48,7 @@ export class LodgingInfoComponent implements OnInit
   separatorKeysCodes: number[] = [ENTER, COMMA];
   create = true;
   hasPhotos = false;
+  lodgingOffersRooms = false;
   emptyTitle!: string;
   lodgingImageFiles!: File[] | null;
   lodgingImagesData: any[] = []; 
@@ -63,6 +64,7 @@ export class LodgingInfoComponent implements OnInit
   selectedPerks: Perk[] = [];
   selectedPerkIds: number[] = [];
   _filteredPerks: Perk[] = [];
+
 
   public constructor(
     private _appState: AppState,
@@ -192,6 +194,12 @@ export class LodgingInfoComponent implements OnInit
     this.lodgingFormGroup.get("perkName")!.setValue(null);
   }
 
+  goToRooms() {
+    if (this.lodging) {
+      this._router.navigate(["lodging", this.lodging!.id, "rooms"]);
+    }
+  }
+
   perkAutoCompleteSelected(event: MatAutocompleteSelectedEvent) {
     const perk = event.option.value as Perk;
 
@@ -248,6 +256,9 @@ export class LodgingInfoComponent implements OnInit
     const description = this.lodgingFormGroup.get<string>("description")!;
     const emailAddress = this.lodgingFormGroup.get<string>("emailAddress")!;
     const type = this.lodgingFormGroup.get<string>("lodgingType")!;
+    const perNightPrice = this.lodgingFormGroup.get<string>("perNightPrice")!;
+    const fees = this.lodgingFormGroup.get<string>("fees")!;
+    const capacity = this.lodgingFormGroup.get<string>("capacity")!;
 
     if (this.lodgingFormGroup.invalid) {
       if (lodgingName.hasError("required")) {
@@ -260,12 +271,21 @@ export class LodgingInfoComponent implements OnInit
         this._notificationService.show("La dirección del alojamiento es obligatoria.");
       }
       if (emailAddress.hasError("required")) {
-        this._notificationService.show("El correo electrónico del alojamiento es obligatoria.");
+        this._notificationService.show("El correo electrónico del alojamiento es obligatorio.");
       }
       if (type.hasError("required")) {
         this._notificationService.show("El tipo del alojamiento es obligatorio.");
       }
-      
+      if (perNightPrice.hasError("required")) {
+        this._notificationService.show("El precio por noche del alojamiento es obligatorio.");
+      }
+      if (fees.hasError("required")) {
+        this._notificationService.show("El impuesto aplicado a las reservas es obligatorio.");
+      }
+      if (capacity.hasError("required")) {
+        this._notificationService.show("La capacidad del alojamiento es obligatoria.");
+      }
+
       return;
     }
 
@@ -288,6 +308,9 @@ export class LodgingInfoComponent implements OnInit
       description.value.trim(),
       address.value.trim(),
       emailAddress.value.trim(),
+      perNightPrice.value,
+      fees.value,
+      capacity.value,
       null,
       null,
       null,
@@ -315,7 +338,7 @@ export class LodgingInfoComponent implements OnInit
               title: "El alojamiento ha sido creado con éxito."
             });
 
-            this._router.navigate(["lodging", response.body!.id]);
+            this._router.navigate(["lodging", "edit", response.body!.id]);
           }
           else {
             this.lodging = newLodging;
@@ -461,9 +484,33 @@ export class LodgingInfoComponent implements OnInit
       address: new FormControl(this.lodging?.address, { nonNullable: true, validators: Validators.required }),
       emailAddress: new FormControl(this.lodging?.emailAddress, { nonNullable: true, validators: [Validators.required, Validators.email] }),
       lodgingType: new FormControl(this.lodging?.type, { nonNullable: true, validators: Validators.required }),
+      perNightPrice: new FormControl<number>(50),
+      fees: new FormControl<number>(10),
+      capacity: new FormControl<number>(2),
       phoneNumber: new FormControl(""),
       perkName: new FormControl(""),
     });
+
+    formGroup.get("lodgingType")!.valueChanges.subscribe(lodgingType => {
+      if (lodgingType) {
+        this.lodgingOffersRooms = Lodging.typeOffersRooms(lodgingType);
+      }
+      else {
+        this.lodgingOffersRooms = false;
+      }
+
+      if (this.lodgingOffersRooms) {
+        formGroup.addControl("perNightPrice", new FormControl(50, { nonNullable: true, validators: Validators.required }));
+        formGroup.addControl("fees", new FormControl(10, { nonNullable: true, validators: Validators.required }));
+        formGroup.addControl("capacity", new FormControl(2, { nonNullable: true, validators: Validators.required }));
+      }
+      else {
+        formGroup.addControl("perNightPrice", new FormControl(50));
+        formGroup.addControl("fees", new FormControl(10));
+        formGroup.addControl("capacity", new FormControl(2));
+      }
+    });
+
 
     this.filteredPerks = formGroup.get("perkName")!.valueChanges.pipe(
       startWith(null),
@@ -494,6 +541,7 @@ export class LodgingInfoComponent implements OnInit
       const lodgingId = parseInt(lodgingIdString);
       this.lodging = await firstValueFrom(this._lodgingService.getLodging(lodgingId));
 
+      this.lodgingOffersRooms = Lodging.offersRooms(this.lodging);
       this.hasPhotos = this.lodging.photos!.length > 0;
       this.selectedPerks = this.lodging.perks!.slice();
       this.selectedPerkIds = this.lodging.perks!.map(perk => perk.id);

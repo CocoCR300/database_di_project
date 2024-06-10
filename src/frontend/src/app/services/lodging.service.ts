@@ -52,11 +52,15 @@ export class LodgingService extends BaseService
     saveLodging(lodging: Lodging): Observable<AppResponse> {
         // TODO
         const lodgingTrimmed = {
-            lodging_id: lodging.id,
             ownerId: lodging.ownerId,
             address: lodging.address,
             name: lodging.name,
             description: lodging.description,
+            emailAddress: lodging.emailAddress,
+            type: lodging.type,
+            perNightPrice: lodging.perNightPrice,
+            fees: lodging.fees,
+            capacity: lodging.capacity
         };
 
         return this.post("lodging", true, lodgingTrimmed);
@@ -104,12 +108,24 @@ export class LodgingService extends BaseService
         return this.delete(`lodging/${lodgingId}/phone_number`, true, phoneNumbers);
     }
 
-    addRoomType(lodgingId: number, roomType: RoomType) {
-        return this.post(`roomtype/${lodgingId}`, true, roomType);
+    addRooms(lodgingId: number, roomTypeId: number, rooms: Room[]) {
+        return this.post(`room/${lodgingId}`, true, rooms);
+    }
+
+    deleteRooms(lodgingId: number, roomTypeId: number, roomNumbers: number[]) {
+        return this.delete(`room/${lodgingId}`, true, roomNumbers);
+    }
+
+    addRoomTypes(lodgingId: number, roomTypes: RoomType[]) {
+        return this.post(`roomtype/${lodgingId}`, true, roomTypes);
+    }
+
+    deleteRoomTypes(lodgingId: number, roomTypeIds: number[]) {
+        return this.delete(`roomtype/${lodgingId}`, true, roomTypeIds);
     }
 
     updateRoomType(lodgingId: number, roomType: RoomType) {
-        return this.post(`roomtype/${lodgingId}/${roomType.id}`, true, roomType);
+        return this.patch(`roomtype/${lodgingId}/${roomType.id}`, true, roomType);
     }
 
     addRoomTypePhotos(lodgingId: number, roomTypeId: number, images: File[]) {
