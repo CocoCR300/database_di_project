@@ -18,12 +18,15 @@ export class ImagesUploadDialogComponent
   newImages: any[] = [];
   imagesToDelete: string[] = [];
   title: string;
+  imagesRoute: string;
 
   public constructor(
     public dialogRef: MatDialogRef<ImagesUploadDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ImagesUploadDialogData
   ) {
     this.title = data.title;
+    this.imagesRoute = data.imagesRoute;
+
     for (const fileName of data.imageFileNames) {
       this.images.push(new DialogImageData(fileName, null));
     }
@@ -32,7 +35,7 @@ export class ImagesUploadDialogComponent
   prepareDataForDisplay(imageData: DialogImageData) {
     let imageSrc = "";
     if (imageData.fileName) {
-      imageSrc = `${server.lodgingImages}${imageData.fileName}`;
+      imageSrc = `${this.imagesRoute}${imageData.fileName}`;
     }
     else {
       imageSrc = imageData.data;
@@ -91,6 +94,7 @@ export class ImagesUploadDialogData
   public constructor(
     public edit: boolean,
     public title: string,
+    public imagesRoute: string,
     public imageFileNames: string[]
   ) { }
 }

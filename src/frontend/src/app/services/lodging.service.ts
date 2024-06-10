@@ -33,8 +33,8 @@ export class LodgingService extends BaseService
         return this.delete("booking", true, bookingIds);
     }
 
-    getLessorLodgings(lessorId: number): Observable<Lodging[]> {
-        return this.get<Lodging[]>(`lessor/${lessorId}/lodging`, true);
+    getLessorLodgings(lessorUserName: string): Observable<Lodging[]> {
+        return this.get<Lodging[]>(`lodging/lessor/${lessorUserName}`, false);
     }
 
     getLodging(lodgingId: number): Observable<Lodging> {
@@ -102,5 +102,21 @@ export class LodgingService extends BaseService
 
     removePhoneNumbers(lodgingId: number, phoneNumbers: string[]) {
         return this.delete(`lodging/${lodgingId}/phone_number`, true, phoneNumbers);
+    }
+
+    addRoomType(lodgingId: number, roomType: RoomType) {
+        return this.post(`roomtype/${lodgingId}`, true, roomType);
+    }
+
+    updateRoomType(lodgingId: number, roomType: RoomType) {
+        return this.post(`roomtype/${lodgingId}/${roomType.id}`, true, roomType);
+    }
+
+    addRoomTypePhotos(lodgingId: number, roomTypeId: number, images: File[]) {
+        return this.postFiles(`roomtype/${lodgingId}/${roomTypeId}/photo`, true, images);
+    }
+
+    deleteRoomTypePhotos(lodgingId: number, roomTypeId: number, imageFileNames: string[]) {
+        return this.deleteImages(`roomtype/${lodgingId}/${roomTypeId}/photo`, true, imageFileNames);
     }
 }

@@ -27,8 +27,8 @@ export class HomeComponent implements OnInit
     private _router: Router
   ) { }
 
-  public get isCustomer() {
-    return this._appState.role == UserRoleEnum.Customer;
+  public get isLessor() {
+    return this._appState.role == UserRoleEnum.Lessor;
   }
 
   prependImagesRoute(lodging: Lodging) {

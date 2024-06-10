@@ -1,7 +1,6 @@
 c-carousel {
     clip-path: rect(0 0 100% 100% round var(--border-radius));
-    margin: auto;
-    width: 25em;
+    width: 20em;
 }
 
 mat-chip-grid {
@@ -22,7 +21,6 @@ mat-chip-grid {
     display: flex;
     flex: 1;
     flex-direction: column;
-    justify-content: center;
     row-gap: 1em;
 }
 
@@ -31,7 +29,6 @@ mat-chip-grid {
     display: flex;
     flex: 1;
     flex-direction: column;
-    justify-content: center;
 }
 
 #lodging_form {
@@ -42,7 +39,7 @@ mat-chip-grid {
     column-gap: 1em;
     display: grid;
     grid-template-columns: repeat(2, auto);
-    grid-template-rows: repeat(6, 1fr);
+    grid-template-rows: repeat(4, 1fr);
     padding: 2em 2em 0px 2em;
     row-gap: 0.5em;
 }
@@ -61,6 +58,7 @@ mat-chip-grid {
 
 #room_type_image_container {
     height: 12em;
+    margin: 0.5em 0px 0px 0px;
     width: 20em;
 }
 
@@ -80,6 +78,11 @@ mat-chip-grid {
     width: 100%
 }
 
+#room_numbers_field {
+    grid-column: 1 / span 2;
+    grid-row: 3 / span 2;
+}
+
 #room_type_input_container {
     display: grid;
     column-gap: 1em;
@@ -95,6 +98,10 @@ mat-chip-grid {
 
 .buttons_container > button {
     margin: 0px 0.3em;
+}
+
+.flex_grow {
+    flex-grow: 1;
 }
 
 .lodging_form_input_shrink {
@@ -119,7 +126,6 @@ mat-chip-grid {
 .room_type_image {
     clip-path: rect(0px 0px 100% 100% round var(--border-radius));
     display: block;
-    height: 10em;
     object-fit: cover;
     width: 100%;
 }

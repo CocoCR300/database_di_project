@@ -154,6 +154,27 @@ public class LodgingController : BaseController
         return Ok(PaginatedList<object>.Create(lodgingObjects, lodgingObjects.Length, page, pageSize));
     }
 
+    [HttpGet("lessor/{lessorUserName}")]
+    public ObjectResult GetLessorLodgings(string lessorUserName)
+    {
+        User? user = _context.Find<User>(lessorUserName);
+
+        if (user == null)
+        {
+            return NotFound("No existe un usuario con el nombre especificado.");
+        }
+        
+        if (user.RoleId != UserRole.Lessor)
+        {
+            return NotFound("El usuario especificado no es un arrendador.");
+        }
+
+        _context.Entry(user).Reference(u => u.Person).Load();
+
+        IEnumerable<Lodging> lodgings = _context.Lodging.Where(l => l.OwnerId == user.Person.Id);
+        return Ok(lodgings);
+    }
+
     [HttpGet("{lodgingId}")]
     public ObjectResult Get(uint lodgingId)
     {

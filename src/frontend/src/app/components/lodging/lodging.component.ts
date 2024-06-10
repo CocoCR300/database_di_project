@@ -92,7 +92,7 @@ export class LodgingComponent implements OnInit {
     }
 
     public async editLodging(lodgingId: number) {
-        this.router.navigate(["lodging", lodgingId]);
+        this.router.navigate(["lodging/edit", lodgingId]);
     }
 
     public offersRoomTypes(lodgingType: number | undefined): boolean {
@@ -289,14 +289,12 @@ export class LodgingComponent implements OnInit {
 
         if (this.isLessor) {
             this.title = "Mis alojamientos";
-            this._userService.getUser(this._appState.userName!).subscribe(user => {
-                this._lodgingService.getLessorLodgings(user.personId).subscribe(lodgings => {
-                    this._lodgings = lodgings;
-                    this.updatePagedList(0);
-                });
+            this._lodgingService.getLessorLodgings(this._appState.userName!).subscribe(lodgings => {
+                this._lodgings = lodgings;
+                this.updatePagedList(0);
             });
         } else {
-            this._lodgingService.getLodgings(100, 1).subscribe(lodgings => {
+            this._lodgingService.getLodgings(10000, 1).subscribe(lodgings => {
                 lodgings.forEach(lodging => {
                     if (lodging.roomTypes) {
                         let min = Infinity, max = 0;
