@@ -3,19 +3,12 @@
     width: 70%;
 }
 .mat-column-role, .mat-column-user_name, .mat-column-first_name, .mat-column-last_name, 
-.mat-column-phone_number, .mat-column-email_address, .mat-column-image{
+.mat-column-phone_numbers, .mat-column-email_address{
     text-align: center;
     color: white;
 }
 table{
     background-color:#69818D;
-}
-
-.image-user{
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    object-fit: cover;
 }
 
 .mat-mdc-row .mat-mdc-cell {

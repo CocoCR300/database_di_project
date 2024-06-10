@@ -37,10 +37,24 @@ export class UserComponent implements OnInit, AfterViewInit{
     this.updateTable();
   }
 
+  phoneNumbersFormat(username:string): string{
+    let user = this.usersTable.find((userAux: User) => userAux.userName === username) as User;
+    let phoneCollectionAux = '';
+    user.phoneNumbers?.forEach((phoneNumber: string) => {
+      if(phoneCollectionAux === '') {
+        phoneCollectionAux = phoneNumber;
+      }else{
+        phoneCollectionAux = phoneCollectionAux + " | " + phoneNumber;
+      }
+    })
+    return phoneCollectionAux;
+  }
+
   updateTable(){
     this._userService.getUsers().subscribe((result: User[]) => {
       this.usersTable = result
       this.usersTable.forEach((user: User) => {
+
         if(user.userName === "root" || user.userName === "generic_customer" || user.userName === "generic_lessor"){
           this.usersTable = this.usersTable.filter((userAux => user.userName !== userAux.userName));
         }
@@ -95,5 +109,5 @@ export class UserComponent implements OnInit, AfterViewInit{
     }
     
 
-    columnsToDisplay =['user_name', 'first_name', 'last_name', 'phone_number', 'email_address', 'role', 'image'];
+    columnsToDisplay =['user_name', 'first_name', 'last_name', 'phone_numbers', 'email_address', 'role'];
 }
