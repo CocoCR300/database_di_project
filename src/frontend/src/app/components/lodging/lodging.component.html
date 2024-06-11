@@ -104,7 +104,7 @@
             </div>
         </div>
         <mat-paginator #paginator mat-flat-paginator
-            [length]="pagedLodgings.length" [pageSize]="pageSize"
+            [length]="lodgings.length" [pageSize]="pageSize"
             [pageIndex]="currentPage" [pageSizeOptions]="[5, 10]"
             (page)="pageChanged($event)">
         </mat-paginator>

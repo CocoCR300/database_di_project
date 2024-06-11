@@ -316,7 +316,6 @@ export class LodgingInfoComponent implements OnInit
       null,
       null,
       null,
-      null,
       null
     );
 

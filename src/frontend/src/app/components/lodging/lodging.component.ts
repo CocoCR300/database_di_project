@@ -38,7 +38,7 @@ import { MatTableModule } from '@angular/material/table';
     styleUrls: ['./lodging.component.scss']
 })
 export class LodgingComponent implements OnInit {
-    private _lodgings!: Lodging[];
+    lodgings: Lodging[] = [];
 
     @ViewChild('bookingForm')
     bookingForm!: NgForm;
@@ -278,7 +278,7 @@ export class LodgingComponent implements OnInit {
         this.searchTermCurrentTimeout = null;
         if (component.searchTerm != "") {
             const searchTermUppercase = component.searchTerm.toLocaleUpperCase();
-            component._filteredLodgings = component._lodgings.filter(lodging => {
+            component._filteredLodgings = component.lodgings.filter(lodging => {
                 return lodging.name.toLocaleUpperCase().includes(searchTermUppercase)
                         || lodging.description.toLocaleUpperCase().includes(searchTermUppercase)
                         || lodging.address.toLocaleUpperCase().includes(searchTermUppercase);
@@ -328,7 +328,7 @@ export class LodgingComponent implements OnInit {
         this._lodgingService.deleteLodging(lodgingId).subscribe(
             (response: AppResponse) => {
                 if (response.ok) {
-                    this._lodgings = this._lodgings.filter(lodging => lodging.id != lodgingId);
+                    this.lodgings = this.lodgings.filter(lodging => lodging.id != lodgingId);
                     this.updatePagedList(this.currentPage);
 
                     Swal.fire({
@@ -349,11 +349,11 @@ export class LodgingComponent implements OnInit {
     private updatePagedList(pageIndex: number) {
         let startIndex = pageIndex * this.pageSize;
         let endIndex = startIndex + this.pageSize;
-        if(endIndex > this._lodgings.length) {
-            endIndex = this._lodgings.length;
+        if(endIndex > this.lodgings.length) {
+            endIndex = this.lodgings.length;
         }
 
-        let lodgings = this._lodgings;
+        let lodgings = this.lodgings;
         if (this._filteredLodgings != null) {
             lodgings = this._filteredLodgings;
         }
@@ -390,7 +390,7 @@ export class LodgingComponent implements OnInit {
         if (this.isLessor) {
             this.title = "Mis alojamientos";
             this._lodgingService.getLessorLodgings(this._appState.userName!).subscribe(lodgings => {
-                this._lodgings = lodgings;
+                this.lodgings = lodgings;
                 this.updatePagedList(0);
             });
         } else {
@@ -413,7 +413,7 @@ export class LodgingComponent implements OnInit {
                         lodging.roomTypeMinPrice = min;
                     }
                 });
-                this._lodgings = lodgings;
+                this.lodgings = lodgings;
                 this.updatePagedList(0);
             });
         }

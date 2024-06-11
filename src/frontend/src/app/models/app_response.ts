@@ -10,6 +10,11 @@ export class AppResponse
 
     public static *getErrors(response: AppResponse) {
         const error = response.error;
+        
+        if (error.message) {
+            yield error.message;
+        }
+
         const errorMessagesByPropertyName = Object.entries<any>(error.errors);
         for (const [, messages] of errorMessagesByPropertyName) {
             for (const message of messages) {

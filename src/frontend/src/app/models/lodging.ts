@@ -23,8 +23,7 @@ export class Lodging {
         public perks:           Perk[] | null,
         public rooms:           Room[] | null,
         public roomTypes:       RoomType[] | null,
-        public owner:           User | null,
-        public perNightPrice:   number | null)
+        public owner:           User | null)
         { }
 
     public static offersRooms(lodging: Lodging) {
