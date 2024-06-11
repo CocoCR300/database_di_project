@@ -264,12 +264,6 @@ namespace Restify.API.Controllers
                 {
                     if (data.UserName != null)
                     {
-                        User? existingUser = _context.Find<User>(data.UserName);
-                        if (existingUser != null)
-                        {
-                            return NotAcceptable("Ya existe un usuario con el nuevo nombre especificado.");
-                        }
-                        
                         user.Name = data.UserName;
                         user.Person.UserName = data.UserName;
                     }

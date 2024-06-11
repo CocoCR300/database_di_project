@@ -14,9 +14,6 @@ export class UserService extends BaseService{
     private users!: User[];
     protected override _appState!: AppState;
 
-    
-    async initializeArray() {
-    }
 
     getUsers(): Observable<User[]> {
         return this.get<User[]>("User/1000/1");
@@ -53,17 +50,42 @@ export class UserService extends BaseService{
     }
 
     updateUser(data:string[], username:string): Observable<AppResponse>{
-        const user = {
+        let firstName;
+        let lastName;
+        let emailAddress;
+        if(data[0] === '') {
+            firstName = null;
+        }else {
+            firstName = data[0];
+        }
+        if(data[1] === '') {
+            lastName = null;
+        }else {
+            lastName = data[1];
+        }
+        if(data[2] === '') {
+            emailAddress = null;
+        }else {
+            emailAddress = data[2];
+        }
+        let user = {
             userName: username,
-            firsName: data[0],
-            lastName: data[1],
-            emailAddress: data[2],
-            phoneNumber: data[3]
+            firstName: firstName,
+            lastName: lastName,
+            emailAddress: emailAddress,
         }
 
         return this.patch(`user/${username}`, true, user);
     }
 
+    addPhoneNumbers(username: string, phoneNumbers: string[]) {
+        return this.post(`user/${username}/phone_number`, true, phoneNumbers);
+    }
+
+    deletePhoneNumbers(username: string, phoneNumbers: string[]) {
+        return this.delete(`user/${username}/phone_number`, true, phoneNumbers);
+    }
+    
     logOut(){
         this.post(`user/${this._appState.userName}/logout`,true,'').subscribe((response : AppResponse) => {
             if(response.ok){
