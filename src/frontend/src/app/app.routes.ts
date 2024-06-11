@@ -13,19 +13,21 @@ import { LodgingInfoComponent } from './components/lodging-info/lodging-info.com
 import { UserSettingsComponent } from './components/user-settings/user-settings.component';
 import { BookingComponent } from './components/booking/booking.component';
 import { LodgingRoomsComponent } from './components/lodging-rooms/lodging-rooms.component';
+import { CustomerGuard } from './services/customer.guard';
+import { LessorGuard } from './services/lessor.guard';
 
 export const routes: Routes = [
     {path: 'lodging', component: LodgingComponent},
-    {path: 'lodging/create', component: LodgingInfoComponent, canActivate: [LogInGuard]},
-    {path: 'lodging/edit/:id', component: LodgingInfoComponent, canActivate: [LogInGuard]},
-    {path: 'lodging/:id/rooms', component: LodgingRoomsComponent, canActivate: [LogInGuard]},
+    {path: 'lodging/create', component: LodgingInfoComponent, canActivate: [LogInGuard, LessorGuard]},
+    {path: 'lodging/edit/:id', component: LodgingInfoComponent, canActivate: [LogInGuard, LessorGuard]},
+    {path: 'lodging/:id/rooms', component: LodgingRoomsComponent, canActivate: [LogInGuard, LessorGuard]},
     {path: 'login', component: LoginComponent, canActivate: [AlreadyLoggedInGuard]},
     {path: 'register', component: RegisterComponent, canActivate: [AlreadyLoggedInGuard]},
     {path: 'home', component: HomeComponent},
     {path: 'user/settings/:name', component: UserSettingsComponent, canActivate: [LogInGuard]},
     {path: 'user', component: UserComponent, canActivate: [LogInGuard, AdministratorGuard]},
     {path: 'configuration', component:ConfigurationComponent},
-    {path: 'booking', component: BookingComponent},
-    { path: '', redirectTo: '/login', pathMatch: 'full' },
+    {path: 'booking', component: BookingComponent, canActivate: [LogInGuard, CustomerGuard]},
+    {path: '', redirectTo: '/login', pathMatch: 'full'},
     {path: '**', component: ErrorComponent}
 ];
