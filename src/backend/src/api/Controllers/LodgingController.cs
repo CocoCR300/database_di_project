@@ -132,7 +132,8 @@ public class LodgingController : BaseController
                     Photos = lodgingPhotos,
                     lodging.Type,
                     roomType?.PerNightPrice,
-                    roomType?.Fees
+                    roomType?.Fees,
+                    roomType?.Capacity
                 };
             }
             
@@ -213,7 +214,8 @@ public class LodgingController : BaseController
                     Photos = lodgingPhotos,
                     lodging.Type,
                     roomType?.PerNightPrice,
-                    roomType?.Fees
+                    roomType?.Fees,
+                    roomType?.Capacity
                 };
             }
             
@@ -334,7 +336,7 @@ public class LodgingController : BaseController
             if (!data.Capacity.HasValue || !data.PerNightPrice.HasValue || !data.Fees.HasValue)
             {
                 return NotAcceptable(
-                    "El costo por noche y el impuesto es obligatorio para el tipo de alojamiento especificado.");
+                    "El costo por noche, el impuesto y la capacidad son obligatorios para el tipo de alojamiento especificado.");
             }
 
             decimal perNightPrice = data.PerNightPrice.Value,

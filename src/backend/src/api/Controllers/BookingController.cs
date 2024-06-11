@@ -88,7 +88,10 @@ public class BookingController : BaseController
             return BadRequest(ModelState);
         }
 
-        ObjectResult? result = GetRoomBookingsToAdd(data.LodgingId, data.Rooms, out List<RoomBooking>? roomBookingsToAdd,
+        Lodging lodging = _context.Find<Lodging>(data.LodgingId)!;
+        _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
+        
+        ObjectResult? result = GetRoomBookingsToAdd(lodging, data.Rooms, out List<RoomBooking>? roomBookingsToAdd,
             out _);
 
         if (result != null)
@@ -156,6 +159,8 @@ public class BookingController : BaseController
         _context.Entry(user).Reference(u => u.Person).Load();
         Booking? booking = _context.Booking
             .Where(b => b.Id == bookingData.BookingId)
+            .Include(b => b.Lodging)
+            .ThenInclude(l => l.RoomTypes)
             .Include(b => b.RoomBookings)
             .ThenInclude(r => r.Room)
             .ThenInclude(r => r.Type)
@@ -185,7 +190,7 @@ public class BookingController : BaseController
         Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>? newRoomBookingsByRoomNumber = null;
         if (bookingData.RoomsBookingsToAdd != null)
         {
-            ObjectResult? result = GetRoomBookingsToAdd(booking.LodgingId, bookingData.RoomsBookingsToAdd,
+            ObjectResult? result = GetRoomBookingsToAdd(booking.Lodging, bookingData.RoomsBookingsToAdd,
                 out var roomBookingsToAdd, out newRoomBookingsByRoomNumber);
 
             if (result != null)
@@ -197,6 +202,14 @@ public class BookingController : BaseController
             {
                 booking.RoomBookings.Add(roomBooking);
             }
+        }
+
+        bool lodgingDoesNotOfferRooms = !Lodging.OffersRooms(booking.Lodging);
+        uint roomTypeId = 0; 
+        
+        if (lodgingDoesNotOfferRooms)
+        {
+            roomTypeId = booking.Lodging.RoomTypes[0].Id;
         }
 
         bool invalidUpdateData = false;
@@ -221,6 +234,10 @@ public class BookingController : BaseController
                 }
                 else if (!invalidUpdateData)
                 {
+                    if (lodgingDoesNotOfferRooms)
+                    {
+                        roomBookingData.RoomTypeId = roomTypeId;
+                    }
                     DateOnly    startDate = roomBookingData.StartDate ?? roomBooking.StartDate,
                                 endDate = roomBookingData.EndDate ?? roomBooking.EndDate;
                     if (endDate.CompareTo(startDate) <= 0)
@@ -335,16 +352,25 @@ public class BookingController : BaseController
         return Ok(message);
     }
 
-    private ObjectResult? GetRoomBookingsToAdd(uint lodgingId,
+    private ObjectResult? GetRoomBookingsToAdd(Lodging lodging,
         RoomBookingRequestData[] roomBookingsData,
         out List<RoomBooking>? roomBookingsToAdd,
         out Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>? roomBookingDatesByRoomNumber)
     {
+        if (!Lodging.OffersRooms(lodging))
+        {
+            uint roomTypeId = lodging.RoomTypes[0].Id;
+            foreach (RoomBookingRequestData data in roomBookingsData)
+            {
+                data.RoomTypeId = roomTypeId;
+            }
+        }
+        
         var requestedRoomsDataByType = roomBookingsData
             .GroupBy(r => r.RoomTypeId)
             .ToArray();
-
-        var availableRoomsByType = GetAvailableRoomsByType(lodgingId, requestedRoomsDataByType);
+        
+        var availableRoomsByType = GetAvailableRoomsByType(lodging.Id, requestedRoomsDataByType);
         var availableRoomsNewBookings = new Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>();
 
         List<RoomBooking> roomBookings = new List<RoomBooking>();
@@ -365,7 +391,7 @@ public class BookingController : BaseController
                             int days = requestedRoomData.EndDate.Value.DayNumber - requestedRoomData.StartDate.Value.DayNumber;
                             roomBookings.Add(new RoomBooking
                             {
-                                LodgingId = lodgingId,
+                                LodgingId = lodging.Id,
                                 StartDate = requestedRoomData.StartDate!.Value,
                                 EndDate = requestedRoomData.EndDate!.Value,
                                 RoomNumber = room.Number,
@@ -489,7 +515,7 @@ public interface IRoomBookingRequestData
 public record RoomBookingRequestData : IRoomBookingRequestData
 {
     [Required(ErrorMessage = "El identificador del tipo de habitación es obligatorio.")]
-    public uint        RoomTypeId { get; init; }
+    public uint        RoomTypeId { get; set; }
     [Required(ErrorMessage = "La fecha de inicio de la reservación de la habitación es obligatoria.")]
     public DateOnly?   StartDate { get; init; }
     [Required(ErrorMessage = "La fecha de finalización de la reservación es obligatoria.")]
@@ -503,7 +529,7 @@ public record RoomBookingPatchRequestData : IRoomBookingRequestData
     [Required(ErrorMessage = "El identificador de la reservación de la habitación es obligatorio.")]
     public uint          RoomBookingId { get; init; }
     [Required(ErrorMessage = "El identificador del tipo de habitación es obligatorio.")]
-    public uint          RoomTypeId { get; init; }
+    public uint          RoomTypeId { get; set; }
     public DateOnly?     StartDate { get; init; }
     public DateOnly?     EndDate { get; init; }
     public decimal?      Discount { get; init; }
