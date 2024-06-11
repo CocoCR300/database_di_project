@@ -1,4 +1,4 @@
-import { PhoneNumber } from "./phone_number";
+import { PhoneNumber } from "../phone_number";
 
 export class Person
 {

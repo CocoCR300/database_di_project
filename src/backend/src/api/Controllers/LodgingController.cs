@@ -287,7 +287,7 @@ public class LodgingController : BaseController
                 {
                     Capacity = capacity,
                     Fees = fees,
-                    Name = "Automatically created room",
+                    Name = "Alojamiento",
                     PerNightPrice = perNightPrice,
                 }
             };

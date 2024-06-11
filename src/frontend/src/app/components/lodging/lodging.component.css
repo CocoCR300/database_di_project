@@ -110,3 +110,174 @@ mat-paginator {
     grid-row: 2;
     justify-self: center;
 }
+mat-drawer {
+    background-color: var(--color-secondary);
+    padding: 2em;
+    width: 40em;
+}
+
+mat-drawer-content {
+    display: flex;
+    flex-direction: column;
+}
+
+mat-form-field {
+    width: 20em;
+}
+
+mat-paginator {
+    margin-bottom: 1em;
+}
+
+.button {
+    display: block;
+    margin: auto;
+    margin-top: 0.2rem;
+}
+
+.buttons_container {
+    column-gap: 0.5em;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 1em;
+    row-gap: 0.5em;
+}
+
+.buttons_container > * {
+    flex: 1;
+}
+
+.lodgings_container {
+    column-gap: 1em;
+    display: flex;
+    flex: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 1em;
+    row-gap: 1em;
+    width: 100vw;
+}
+
+.lodging_card {
+    display: flex;
+    flex-direction: column;
+    border: 0.1em solid #ddd;
+    border-radius: var(--border-radius);
+    width: 20em;
+}
+
+.lodging_image {
+    clip-path: rect(0px 0px 100% 100% round var(--border-radius));
+    object-fit: cover;
+    height: 12em;
+}
+
+.lodging_info {
+    padding: 20px;
+    flex: 1;
+}
+
+.lodging_name {
+    margin-top: 0;
+    font-size: 1.5em;
+}
+
+.lodging_address, .lodging_description, .lodging_details {
+    margin: 10px 0;
+}
+
+.price_per_night {
+    color: #52f0dd;
+}
+
+.rooms_available {
+    font-weight: bold;
+    display: block;
+    margin-top: 5px;
+}
+
+#title_container {
+    align-items: center;
+    display: grid;
+    grid-template-columns: auto min-content;
+    grid-template-rows: auto auto;
+}
+
+#title_container > h1 {
+    grid-column: 1 / span 2;
+    grid-row: 1;
+}
+
+#title_container > button {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0px 2em;
+    z-index: 1;
+}
+
+#title_container > mat-form-field {
+    grid-column: 1 / span 2;
+    grid-row: 2;
+    justify-self: center;
+}
+
+#booking-container {
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(15px) brightness(40%);
+    color: white;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.title {
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.header-row {
+    background-color: var(--color-secondary);
+}
+
+.header-cell {
+    padding: 10px;
+    font-weight: bold;
+    color: white;
+    border: 1px solid var(--color-accent);
+}
+
+.data-row:nth-child(odd) {
+    background-color: var(--color-accent);
+}
+
+.data-row:nth-child(even) {
+    background-color: var(--color-secondary);
+}
+
+.data-cell {
+    padding: 10px;
+    border: 1px solid var(--color-accent);
+    color: white;
+}
+
+.data-cell, .header-cell {
+    text-align: center;
+}
+
+
+.price-info {
+    padding: 0.5em;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    margin-top: 1em;
+    text-align: center;
+}

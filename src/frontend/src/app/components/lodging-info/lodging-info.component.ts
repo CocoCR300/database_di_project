@@ -293,6 +293,7 @@ export class LodgingInfoComponent implements OnInit
       null,
       null,
       null,
+      null,
       null
     );
 
@@ -482,6 +483,7 @@ export class LodgingInfoComponent implements OnInit
   }
 
   async ngOnInit() {
+    
     this.emptyTitle = "Nuevo alojamiento";
 
     this._lodgingService.getPerks().subscribe(perks => this.perks = perks);

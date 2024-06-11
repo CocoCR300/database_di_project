@@ -10,7 +10,7 @@ export class Lodging {
     constructor(
         public id:              number,
         public ownerId:         number,
-        public type:            number,
+        public type:            any ,
         public name:            string,
         public description:     string,
         public address:         string,
@@ -20,6 +20,7 @@ export class Lodging {
         public perks:           Perk[] | null,
         public rooms:           Room[] | null,
         public roomTypes:       RoomType[] | null,
-        public owner:           User | null)
+        public owner:           User | null,
+        public perNightPrice:   number | null)
         { }
 }

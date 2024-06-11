@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { BookingService } from '../../services/booking.service';
 import { AppState } from '../../models/app_state';
@@ -9,11 +9,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { BookingDialogComponent } from '../booking-dialog/booking-dialog.component';
 import { NotificationService } from '../../services/notification.service';
+import { MatPaginator } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [RouterOutlet, MatTableModule, MatIconModule],
+  imports: [RouterOutlet, MatTableModule, MatIconModule, MatPaginator],
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.css']
 })
@@ -21,7 +22,8 @@ export class BookingComponent implements OnInit {
   public bookings: any[] = [];
   public bookingDataSource: MatTableDataSource<any> = new MatTableDataSource<any>();
   public displayedColumns: string[] = ['booking_id', 'lodging', 'customer', 'status', 'start_date', 'end_date', 'actions'];
-
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  
   constructor(
     private bookingService: BookingService,
     private appState: AppState,
