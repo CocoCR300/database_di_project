@@ -141,7 +141,8 @@ public class BookingController : BaseController
 
     }
 
-    public ObjectResult ChangeBookingStatus(string userName, uint bookingId, BookingStatus newBookingStatus)
+    [HttpPatch("user/{userName}/{bookingId}/status")]
+    public ObjectResult ChangeBookingStatus(string userName, uint bookingId, [FromBody] BookingStatus newBookingStatus)
     {
         User? user = _context.Find<User>(userName);
 

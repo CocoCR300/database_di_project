@@ -1,57 +1,59 @@
 <div id="booking-container">
     <h1 class="title">Mis Reservas</h1>
 
-    <table mat-table [dataSource]="bookingDataSource" class="mat-elevation-z8 custom-table">
-        <ng-container matColumnDef="booking_id">
-            <th mat-header-cell *matHeaderCellDef class="header-cell"> Id de la reserva </th>
-            <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.booking_id}} </td>
-        </ng-container>
+    <div class="table_container">
+        <table mat-table [dataSource]="bookingDataSource" class="mat-elevation-z8 custom-table">
+            <ng-container matColumnDef="booking_id">
+                <th mat-header-cell *matHeaderCellDef class="header-cell"> Id de la reserva </th>
+                <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.booking_id}} </td>
+            </ng-container>
 
-        <ng-container matColumnDef="lodging">
-            <th mat-header-cell *matHeaderCellDef class="header-cell"> Alojamiento </th>
-            <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.lodging}} </td>
-        </ng-container>
+            <ng-container matColumnDef="lodging">
+                <th mat-header-cell *matHeaderCellDef class="header-cell"> Alojamiento </th>
+                <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.lodging}} </td>
+            </ng-container>
 
-        <ng-container matColumnDef="customer">
-            <th mat-header-cell *matHeaderCellDef class="header-cell"> Cliente </th>
-            <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.customer}} </td>
-        </ng-container>
+            <ng-container matColumnDef="customer">
+                <th mat-header-cell *matHeaderCellDef class="header-cell"> Cliente </th>
+                <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.customer}} </td>
+            </ng-container>
 
-        <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef class="header-cell"> Estado </th>
-            <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.status}} </td>
-        </ng-container>
+            <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef class="header-cell"> Estado </th>
+                <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.statusDisplay}} </td>
+            </ng-container>
 
-        <ng-container matColumnDef="start_date">
-            <th mat-header-cell *matHeaderCellDef class="header-cell"> Fecha de inicio </th>
-            <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.start_date}} </td>
-        </ng-container>
+            <ng-container matColumnDef="start_date">
+                <th mat-header-cell *matHeaderCellDef class="header-cell"> Fecha de inicio </th>
+                <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.start_date}} </td>
+            </ng-container>
 
-        <ng-container matColumnDef="end_date">
-            <th mat-header-cell *matHeaderCellDef class="header-cell">Fecha de finalización</th>
-            <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.end_date}} </td>
-        </ng-container>
+            <ng-container matColumnDef="end_date">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Fecha de finalización</th>
+                <td mat-cell *matCellDef="let booking" class="data-cell"> {{booking.end_date}} </td>
+            </ng-container>
 
-        <ng-container matColumnDef="payment">
-            <th mat-header-cell *matHeaderCellDef class="header-cell">Pago</th>
-            <td mat-cell *matCellDef="let booking">
-              <mat-checkbox aria-readonly="true" disabled="true" [checked]="booking.payment != null">
-              </mat-checkbox>
-            </td>
-          </ng-container>
+            <ng-container matColumnDef="payment">
+                <th mat-header-cell *matHeaderCellDef class="header-cell">Pago</th>
+                <td mat-cell *matCellDef="let booking">
+                <mat-checkbox aria-readonly="true" disabled="true" [checked]="booking.payment != null">
+                </mat-checkbox>
+                </td>
+            </ng-container>
 
-        <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef class="header-cell"> Acciones </th>
-            <td mat-cell *matCellDef="let booking" class="data-cell">
-                <button mat-icon-button (click)="onAction(booking)">
-                    <mat-icon>arrow_forward</mat-icon>
-                </button>
-            </td>
-        </ng-container>
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="header-cell"> Acciones </th>
+                <td mat-cell *matCellDef="let booking" class="data-cell">
+                    <button *ngIf="showActionsForBooking(booking)" mat-icon-button (click)="onAction(booking)">
+                        <mat-icon>arrow_forward</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="header-row"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="data-row"></tr>
-    </table>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns" class="header-row"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="data-row"></tr>
+        </table>
+    </div>
 
-    <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+    <mat-paginator [length]="bookings.length" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
 </div>

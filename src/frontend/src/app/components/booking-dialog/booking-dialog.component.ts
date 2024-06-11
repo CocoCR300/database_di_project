@@ -1,6 +1,6 @@
-import { Component,Inject} from '@angular/core';
+import { Component,Inject, OnInit} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
-import { Booking } from '../../models/booking';
+import { Booking, BookingStatus } from '../../models/booking';
 import { MatCardModule } from '@angular/material/card';
 import { NgIf } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,16 +14,32 @@ import { NotificationService } from '../../services/notification.service';
   styleUrl: './booking-dialog.component.css'
 })
 export class BookingDialogComponent {
-  public paymentProcess = false;
+  public canPay: boolean = false;
+  public canCancelOrConfirm: boolean = false;
+  public canDelete: boolean = false;
+  public paymentProcess: boolean = false;
   public title: string = "Acciones  de reserva";
+  public booking: any;
   invoiceFile: File | null = null;
 
   constructor(
     public dialogRef: MatDialogRef<BookingDialogComponent>,
     public notificationService: NotificationService,
-    @Inject(MAT_DIALOG_DATA) public data: { booking: Booking }
-  ) { }
+    @Inject(MAT_DIALOG_DATA) public data: { booking: any }
+  ) {
+    this.booking = data.booking;
 
+    this.canCancelOrConfirm = this.booking.status == BookingStatus.Created;
+    this.canPay = this.booking.status == BookingStatus.Confirmed && this.booking.payment == null;
+    this.canDelete = this.booking.status == BookingStatus.Cancelled || this.booking.status == BookingStatus.Finished;
+  }
+
+  cancelBooking() {
+    this.dialogRef.close(new BookingDialogResult(BookingDialogResultEnum.Cancel,
+      this.data.booking, null
+    ));
+  }
+  
   confirmBooking() {
     this.dialogRef.close(new BookingDialogResult(BookingDialogResultEnum.Confirm,
       this.data.booking, null
@@ -83,6 +99,7 @@ export class BookingDialogResult
 
 export enum BookingDialogResultEnum
 {
+  Cancel,
   Confirm,
   Delete,
   Pay

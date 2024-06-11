@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { BookingService } from '../../services/booking.service';
 import { AppState } from '../../models/app_state';
@@ -13,18 +13,20 @@ import { NotificationService } from '../../services/notification.service';
 import { MatPaginator } from '@angular/material/paginator';
 import { UserRoleEnum } from '../../models/user';
 import moment from 'moment';
+import { NgIf } from '@angular/common';
+import { BookingStatus } from '../../models/booking';
 
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [RouterOutlet, MatCheckboxModule, MatTableModule, MatIconModule, MatPaginator],
+  imports: [RouterOutlet, MatCheckboxModule, MatTableModule, MatIconModule, MatPaginator, NgIf],
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.css'],
   providers: [
     {provide: MAT_CHECKBOX_DEFAULT_OPTIONS, useValue: { clickAction: 'noop' } as MatCheckboxDefaultOptions}
   ]
 })
-export class BookingComponent implements OnInit {
+export class BookingComponent implements AfterViewInit, OnInit {
   public bookingStatuses = ['Creado', 'Confirmado', 'Cancelado', 'Finalizado'];
 
   public isLessor: boolean = false;
@@ -39,7 +41,11 @@ export class BookingComponent implements OnInit {
     private userService: UserService,
     public dialog: MatDialog,
     public notificationService: NotificationService
-  ) {}
+  ) {
+  }
+  ngAfterViewInit(): void {
+    this.bookingDataSource.paginator = this.paginator;
+  }
 
   async ngOnInit() {
     this.isLessor = this.appState.role == UserRoleEnum.Lessor;
@@ -51,6 +57,9 @@ export class BookingComponent implements OnInit {
     await this.loadBookings();
   }
 
+  showActionsForBooking(booking: any): boolean {
+    return booking.status != BookingStatus.Confirmed;
+  }
   async loadBookings() {
     const user = await firstValueFrom(this.userService.getUser(this.appState.userName!));
     const bookingsResponse = await firstValueFrom(this.bookingService.getBookingsByPersonId(user.userName!));
@@ -60,7 +69,8 @@ export class BookingComponent implements OnInit {
         booking_id: booking.id,
         lodging: booking.name,
         customer: user.userName, 
-        status: this.bookingStatuses[booking.roomBookings[0]?.status],
+        status: booking.roomBookings[0]?.status,
+        statusDisplay: this.bookingStatuses[booking.roomBookings[0]?.status],
         start_date: booking.roomBookings[0]?.startDate,
         end_date: booking.roomBookings[0]?.endDate,
         payment: booking.payment,
@@ -73,7 +83,6 @@ export class BookingComponent implements OnInit {
 
   async onAction(booking: any) {
     const dialogRef = this.dialog.open(BookingDialogComponent, {
-      width: '500px',
       data: { booking }
     });
 
@@ -82,10 +91,15 @@ export class BookingComponent implements OnInit {
       const result = dialogResult.result;
 
       if (result === BookingDialogResultEnum.Confirm) {
-        const response = await firstValueFrom(this.bookingService.confirmBooking(dialogResult.booking.booking_id));
+        const response = await firstValueFrom(this.bookingService.confirmBooking(
+          this.appState.userName!, dialogResult.booking.booking_id));
 
         if (response.ok) {
-
+          this.notificationService.show("La reserva ha sido confirmada.");
+          this.loadBookings();
+        }
+        else {
+          this.notificationService.show("Ha ocurrido un error al confirmar la reserva.");
         }
       }
       else if (result === BookingDialogResultEnum.Delete) {

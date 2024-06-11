@@ -9,9 +9,12 @@
       }
     </mat-card-content>
     <mat-card-actions *ngIf="!paymentProcess" class="dialog-actions">
-      <button *ngIf="data.booking.payment == null" mat-button class="action-button" (click)="onPay()">Realizar Pago</button>
+    @if (canCancelOrConfirm) {
       <button mat-button class="action-button" (click)="confirmBooking()">Confirmar Reserva</button>
-      <button mat-button class="action-button" (click)="onCancel()">Eliminar Reserva</button>
+      <button mat-button class="action-button" (click)="cancelBooking()">Cancelar Reserva</button>
+    }
+      <button *ngIf="canPay" mat-button class="action-button" (click)="onPay()">Realizar Pago</button>
+      <button *ngIf="canDelete" mat-button class="action-button" (click)="onCancel()">Eliminar Reserva</button>
       <button mat-button class="action-button" (click)="onClose()">Cerrar</button>
     </mat-card-actions>
     <mat-card-actions *ngIf="paymentProcess" class="dialog-actions">

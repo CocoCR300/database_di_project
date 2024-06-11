@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { BaseService } from "./base.service";
 import { AppResponse } from "../models/app_response";
-import { Booking } from "../models/booking";
+import { Booking, BookingStatus } from "../models/booking";
 import { AppState } from "../models/app_state";
 import { HttpClient } from "@angular/common/http";
 import { BookingRequestData } from "../models/booking-request-data";
@@ -23,11 +23,19 @@ export class BookingService extends BaseService
     }
     
     public getBookingsByPersonId(userName: string): Observable<Booking[]> {
-        return this.get<Booking[]>(`Booking/user/${userName}/10/1`, true);
+        return this.get<Booking[]>(`Booking/user/${userName}/10000/1`, true);
     }
 
-    public confirmBooking() {
+    public changeBookingStatus(userName: string, bookingId: number, bookingStatus: BookingStatus) {
+      return this.patch(`booking/user/${userName}/${bookingId}/status`, true, bookingStatus);
+    }
 
+    public cancelBooking(userName: string, bookingId: number) {
+      return this.changeBookingStatus(userName, bookingId, BookingStatus.Cancelled);
+    }
+
+    public confirmBooking(userName: string, bookingId: number) {
+      return this.changeBookingStatus(userName, bookingId, BookingStatus.Confirmed);
     }
 
     public deleteBookings(customerUserName: string, bookingIds: number[]): Observable<AppResponse> {

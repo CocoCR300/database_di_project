@@ -17,8 +17,8 @@ export class Booking
 
 export enum BookingStatus
 {
-    Created   = 1,
-    Confirmed = 2,
-    Cancelled = 3,
-    Finished  = 4
+    Created   = 0,
+    Confirmed = 1,
+    Cancelled = 2,
+    Finished  = 3 
 }
