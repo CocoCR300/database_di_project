@@ -322,13 +322,14 @@ public class BookingController : BaseController
                     }
                     else
                     {
-                        return NotFound("El alojamiento no posee algunos de los tipos de habitación especificados.");
+                        return NotAcceptable(
+                            "No hay habitaciones disponibles para realizar la actualización de la reservación en los intervalos de tiempo especificados.");
                     }
                     
                     if (selectedRoom == null)
                     {
                         return NotAcceptable(
-                            "No hay habitaciones suficientes para llevar a cabo la actualización en la reservación en los intervalos de tiempo especificados.");
+                            "No hay habitaciones disponibles para realizar la actualización en la reservación en los intervalos de tiempo especificados.");
                     }
                 }
             }
@@ -357,7 +358,8 @@ public class BookingController : BaseController
         out List<RoomBooking>? roomBookingsToAdd,
         out Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>? roomBookingDatesByRoomNumber)
     {
-        if (!Lodging.OffersRooms(lodging))
+        bool lodgingDoesNotOfferRooms = !Lodging.OffersRooms(lodging);
+        if (lodgingDoesNotOfferRooms)
         {
             uint roomTypeId = lodging.RoomTypes[0].Id;
             foreach (RoomBookingRequestData data in roomBookingsData)
@@ -409,18 +411,20 @@ public class BookingController : BaseController
                         
                     if (noRoomsAvailable)
                     {
-                        roomBookingsToAdd = null;
-                        roomBookingDatesByRoomNumber = null;
+                        roomBookingsToAdd = roomBookings;
+                        roomBookingDatesByRoomNumber = availableRoomsNewBookings;
+                        
                         return NotAcceptable(
-                            $"No hay habitaciones suficientes del tipo {group.Key} para llevar a cabo la reservación en los intervalos de tiempo especificados.");
+                            $"No hay habitaciones disponibles para realizar la reservación en los intervalos de tiempo especificados.");
                     }
                 }
             }
             else
             {
-                roomBookingsToAdd = null;
-                roomBookingDatesByRoomNumber = null;
-                return NotFound($"No hay habitaciones del tipo {group.Key} disponibles en los intervalos de tiempo especificados.");
+                roomBookingsToAdd = roomBookings;
+                roomBookingDatesByRoomNumber = availableRoomsNewBookings;
+                
+                return NotFound($"No hay habitaciones disponibles en los intervalos de tiempo especificados.");
             }
         }
 
