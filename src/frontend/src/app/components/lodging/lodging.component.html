@@ -92,6 +92,7 @@
                     <p class="lodging_address">{{ lodging.address }}</p>
                     <p class="lodging_description">{{ lodging.description }}</p>
                     <div class="lodging_details">
+                        <span *ngIf="!hasRoomTypes(lodging)" class="price_per_night">Precio por noche: {{ lodging.perNightPrice | currency }}</span>
                         <span *ngIf="hasRoomTypes(lodging)" class="price_per_night">Precio por noche: {{ lodging.roomTypeMinPrice | currency }} — {{ lodging.roomTypeMaxPrice | currency }}</span>
                     </div>
                 </div>

@@ -110,18 +110,44 @@ export class LodgingRoomsComponent implements OnInit
   }
 
   createRoomType() {
+    this.resetForm();
+
     this.inputDisabled = false;
     this.create = true;
-    this.roomTypeFormGroup = this.buildFormGroup();
+    this.roomTypeFormGroup = this.buildFormGroup(); 
   }
 
   addRoom(event: any) {
-    if (!this.roomNumbers.includes(event.value)) {
-      if (!this.lodging!.rooms!.find(room => room.number == event.value)) {
-        this.newRoomNumbers.push(event.value);
+    const roomNumber = parseInt(event.value);
+    const input: string = event.value;
+    const range = input.split('-');
+
+    if (range.length == 2) {
+      let   start = parseInt(range[0]);
+      const end   = parseInt(range[1]);
+
+      if (!(isNaN(start) || isNaN(end))) {
+        for (; start <= end; ++start) {
+
+          if (!this.roomNumbers.includes(start)) {
+            const room = this.lodging!.rooms!.find(room => room.number == start);
+
+            if (!room) {
+              this.newRoomNumbers.push(start);
+            }
+
+            this.roomNumbers.push(start);
+          }
+        }
+      }
+    }
+    else if (!isNaN(roomNumber) && !this.roomNumbers.includes(roomNumber)) {
+      const room = this.lodging!.rooms!.find(room => room.number == event.value)
+      if (!room) {
+        this.newRoomNumbers.push(roomNumber);
       }
 
-      this.roomNumbers.push(event.value);
+      this.roomNumbers.push(roomNumber);
     }
 
     event.chipInput!.clear();
@@ -225,22 +251,6 @@ export class LodgingRoomsComponent implements OnInit
 
         if (response.ok) {
           this.newRoomNumbers = [];
-        }
-        else {
-          allOk = false;
-          Swal.fire({
-            icon: "error",
-            title: "Ha ocurrido un error al registrar los números de la habitación"
-          });
-        }
-      }
-
-      if (this.roomNumbersToDelete.length > 0) {
-        const rooms = this.roomNumbersToDelete;
-        const response = await firstValueFrom(this._lodgingService.deleteRooms(this.lodging!.id, newRoomType.id, rooms));
-
-        if (response.ok) {
-          this.roomNumbersToDelete = [];
         }
         else {
           allOk = false;
@@ -358,10 +368,10 @@ export class LodgingRoomsComponent implements OnInit
   }
 
   openImagesDialog() {
-    const images: string[] = this.selectedRoomTypePhotos.map(room => room.fileName!);
+    const images = this.selectedRoomTypePhotos.slice();
 
     this._dialog.open(ImagesUploadDialogComponent,
-      { data: new ImagesUploadDialogData(false, "Fotos de la habitación", server.roomTypeImages, images) })
+      { data: new ImagesUploadDialogData(false, "Fotos de la habitación", server.roomTypeImages, this.selectedRoomTypePhotos) })
       .afterClosed().subscribe((dialogResult: ImagesUploadDialogResult) => {
           if (dialogResult.confirmed) {
             this.selectedRoomTypePhotos = dialogResult.updatedImages;

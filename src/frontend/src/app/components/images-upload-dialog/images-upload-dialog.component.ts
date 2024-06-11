@@ -26,10 +26,7 @@ export class ImagesUploadDialogComponent
   ) {
     this.title = data.title;
     this.imagesRoute = data.imagesRoute;
-
-    for (const fileName of data.imageFileNames) {
-      this.images.push(new DialogImageData(fileName, null));
-    }
+    this.images = data.images;
   }
 
   prepareDataForDisplay(imageData: DialogImageData) {
@@ -95,7 +92,7 @@ export class ImagesUploadDialogData
     public edit: boolean,
     public title: string,
     public imagesRoute: string,
-    public imageFileNames: string[]
+    public images: DialogImageData[]
   ) { }
 }
 

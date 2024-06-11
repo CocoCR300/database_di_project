@@ -22,7 +22,7 @@ import { MatOptionModule } from '@angular/material/core';
 import { Perk } from '../../models/perk';
 import { CarouselModule } from '@coreui/angular';
 import { MatDialog } from '@angular/material/dialog';
-import { ImagesUploadDialogComponent, ImagesUploadDialogData, ImagesUploadDialogResult } from '../images-upload-dialog/images-upload-dialog.component';
+import { DialogImageData, ImagesUploadDialogComponent, ImagesUploadDialogData, ImagesUploadDialogResult } from '../images-upload-dialog/images-upload-dialog.component';
 import { AppImageData } from '../../models/app_image_data';
 
 @Component({
@@ -104,7 +104,7 @@ export class LodgingInfoComponent implements OnInit
   }
 
   openImagesDialog() {
-    const images: string[] = this.lodging?.photos?.slice() ?? [];
+    const images: DialogImageData[] = this.lodging?.photos?.map(file => new DialogImageData(file, null)) ?? [];
 
     this._dialog.open(ImagesUploadDialogComponent,
       { data: new ImagesUploadDialogData(false, "Fotos del alojamiento", server.lodgingImages, images) })

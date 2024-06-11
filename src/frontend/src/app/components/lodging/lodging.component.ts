@@ -84,7 +84,7 @@ export class LodgingComponent implements OnInit {
     }
 
     hasRoomTypes(lodging: Lodging) {
-        return lodging.roomTypes && lodging.roomTypes.length > 0;
+        return Lodging.offersRooms(lodging) && lodging.roomTypes!.length > 0;
     }
 
     prependImagesRoute(lodging: Lodging) {

@@ -172,8 +172,68 @@ public class LodgingController : BaseController
 
         _context.Entry(user).Reference(u => u.Person).Load();
 
-        IEnumerable<Lodging> lodgings = _context.Lodging.Where(l => l.OwnerId == user.Person.Id);
-        return Ok(lodgings);
+        IQueryable<Lodging> lodgings = _context.Lodging
+            .Include(l => l.Perks)
+            .Include(l => l.PhoneNumbers)
+            .Include(l => l.RoomTypes)
+            .Include(l => l.Owner)
+            .ThenInclude(p => p.User).
+            Where(l => l.OwnerId == user.Person.Id);
+        
+        
+        object[] lodgingObjects = lodgings.AsEnumerable().Select<Lodging, object>(lodging =>
+        {
+            string[] lodgingPhoneNumbers = lodging.PhoneNumbers.Select(p => p.Number).ToArray();
+            string[] lodgingPhotos = lodging.Photos
+                .OrderBy(p => p.Ordering)
+                .Select(p => p.FileName)
+                .ToArray();
+            
+            if (!Lodging.OffersRooms(lodging))
+            {
+                _context.Entry(lodging).Collection(l => l.RoomTypes);
+                
+                RoomType? roomType = null;
+
+                if (lodging.RoomTypes.Count > 0)
+                {
+                    roomType = lodging.RoomTypes[0];  
+                } 
+                
+                return new
+                {
+                    lodging.Address,
+                    lodging.Description,
+                    lodging.EmailAddress,
+                    lodging.Id,
+                    lodging.Name,
+                    Owner = Models.User.MergeForResponse(lodging.Owner.User, lodging.Owner),
+                    lodging.Perks,
+                    PhoneNumbers = lodgingPhoneNumbers,
+                    Photos = lodgingPhotos,
+                    lodging.Type,
+                    roomType?.PerNightPrice,
+                    roomType?.Fees
+                };
+            }
+            
+            return new
+            {
+                lodging.Address,
+                lodging.Description,
+                lodging.EmailAddress,
+                lodging.Id,
+                lodging.Name,
+                Owner = Models.User.MergeForResponse(lodging.Owner.User, lodging.Owner),
+                lodging.Perks,
+                PhoneNumbers = lodgingPhoneNumbers,
+                Photos = lodgingPhotos,
+                lodging.RoomTypes,
+                lodging.Type
+            };
+        }).ToArray();
+        
+        return Ok(lodgingObjects);
     }
 
     [HttpGet("{lodgingId}")]
@@ -617,13 +677,24 @@ public class LodgingController : BaseController
         if (data.Address != null)
             lodging.Address = data.Address;
         if (data.Type != null)
+        {
+            if (!Lodging.OffersRooms(lodging) && Lodging.TypeOffersRooms(data.Type.Value))
+            {
+                _context.Entry(lodging).Collection(l => l.Rooms).Load();
+                _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
+                
+                lodging.Rooms.RemoveAt(0);
+                lodging.RoomTypes.RemoveAt(0);
+            }
+            
             lodging.Type = data.Type.Value;
+        }
         if (data.EmailAddress != null)
             lodging.EmailAddress = data.EmailAddress;
 
         if (!Lodging.OffersRooms(lodging))
         {
-            _context.Entry(lodging).Collection(l => l.RoomTypes);
+            _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
             RoomType roomType = lodging.RoomTypes[0];
 
             if (data.Capacity.HasValue)

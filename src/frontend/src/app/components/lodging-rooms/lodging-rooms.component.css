@@ -1,11 +1,16 @@
+h3 {
+    margin: 0.5em 0px 0.5em 0px;
+}
+
 mat-chip-grid {
-    max-height: 6em;
+    max-height: 5em;
     overflow: scroll;
 }
 
 #lodging_title {
     margin: 0.5em 0px 0px 0px;
 }
+
 #lodging_info_main {
     display: flex;
     height: 100%;
@@ -30,15 +35,6 @@ mat-chip-grid {
     align-self: stretch;
 }
 
-#lodging_form_input_container {
-    column-gap: 1em;
-    display: grid;
-    grid-template-columns: repeat(2, auto);
-    grid-template-rows: repeat(4, 1fr);
-    padding: 2em 2em 0px 2em;
-    row-gap: 0.5em;
-}
-
 #buttons_container {
     gap: 2em;
 }
@@ -52,9 +48,9 @@ mat-chip-grid {
 }
 
 #room_type_image_container {
-    height: 12em;
+    height: 10em;
     margin: 0.5em 0px;
-    width: 20em;
+    width: 18em;
 }
 
 #perk_chips_field {
@@ -82,7 +78,7 @@ mat-chip-grid {
     display: grid;
     column-gap: 1em;
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 3.5em);
     margin: 0px 2em;
 }
 
@@ -121,7 +117,7 @@ mat-chip-grid {
 .room_type_image {
     clip-path: rect(0px 0px 100% 100% round var(--border-radius));
     display: block;
-    height: 12em;
+    height: 10em;
     object-fit: cover;
     width: 100%;
 }
