@@ -160,7 +160,7 @@ export class LodgingComponent implements OnInit {
     }
 
     public async submitBooking() {
-        this.updateValidators(); // Asegúrate de actualizar las validaciones antes de enviar el formulario
+        this.updateValidators();
     
         if (this.bookingFormGroup.valid && this.selectedLodging) {
             const startDate = this.bookingFormGroup.get('startDate')?.value;
@@ -256,8 +256,8 @@ export class LodgingComponent implements OnInit {
     public bookingDrawerClosed() {
         this.bookingForm.resetForm();
         this.temporaryBookings = [];
-        this.dataSource.data = [...this.temporaryBookings]; // Actualiza la referencia de datos con una nueva copia
-        this.cdr.detectChanges(); // Fuerza la detección de cambios
+        this.dataSource.data = [...this.temporaryBookings];
+        this.cdr.detectChanges();
     }
 
     public pageChanged(event: any) {

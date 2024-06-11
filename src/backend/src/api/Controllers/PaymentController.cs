@@ -72,7 +72,7 @@ public class PaymentController : BaseController
     }
     
     [HttpPost("{bookingId}")]
-    public ObjectResult Store(uint bookingId, PaymentRequestData data)
+    public ObjectResult Store(uint bookingId, [FromForm] PaymentRequestData data)
     {
         Booking? booking = _context.Find<Booking>(bookingId);
 
@@ -127,7 +127,5 @@ public record PaymentRequestData
 	public DateTimeOffset	DateAndTime { get; set; }
     [Required]
 	public decimal			Amount { get; set; }
-    [FromForm]
-    [Required]
 	public IFormFile        InvoiceImageFile { get; set; }
 }

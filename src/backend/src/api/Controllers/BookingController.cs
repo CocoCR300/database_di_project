@@ -140,6 +140,34 @@ public class BookingController : BaseController
         return Ok(message);
 
     }
+
+    public ObjectResult ChangeBookingStatus(string userName, uint bookingId, BookingStatus newBookingStatus)
+    {
+        User? user = _context.Find<User>(userName);
+
+        if (user == null)
+        {
+            return NotFound("No existe un usuario con el nombre especificado.");
+        }
+
+        Booking? booking = _context.Find<Booking>(bookingId);
+
+        if (booking == null)
+        {
+            return NotFound("No existe una reservación con el identificador especificado.");
+        }
+        
+        _context.Entry(booking).Collection(b => b.RoomBookings).Load();
+
+        foreach (RoomBooking roomBooking in booking.RoomBookings)
+        {
+            roomBooking.Status = newBookingStatus;
+        }
+
+        _context.SaveChanges();
+        
+        return Ok("El estado de la reserva ha sido actualizado con éxito.");
+    }
     
     [HttpPatch("user/{userName}")]
     public ObjectResult UpdateUserBooking(string userName, BookingPatchRequestData bookingData)

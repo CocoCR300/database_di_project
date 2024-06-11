@@ -15,6 +15,7 @@ $my-theme: mat.define-dark-theme((
 
 @include mat.core-theme($my-theme);
 @include mat.button-theme($my-theme);
+@include mat.checkbox-theme($my-theme);
 @include mat.chips-theme($my-theme);
 @include mat.datepicker-theme($my-theme);
 @include mat.dialog-theme($my-theme);
