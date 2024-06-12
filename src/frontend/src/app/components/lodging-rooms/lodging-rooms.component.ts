@@ -25,6 +25,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { DialogImageData, ImagesUploadDialogComponent, ImagesUploadDialogData, ImagesUploadDialogResult } from '../images-upload-dialog/images-upload-dialog.component';
 import { RoomType } from '../../models/room_type';
 import { Room } from '../../models/room';
+import { AppResponse } from '../../models/app_response';
 
 @Component({
   selector: 'app-lodging-rooms',
@@ -197,6 +198,12 @@ export class LodgingRoomsComponent implements OnInit
       if (roomTypeName.hasError("required")) {
         this._notificationService.show("El nombre de la habitación es obligatorio.");
       }
+      if (roomTypeName.hasError("minLength")) {
+        this._notificationService.show("El nombre de la habitación debe tener 5 carácteres como mínimo.");
+      }
+      if (roomTypeName.hasError("maxLength")) {
+        this._notificationService.show("El nombre de la habitación debe tener 75 carácteres como máximo.");
+      }
       if (perNightPrice.hasError("required")) {
         this._notificationService.show("El precio por noche de la habitación es obligatorio.");
       }
@@ -205,6 +212,24 @@ export class LodgingRoomsComponent implements OnInit
       }
       if (fees.hasError("required")) {
         this._notificationService.show("El impuesto aplicado de la habitación es obligatorio.");
+      }
+      if (perNightPrice.hasError("min")) {
+        this._notificationService.show("El precio por noche de la habitación debe ser mayor a cero.");
+      }
+      if (perNightPrice.hasError("max")) {
+        this._notificationService.show("El precio por noche de la habitación debe ser menor a 100000000.");
+      }
+      if (fees.hasError("min")) {
+        this._notificationService.show("El impuesto aplicado de la habitación debe ser mayor a 0.");
+      }
+      if (fees.hasError("max")) {
+        this._notificationService.show("El impuesto aplicado de la habitación debe ser menor a 100000000.");
+      }
+      if (capacity.hasError("min")) {
+        this._notificationService.show("La capacidad de la habitación debe ser mayor a 0.");
+      }
+      if (capacity.hasError("max")) {
+        this._notificationService.show("La capacidad de la habitación debe ser menor a 1000.");
       }
 
       return;
@@ -226,14 +251,15 @@ export class LodgingRoomsComponent implements OnInit
     }
 
     if (this.create) {
+      let addPhotosResponse!: AppResponse;
       const addRoomTypeResponse = await firstValueFrom(this._lodgingService.addRoomTypes(this.lodging!.id, [ roomType ]));
       const newRoomType = addRoomTypeResponse.body[0] as RoomType;
 
       let allOk = true;
       if (this.newRoomTypeImages.length > 0) {
-        const response = await firstValueFrom(this._lodgingService.addRoomTypePhotos(this.lodging!.id, newRoomType.id, this.newRoomTypeImages));
+        addPhotosResponse = await firstValueFrom(this._lodgingService.addRoomTypePhotos(this.lodging!.id, newRoomType.id, this.newRoomTypeImages));
 
-        if (response.ok) {
+        if (addPhotosResponse.ok) {
           this.newRoomTypeImages = [];
         }
         else {
@@ -245,8 +271,9 @@ export class LodgingRoomsComponent implements OnInit
         }
       }
 
+      let rooms: Room[] = [];
       if (roomNumbers.length > 0) {
-        const rooms = roomNumbers.map(roomNumber => new Room(this.lodging!.id, roomNumber, newRoomType.id, null, null));
+        rooms = roomNumbers.map(roomNumber => new Room(this.lodging!.id, roomNumber, newRoomType.id, null, null));
         const response = await firstValueFrom(this._lodgingService.addRooms(this.lodging!.id, newRoomType.id, rooms));
 
         if (response.ok) {
@@ -267,13 +294,20 @@ export class LodgingRoomsComponent implements OnInit
           title: "La habitación ha sido creada con éxito"
         });
 
-        window.location.reload();
+        newRoomType.photos = addPhotosResponse.body;
+        for (const room of rooms) {
+          this.lodging!.rooms!.push(room);
+        }
+
+        this.roomTypes.push(newRoomType);
+        this.cancelEdit();
       }
     }
     else {
+      let rooms: Room[] = [];
       if (roomNumbers.length > 0) {
         const roomTypeId = this.selectedRoomType!.id;
-        const rooms = roomNumbers.map(roomNumber => new Room(this.lodging!.id, roomNumber, roomTypeId, null, null));
+        rooms = roomNumbers.map(roomNumber => new Room(this.lodging!.id, roomNumber, roomTypeId, null, null));
         const response = await firstValueFrom(this._lodgingService.addRooms(this.lodging!.id, roomTypeId, rooms));
 
         if (!response.ok) {
@@ -343,7 +377,16 @@ export class LodgingRoomsComponent implements OnInit
           title: "La habitación ha sido actualizada con éxito"
         });
 
-        window.location.reload();
+        this.selectedRoomType!.capacity = roomType.capacity;
+        this.selectedRoomType!.fees = roomType.fees;
+        this.selectedRoomType!.name = roomType.name;
+        this.selectedRoomType!.perNightPrice = roomType.perNightPrice;
+        this.selectedRoomType!.photos = roomType.photos;
+        for (const room of rooms) {
+          this.lodging!.rooms!.push(room);
+        }
+
+        this.cancelEdit();
       }
       else {
         await Swal.fire({
@@ -405,10 +448,10 @@ export class LodgingRoomsComponent implements OnInit
   private buildFormGroup() {
     const disabled = this.inputDisabled;
     this.roomTypeFormGroup = new FormGroup({
-      roomTypeName: new FormControl({ disabled: disabled, value: this.selectedRoomType?.name ?? "" }, { nonNullable: true, validators: Validators.required }),
-      capacity: new FormControl<number>({ disabled: disabled, value: this.selectedRoomType?.capacity ?? 1 }, { nonNullable: true, validators: Validators.required }),
-      perNightPrice: new FormControl<number>({ disabled: disabled, value: this.selectedRoomType?.perNightPrice ?? 50 }, { nonNullable: true, validators: Validators.required }),
-      fees: new FormControl<number>({ disabled: disabled , value: this.selectedRoomType?.fees ?? 10 }, { nonNullable: true, validators: Validators.required }),
+      roomTypeName: new FormControl({ disabled: disabled, value: this.selectedRoomType?.name ?? "" }, { nonNullable: true, validators: [Validators.required, Validators.minLength(5), Validators.maxLength(75)] }),
+      capacity: new FormControl<number>({ disabled: disabled, value: this.selectedRoomType?.capacity ?? 1 }, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.max(1000)] }),
+      perNightPrice: new FormControl<number>({ disabled: disabled, value: this.selectedRoomType?.perNightPrice ?? 50 }, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.max(100000000)] }),
+      fees: new FormControl<number>({ disabled: disabled , value: this.selectedRoomType?.fees ?? 10 }, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.max(100000000)] }),
       roomNumber: new FormControl<string>({ disabled: disabled, value: "" }),
     });
 

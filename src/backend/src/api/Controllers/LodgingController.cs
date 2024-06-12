@@ -551,7 +551,8 @@ public class LodgingController : BaseController
             return NotFound("No existe un alojamiento con el identificador especificado.");
         }
 
-        foreach (string phoneNumber in phoneNumbers)
+        IEnumerable<string> newPhoneNumbers = phoneNumbers.Except(lodging.PhoneNumbers.Select(p => p.Number));
+        foreach (string phoneNumber in newPhoneNumbers)
         {
             lodging.PhoneNumbers.Add(new LodgingPhoneNumber
             {

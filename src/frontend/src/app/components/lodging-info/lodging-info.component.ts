@@ -327,34 +327,55 @@ export class LodgingInfoComponent implements OnInit
     }
 
     if (this.create) {
-      const response = await firstValueFrom(this._userService.getUser(this._appState.userName!));
+      let response = await firstValueFrom(this._userService.getUser(this._appState.userName!));
       newLodging.ownerId = response.personId;
-      this._lodgingService.saveLodging(newLodging).subscribe(async response => {
-        if (response.ok) {
-          if (this.create) {
-            await Swal.fire({
-              icon: "success",
-              title: "El alojamiento ha sido creado con éxito."
-            });
 
-            this._router.navigate(["lodging", "edit", response.body!.id]);
+      const saveLodgingResponse = await firstValueFrom(this._lodgingService.saveLodging(newLodging));
+      if (saveLodgingResponse.ok) {
+        if (this.create) {
+          await Swal.fire({
+            icon: "success",
+            title: "El alojamiento ha sido creado con éxito."
+          });
+
+          if (this.perksToAdd.length > 0) {
+            let response = await firstValueFrom(this._lodgingService.addPerks(newLodging.id, this.perksToAdd.map(perk => perk.id)));
+
+            if (!response.ok) {
+              await Swal.fire({
+                icon: "error",
+                title: "Ha ocurrido un error al registrar los beneficios adicionales del alojamiento."
+              });
+            }
           }
-          else {
-            this.lodging = newLodging;
-            this.lodgingFormGroup = this.buildFormGroup();
-            Swal.fire({
-              icon: "success",
-              title: "El alojamiento ha sido modificado con éxito."
-            });
+
+          if (this.phoneNumbersToAdd.length > 0) {
+            let response = await firstValueFrom(this._lodgingService.addPhoneNumbers(newLodging.id, this.phoneNumbersToAdd));
+
+            if (!response.ok) {
+              await Swal.fire({
+                icon: "error",
+                title: "Ha ocurrido un error al registrar los números de teléfono del alojamiento."
+              });
+            }
           }
+
+          this._router.navigate(["lodging", "edit", saveLodgingResponse.body!.id]);
         }
         else {
-          for (const message of AppResponse.getErrors(response)) {
-              this._notificationService.show(message);
-          }
+          this.lodging = newLodging;
+          this.lodgingFormGroup = this.buildFormGroup();
+          Swal.fire({
+            icon: "success",
+            title: "El alojamiento ha sido modificado con éxito."
+          });
         }
-      });
-
+      }
+      else {
+        for (const message of AppResponse.getErrors(saveLodgingResponse)) {
+            this._notificationService.show(message);
+        }
+      }
     }
     else {
       let perksAddedPromise: Promise<AppResponse> | null = null;
