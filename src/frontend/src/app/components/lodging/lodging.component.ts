@@ -28,11 +28,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { BookingRequestData } from '../../models/booking-request-data';
 import { RoomRequest } from '../../models/room-request';
 import { MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
     selector: 'app-lodging',
     standalone: true,
-    imports: [MatTableModule, MatSelectModule, AsyncPipe, CurrencyPipe, FormsModule, NgFor, NgIf, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatInputModule, MatPaginatorModule, MatSidenavModule, ReactiveFormsModule],
+    imports: [MatIconModule, MatTableModule, MatSelectModule, AsyncPipe, CurrencyPipe, FormsModule, NgFor, NgIf, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatInputModule, MatPaginatorModule, MatSidenavModule, ReactiveFormsModule],
     providers: [provideMomentDateAdapter()],
     templateUrl: './lodging.component.html',
     styleUrls: ['./lodging.component.scss']
@@ -65,7 +66,7 @@ export class LodgingComponent implements OnInit {
     selectedTotalPrice: number = 0;
     public temporaryBookings: BookingRequestData[] = [];
     public dataSource: MatTableDataSource<BookingRequestData>;
-    displayedColumns: string[] = ['roomTypeId', 'startDate', 'endDate', 'discount'];
+    displayedColumns: string[] = ['roomTypeId', 'startDate', 'endDate', 'discount', 'actions'];
 
     public constructor(
         private _appState: AppState,
@@ -144,13 +145,12 @@ export class LodgingComponent implements OnInit {
             this.temporaryBookings.push(bookingRequestData);
             this.dataSource.data = [...this.temporaryBookings]; // Actualiza la referencia de datos con una nueva copia
             this.cdr.detectChanges(); // Fuerza la detección de cambios
+            this.bookingFormGroup.get('roomTypeId')!.reset();
+            this.bookingFormGroup.get('roomTypeId')!.setErrors(null);
 
-            Swal.fire({
-                icon: "success",
-                title: "La reserva ha sido guardada temporalmente."
-            });
-
-        } else {
+            this._notificationService.show("La reserva ha sido guardada temporalmente.");
+        }
+        else {
             Swal.fire({
                 icon: "error",
                 title: "Formulario inválido",
@@ -201,7 +201,6 @@ export class LodgingComponent implements OnInit {
             });
         }
     }
-    
 
     public async submitAllBookings() {
         try {
@@ -240,6 +239,12 @@ export class LodgingComponent implements OnInit {
                 text: "No se pudieron realizar las reservas."
             });
         }
+    }
+
+    public deleteRoomBooking(rowIndex: number) {
+        this.temporaryBookings.splice(rowIndex, 1);
+        this.dataSource.data = [...this.temporaryBookings]; // Actualiza la referencia de datos con una nueva copia
+        this.cdr.detectChanges(); // Fuerza la detección de cambios
     }
 
     public openBookingDrawer(lodging: Lodging) {
@@ -395,7 +400,10 @@ export class LodgingComponent implements OnInit {
             });
         } else {
             this._lodgingService.getLodgings(10000, 1).subscribe(lodgings => {
-                lodgings.forEach(lodging => {
+                this.lodgings = lodgings
+                    .filter(lodging => !Lodging.offersRooms(lodging) || (lodging.roomTypes != null && lodging.roomTypes.length > 0));
+
+                this.lodgings .forEach(lodging => {
                     if (lodging.roomTypes) {
                         let min = Infinity, max = 0;
     
@@ -413,7 +421,6 @@ export class LodgingComponent implements OnInit {
                         lodging.roomTypeMinPrice = min;
                     }
                 });
-                this.lodgings = lodgings;
                 this.updatePagedList(0);
             });
         }

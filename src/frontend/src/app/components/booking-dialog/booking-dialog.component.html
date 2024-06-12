@@ -3,17 +3,16 @@
     <mat-card-content>
       <p *ngIf="!paymentProcess">¿Qué acción desea realizar?</p>
       @if(paymentProcess) {
-        <p>Adjunte el comprobante de pago</p>
+        <p>{{ invoiceFileDisplay }}</p>
         <input #imageInput hidden="hidden" type="file" (change)="submitImageFile($event)" required>
         <button mat-flat-button (click)="imageInput.click()">Subir comprobante de pago</button>
       }
     </mat-card-content>
     <mat-card-actions *ngIf="!paymentProcess" class="dialog-actions">
     @if (canCancelOrConfirm) {
-      <button mat-button class="action-button" (click)="confirmBooking()">Confirmar Reserva</button>
+      <button mat-button class="action-button" (click)="confirmBooking()">Realizar Pago y Confirmar</button>
       <button mat-button class="action-button" (click)="cancelBooking()">Cancelar Reserva</button>
     }
-      <button *ngIf="canPay" mat-button class="action-button" (click)="onPay()">Realizar Pago</button>
       <button *ngIf="canDelete" mat-button class="action-button" (click)="onCancel()">Eliminar Reserva</button>
       <button mat-button class="action-button" (click)="onClose()">Cerrar</button>
     </mat-card-actions>

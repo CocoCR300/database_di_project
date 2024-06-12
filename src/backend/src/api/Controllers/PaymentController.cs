@@ -97,6 +97,12 @@ public class PaymentController : BaseController
         {
             fileName = Guid.NewGuid().ToString();
         }
+
+        _context.Entry(booking).Collection(b => b.RoomBookings).Load();
+        foreach (RoomBooking roomBooking in booking.RoomBookings)
+        {
+            roomBooking.Status = BookingStatus.Confirmed;
+        }
         
         booking.Payment = new Payment
         {

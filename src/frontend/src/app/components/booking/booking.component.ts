@@ -41,8 +41,7 @@ export class BookingComponent implements AfterViewInit, OnInit {
     private userService: UserService,
     public dialog: MatDialog,
     public notificationService: NotificationService
-  ) {
-  }
+  ) { }
   ngAfterViewInit(): void {
     this.bookingDataSource.paginator = this.paginator;
   }
@@ -91,15 +90,24 @@ export class BookingComponent implements AfterViewInit, OnInit {
       const result = dialogResult.result;
 
       if (result === BookingDialogResultEnum.Confirm) {
-        const response = await firstValueFrom(this.bookingService.confirmBooking(
-          this.appState.userName!, dialogResult.booking.booking_id));
+        let total = 0;
 
-        if (response.ok) {
-          this.notificationService.show("La reserva ha sido confirmada.");
+        for (const roomBooking of dialogResult.booking.roomBookings) {
+          total += roomBooking.cost + roomBooking.fees;
+        }
+
+        const paymentAndConfirmationResponse = await firstValueFrom(this.bookingService.payBooking(dialogResult.booking.booking_id,
+          moment.utc().format("YYYY-MM-DD HH:mm"),
+          total,
+          dialogResult.extraData
+        ));
+
+        if (paymentAndConfirmationResponse.ok) {
+          this.notificationService.show("El pago ha sido realizado con éxito. La reserva ha sido confirmada.");
           this.loadBookings();
         }
         else {
-          this.notificationService.show("Ha ocurrido un error al confirmar la reserva.");
+          this.notificationService.show("Ha ocurrido un error al realizar el pago.");
         }
       }
       else if (result === BookingDialogResultEnum.Delete) {
@@ -111,27 +119,6 @@ export class BookingComponent implements AfterViewInit, OnInit {
         }
         else {
           this.notificationService.show("Ha ocurrido un error al eliminar la reservación.");
-        }
-      }
-      else if (result === BookingDialogResultEnum.Pay) {
-        let total = 0;
-
-        for (const roomBooking of dialogResult.booking.roomBookings) {
-          total += roomBooking.cost + roomBooking.fees;
-        }
-
-        const response = await firstValueFrom(this.bookingService.payBooking(dialogResult.booking.booking_id,
-          moment.utc().format("YYYY-MM-DD HH:mm"),
-          total,
-          dialogResult.extraData
-        ));
-
-        if (response.ok) {
-          this.notificationService.show("El pago ha sido realizado con éxito.");
-          this.loadBookings();
-        }
-        else {
-          this.notificationService.show("Ha ocurrido un error al realizar el pago");
         }
       }
     }

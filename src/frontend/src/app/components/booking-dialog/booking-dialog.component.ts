@@ -19,6 +19,7 @@ export class BookingDialogComponent {
   public canDelete: boolean = false;
   public paymentProcess: boolean = false;
   public title: string = "Acciones  de reserva";
+  public invoiceFileDisplay: string = "Adjunte el comprobante de pago";
   public booking: any;
   invoiceFile: File | null = null;
 
@@ -41,23 +42,19 @@ export class BookingDialogComponent {
   }
   
   confirmBooking() {
-    this.dialogRef.close(new BookingDialogResult(BookingDialogResultEnum.Confirm,
-      this.data.booking, null
-    ));
-  }
-
-  onPay() {
     this.title = "Proceso de pago";
     this.paymentProcess = true;
 
     console.log('Realizar Pago');
+
   }
 
   submitImageFile(event: any) {
-    const files = event.target.files;
+    const files: File[] = event.target.files;
 
     for (const file of files) {
       this.invoiceFile = file;
+      this.invoiceFileDisplay = file.name;
       break;
     }
   }
@@ -68,14 +65,16 @@ export class BookingDialogComponent {
       return;
     }
 
-    this.dialogRef.close(
-      new BookingDialogResult(BookingDialogResultEnum.Pay, this.data.booking, this.invoiceFile));
+    this.dialogRef.close(new BookingDialogResult(BookingDialogResultEnum.Confirm,
+      this.data.booking, this.invoiceFile 
+    ));
   }
   
   cancelPayment() {
     this.title = "Acciones de reserva";
     this.paymentProcess = false;
     this.invoiceFile = null;
+    this.invoiceFileDisplay = "Adjunte el comprobante de pago";
   }
 
   public async onCancel() {
@@ -83,7 +82,8 @@ export class BookingDialogComponent {
     this.dialogRef.close(
       new BookingDialogResult(BookingDialogResultEnum.Delete, this.data.booking, null));
   }
-  onClose(){
+
+  onClose() {
     this.dialogRef.close();
   }
 }
@@ -101,6 +101,5 @@ export enum BookingDialogResultEnum
 {
   Cancel,
   Confirm,
-  Delete,
-  Pay
+  Delete
 }
