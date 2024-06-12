@@ -91,7 +91,6 @@ export class UserService extends BaseService{
             if(response.ok){
                 console.log('Sesion cerrada con exito');
             }
-            console.log(response.body.message);
         })
         this._appState.logOut();
     }

@@ -312,15 +312,12 @@ export class LodgingComponent implements OnInit {
                 "Acción requerida",
                 "Este alojamiento aún tiene reservas pendientes. Si continua, las reservas serán borradas ¿Desea continuar?");
             if (proceed) {
-                try {
-                    await firstValueFrom(this._lodgingService.deleteBookings(lodgingBookings.map(booking => booking.id)));
-                }
-                catch (error: any) {
-                    console.log(error);
+                const response = await firstValueFrom(this._lodgingService.deleteBookings(lodgingId, lodgingBookings.map(booking => booking.id)));
+                if (!response.ok) {
                     Swal.fire({
                         icon: "error",
                         title: "Ha ocurrido un error al eliminar las reservas",
-                        text: error.message
+                        text: response.body.message
                     });
                     return;
                 }
@@ -333,13 +330,17 @@ export class LodgingComponent implements OnInit {
         this._lodgingService.deleteLodging(lodgingId).subscribe(
             (response: AppResponse) => {
                 if (response.ok) {
-                    this.lodgings = this.lodgings.filter(lodging => lodging.id != lodgingId);
-                    this.updatePagedList(this.currentPage);
+                    const index = this.lodgings.findIndex(lodging => lodging.id == lodgingId);
 
-                    Swal.fire({
-                        icon: "info",
-                        title: "Alojamiento eliminado con éxito.",
-                    });
+                    if (index > 0) {
+                        this.lodgings.splice(index, 1);
+                        this.updatePagedList(this.currentPage);
+
+                        Swal.fire({
+                            icon: "info",
+                            title: "Alojamiento eliminado con éxito.",
+                        });
+                    }
                 }
                 else {
                     Swal.fire({
@@ -400,8 +401,12 @@ export class LodgingComponent implements OnInit {
             });
         } else {
             this._lodgingService.getLodgings(10000, 1).subscribe(lodgings => {
-                this.lodgings = lodgings
-                    .filter(lodging => !Lodging.offersRooms(lodging) || (lodging.roomTypes != null && lodging.roomTypes.length > 0));
+                this.lodgings = lodgings;
+
+                    if (this._appState.role == UserRoleEnum.Customer) {
+                        this.lodgings = this.lodgings
+                            .filter(lodging => !Lodging.offersRooms(lodging) || (lodging.roomTypes != null && lodging.roomTypes.length > 0));
+                    }
 
                 this.lodgings .forEach(lodging => {
                     if (lodging.roomTypes) {

@@ -18,7 +18,7 @@ export class LodgingService extends BaseService
     }
 
     getLodgingBookings(lodgingId: number): Observable<Booking[]> {
-        return this.get(`lodging/${lodgingId}/booking`, true);
+        return this.get(`booking/lodging/${lodgingId}/10000/1`, true);
     }
 
     getLodgingRooms(lodgingId: number): Observable<Room[]> {
@@ -29,8 +29,8 @@ export class LodgingService extends BaseService
         return this.get(`roomtype/${lodgingId}`, false);
     }
 
-    deleteBookings(bookingIds: number[]): Observable<AppResponse> {
-        return this.delete("booking", true, bookingIds);
+    deleteBookings(lodgingId:number, bookingIds: number[]): Observable<AppResponse> {
+        return this.delete(`booking/lodging/${lodgingId}`, true, bookingIds);
     }
 
     getLessorLodgings(lessorUserName: string): Observable<Lodging[]> {

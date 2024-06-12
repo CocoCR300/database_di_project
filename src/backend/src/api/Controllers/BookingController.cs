@@ -111,6 +111,35 @@ public class BookingController : BaseController
         return Created(booking);
     }
 
+    [HttpDelete("lodging/{lodgingId}")]
+    public ObjectResult DeleteLodgingBookings(uint lodgingId, uint[] bookingIds)
+    {
+        Lodging? lodging = _context.Find<Lodging>(lodgingId);
+
+        if (lodging == null)
+        {
+            return NotFound("No existe un alojamiento con el identificador especificado.");
+        }
+
+        int rows = _context.Booking
+            .Where(b => b.LodgingId == lodging.Id && bookingIds.Contains(b.Id))
+            .Delete();
+
+        if (rows == 0)
+        {
+            return NotFound("No existe ninguna reserva con los identificadores especificados.");
+        }
+
+        string message = "Las reservaciones han sido eliminadas con éxito.";
+        if (rows != bookingIds.Length)
+        {
+            return Ok($"{message} Algunos identificadores no correspondieron a ninguna reservación.");
+        }
+
+        return Ok(message);
+
+    }
+    
     [HttpDelete("user/{userName}")]
     public ObjectResult DeleteUserBookings(string userName, uint[] bookingIds)
     {

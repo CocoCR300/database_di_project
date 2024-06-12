@@ -379,13 +379,19 @@ public class LodgingController : BaseController
 
     }
 
-    [HttpDelete]
-    public ObjectResult Delete(uint id)
+    [HttpDelete("{lodgingId}")]
+    public ObjectResult Delete(uint lodgingId)
     {
-        Lodging? lodging = _context.Find<Lodging>(id);
+        Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
         if (lodging != null)
         {
+            _context.Entry(lodging).Collection(l => l.Rooms).Load();
+            _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
+            
+            lodging.Rooms.Clear();
+            lodging.RoomTypes.Clear();
+            
             _context.Remove(lodging);
             _context.SaveChanges();
                 
