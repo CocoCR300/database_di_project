@@ -264,11 +264,26 @@ export class LodgingInfoComponent implements OnInit
       if (lodgingName.hasError("required")) {
         this._notificationService.show("El nombre del alojamiento es obligatorio.");
       }
+      if (lodgingName.hasError("minLength")) {
+        this._notificationService.show("El nombre del alojamiento debe tener 10 carácteres como mínimo.");
+      }
+      if (lodgingName.hasError("maxLength")) {
+        this._notificationService.show("El nombre del alojamiento debe tener 100 carácteres como máximo.");
+      }
       if (description.hasError("required")) {
         this._notificationService.show("La descripción del alojamiento es obligatoria.");
       }
+      if (description.hasError("maxLength")) {
+        this._notificationService.show("La descripción del alojamiento debe tener 1000 cáracteres como máximo.");
+      }
       if (address.hasError("required")) {
         this._notificationService.show("La dirección del alojamiento es obligatoria.");
+      }
+      if (address.hasError("minLength")) {
+        this._notificationService.show("La dirección del alojamiento debe tener 5 cáracteres como mínimo.");
+      }
+      if (address.hasError("maxLength")) {
+        this._notificationService.show("La dirección del alojamiento debe tener 300 cáracteres como máximo.");
       }
       if (emailAddress.hasError("required")) {
         this._notificationService.show("El correo electrónico del alojamiento es obligatorio.");
@@ -284,6 +299,24 @@ export class LodgingInfoComponent implements OnInit
       }
       if (capacity.hasError("required")) {
         this._notificationService.show("La capacidad del alojamiento es obligatoria.");
+      }
+      if (perNightPrice.hasError("min")) {
+        this._notificationService.show("El costo de la reserva debe ser mayor a 2 dólares.");
+      }
+      if (perNightPrice.hasError("max")) {
+        this._notificationService.show("El precio por noche de la habitación debe ser menor a 100000000 dólares.");
+      }
+      if (fees.hasError("min")) {
+        this._notificationService.show("El impuesto aplicado a la reserva debe ser mayor a 0.");
+      }
+      if (fees.hasError("max")) {
+        this._notificationService.show("El impuesto aplicado de la habitación debe ser menor a 100000000 dólares.");
+      }
+      if (capacity.hasError("min")) {
+        this._notificationService.show("La capacidad de la habitación debe ser mayor a 0.");
+      }
+      if (capacity.hasError("max")) {
+        this._notificationService.show("La capacidad de la habitación debe ser menor a 1000.");
       }
 
       return;
@@ -499,9 +532,9 @@ export class LodgingInfoComponent implements OnInit
 
   private buildFormGroup() {
     const formGroup = new FormGroup({
-      name: new FormControl(this.lodging?.name, { nonNullable: true, validators: Validators.required }),
-      description: new FormControl(this.lodging?.description, { nonNullable: true, validators: Validators.required }),
-      address: new FormControl(this.lodging?.address, { nonNullable: true, validators: Validators.required }),
+      name: new FormControl(this.lodging?.name, { nonNullable: true, validators: [Validators.required, Validators.minLength(10), Validators.maxLength(100)] }),
+      description: new FormControl(this.lodging?.description, { nonNullable: true, validators: [Validators.maxLength(1000)] }),
+      address: new FormControl(this.lodging?.address, { nonNullable: true, validators: [Validators.required, Validators.minLength(5), Validators.maxLength(300)] }),
       emailAddress: new FormControl(this.lodging?.emailAddress, { nonNullable: true, validators: [Validators.required, Validators.email] }),
       lodgingType: new FormControl(this.lodging?.type, { nonNullable: true, validators: Validators.required }),
       perNightPrice: new FormControl<number>(50),
@@ -519,15 +552,15 @@ export class LodgingInfoComponent implements OnInit
         this.lodgingOffersRooms = false;
       }
 
-      if (this.lodgingOffersRooms) {
-        formGroup.addControl("perNightPrice", new FormControl(50, { nonNullable: true, validators: Validators.required }));
-        formGroup.addControl("fees", new FormControl(10, { nonNullable: true, validators: Validators.required }));
-        formGroup.addControl("capacity", new FormControl(2, { nonNullable: true, validators: Validators.required }));
+      if (!this.lodgingOffersRooms) {
+        formGroup.setControl("perNightPrice", new FormControl(50, { nonNullable: true, validators: [Validators.required, Validators.min(2), Validators.max(100000000)] }));
+        formGroup.setControl("fees", new FormControl(10, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.max(100000000)] }));
+        formGroup.setControl("capacity", new FormControl(2, { nonNullable: true, validators: [Validators.required, Validators.min(0), Validators.max(1000)]  }));
       }
       else {
-        formGroup.addControl("perNightPrice", new FormControl(50));
-        formGroup.addControl("fees", new FormControl(10));
-        formGroup.addControl("capacity", new FormControl(2));
+        formGroup.setControl("perNightPrice", new FormControl(50));
+        formGroup.setControl("fees", new FormControl(10));
+        formGroup.setControl("capacity", new FormControl(2));
       }
     });
 
