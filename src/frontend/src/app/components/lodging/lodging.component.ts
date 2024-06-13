@@ -391,6 +391,7 @@ export class LodgingComponent implements OnInit {
             this.isLessor = this._appState.role === UserRoleEnum.Lessor;
             this.canDelete = this._appState.role === UserRoleEnum.Administrator || this.isLessor;
         }
+
         this.canBook = !this.isUserLogged || this._appState.role === UserRoleEnum.Customer;
     
         if (this.isLessor) {

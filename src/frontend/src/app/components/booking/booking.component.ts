@@ -60,17 +60,17 @@ export class BookingComponent implements AfterViewInit, OnInit {
 
     if (this.isLessor) {
       this.displayedColumns = ['booking_id', 'status', 'customer', 'start_date', 'end_date', 'payment', 'actions'];
+      const userName = this.appState.userName!;
+      this.lessorLodgings = await firstValueFrom(this.lodgingService.getLessorLodgings(userName));
+      this.lodgingFormControl.setValue(this.lessorLodgings[0].id);
+      this.lodgingFormControl.valueChanges.subscribe(_ => {
+        this.loadBookings();
+      });
     }
     else {
       this.displayedColumns = ['booking_id', 'lodging', 'status', 'customer', 'start_date', 'end_date', 'payment', 'actions'];
     }
 
-    const userName = this.appState.userName!;
-    this.lessorLodgings = await firstValueFrom(this.lodgingService.getLessorLodgings(userName));
-    this.lodgingFormControl.setValue(this.lessorLodgings[0].id);
-    this.lodgingFormControl.valueChanges.subscribe(_ => {
-      this.loadBookings();
-    });
 
     await this.loadBookings();
   }
