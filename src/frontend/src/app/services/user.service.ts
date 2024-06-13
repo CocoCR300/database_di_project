@@ -50,29 +50,11 @@ export class UserService extends BaseService{
     }
 
     updateUser(data:string[], username:string): Observable<AppResponse>{
-        let firstName;
-        let lastName;
-        let emailAddress;
-        if(data[0] === '') {
-            firstName = null;
-        }else {
-            firstName = data[0];
-        }
-        if(data[1] === '') {
-            lastName = null;
-        }else {
-            lastName = data[1];
-        }
-        if(data[2] === '') {
-            emailAddress = null;
-        }else {
-            emailAddress = data[2];
-        }
         let user = {
             userName: username,
-            firstName: firstName,
-            lastName: lastName,
-            emailAddress: emailAddress,
+            firstName: data[0],
+            lastName: data[1],
+            emailAddress: data[2],
         }
 
         return this.patch(`user/${username}`, true, user);

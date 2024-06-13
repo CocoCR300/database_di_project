@@ -1,5 +1,8 @@
+<div id="title_container">
+    <h1>Configuración</h1>
+    <button *ngIf="isRootUser" class="delete_button" mat-flat-button (click)="deleteUser()" type="button">Eliminar cuenta</button>
+</div>
 <div class="user-settings_container">
-    <h2>Configuración</h2>
     <form class="modify-user" #userModifyForm="ngForm" [formGroup]="userModifyFormGroup" (ngSubmit)="onSubmitUserSettings()">
         <mat-form-field class="input">
             <mat-label>Usuario</mat-label>
@@ -41,7 +44,7 @@
         </mat-form-field>
         <div class="buttons">
             <button class="button" mat-stroked-button type="submit">Guardar Cambios</button>
-            <button class="button" mat-stroked-button type="submit">Salir</button>
+            <button [routerLink]="['/home']" class="button" mat-stroked-button type="button">Salir</button>
         </div>
     </form>
 </div>

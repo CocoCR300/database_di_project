@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { UserService } from '../../services/user.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { User } from '../../models/user';
 import { firstValueFrom, merge } from 'rxjs';
 import { FormsModule, ReactiveFormsModule, FormControl, Validators, NgForm, NgModel, FormGroup } from '@angular/forms';
@@ -14,11 +14,13 @@ import {MatChipsModule, MatChipInputEvent, MatChipEditedEvent} from '@angular/ma
 import Swal from 'sweetalert2';
 import { MatIconModule } from '@angular/material/icon';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { Dialogs } from '../../util/dialogs';
+import { AppState } from '../../models/app_state';
 
 @Component({
   selector: 'app-user-settings',
   standalone: true,
-  imports: [FormsModule, MatFormFieldModule, MatInputModule, ReactiveFormsModule, FormsModule, MatButton, MatChipsModule, MatIconModule],
+  imports: [FormsModule, MatFormFieldModule, MatInputModule, ReactiveFormsModule, FormsModule, MatButton, MatChipsModule, MatIconModule, RouterLink],
   templateUrl: './user-settings.component.html',
   styleUrl: './user-settings.component.css'
 })
@@ -26,12 +28,14 @@ export class UserSettingsComponent implements OnInit {
   addOnBlur = true;
   separatorKeysCodes: number[] = [ENTER, COMMA];
   user!:User;
+  isRootUser = false;
   userModifyFormGroup:FormGroup = this.buildFormGroup();
   phoneNumbers: string[] = [];
   phoneNumbersAdded: string[] = [];
   phoneNumbersDeleted: string[] = [];
 
   public constructor(
+    private _appState: AppState,
     private _userService:UserService,
     private _route:ActivatedRoute,
     private _notificationService: NotificationService,
@@ -41,6 +45,7 @@ export class UserSettingsComponent implements OnInit {
     let userName = this._route.snapshot.paramMap.get('name');
     if (userName !== null) {
       this.user = await firstValueFrom(this._userService.getUser(userName));
+      this.isRootUser = this.user.userName === "root";
       this.phoneNumbers = this.user.phoneNumbers!.slice();
     }
     this.userModifyFormGroup.get<string>("first_name")!.setValue(this.user.firstName);
@@ -50,6 +55,38 @@ export class UserSettingsComponent implements OnInit {
   }
 
   
+  async deleteUser() {
+    let deleteUser = await Dialogs.showConfirmDialog(
+      "¿Está seguro de que desea eliminar su usuario?",
+      "Esta acción no se puede revertir."
+    );
+
+    if (!deleteUser) {
+      return;
+    }
+
+    if (this.user.userName === "root") {
+      await Swal.fire({
+        icon: "error",
+        title: "El usuario raíz no puede ser eliminado."
+      });
+
+      return;
+    }
+
+    const response = await firstValueFrom(this._userService.deleteUser(this.user.userName));
+
+    if (response.ok) {
+      this._appState.logOut();
+    }
+    else {
+      await Swal.fire({
+        icon: "error",
+        title: "Ha ocurrido un error al eliminar su usuario"
+      });
+    }
+  }
+
   addPhoneNumber(event: MatChipInputEvent) {
     const phoneNumber = (event.value) as string;
 
@@ -83,46 +120,60 @@ export class UserSettingsComponent implements OnInit {
 
     if(this.userModifyFormGroup.invalid){
       if(first_name.hasError("required")) {
-        this._notificationService.show("El nombre debe tener un valor");
+        this._notificationService.show("El nombre debe tener un valor.");
+      }
+      if(first_name.hasError("minLength")) {
+        this._notificationService.show("El nombre debe tener 2 carácteres como mínimo.");
+      }
+      if(first_name.hasError("maxLength")) {
+        this._notificationService.show("El nombre debe tener 50 carácteres como máximo.");
       }
       if(last_name.hasError("required")) {
-        this._notificationService.show("El apellido debe tener un valor");
+        this._notificationService.show("El apellido debe tener un valor.");
+      }
+      if(last_name.hasError("minLength")) {
+        this._notificationService.show("El apellido debe tener 2 carácteres como mínimo.");
+      }
+      if(last_name.hasError("maxLength")) {
+        this._notificationService.show("El apellido debe tener 100 carácteres como máximo.");
       }
       if(phone_number.hasError("required")) {
-        this._notificationService.show("El numero de telefono debe tener un valor");
+        this._notificationService.show("El numero de teléfono debe tener un valor.");
       }
       if(email_user.hasError("required")) {
-        this._notificationService.show("El correo es obligatorio");
+        this._notificationService.show("El correo es obligatorio.");
       }
+      if(email_user.hasError("email")) {
+        this._notificationService.show("El correo es inválido.");
+      }
+      if(email_user.hasError("maxLength")) {
+        this._notificationService.show("El correo debe tener 200 carácteres como máximo.");
+      }
+
       return;
     }
 
     let data = [];
     if(this.user.firstName===first_name.value){
-      data[0] = '';
+      data[0] = null;
     }else{
       data[0] = first_name.value;
     }
     if(this.user.lastName===last_name.value){
-      data[1] = '';
+      data[1] = null;
     }else{
       data[1] = last_name.value;
     }
     if(this.user.emailAddress===email_user.value){
-      data[2] = '';
+      data[2] = null;
     }else{
       data[2] = email_user.value;
-    }
-    if(this.user.phoneNumbers===phone_number.value){
-      data[3] = 0;
-    }else{
-      data[3] = phone_number.value;
     }
     
     let phoneNumbersAddedPromise: Promise<AppResponse> | null = null;
     let phoneNumbersDeletedPromise: Promise<AppResponse> | null = null;
 
-    const updateUserPromise = firstValueFrom(this._userService.updateUser(data,userName!));
+    const updateUserPromise = firstValueFrom(this._userService.updateUser(data, userName!));
 
     if(this.phoneNumbersAdded.length > 0) {
       phoneNumbersAddedPromise = firstValueFrom(this._userService.addPhoneNumbers(this.user.userName, this.phoneNumbersAdded));
@@ -151,14 +202,16 @@ export class UserSettingsComponent implements OnInit {
       if(allOk) {
         Swal.fire({
           icon: "success",
-          title: "Se modifico al usuario con exito"
+          title: "El usuario ha sido modificado con éxito."
         });
-      }else{
+      }
+      else {
         for (const message of AppResponse.getErrors(failingResponse!)) {
           this._notificationService.show(message);
+        }
       }
-      }
-    }catch (error) {
+    }
+    catch (error) {
       Swal.fire({
         icon: "error",
         title: "Ha ocurrido un error"
@@ -170,9 +223,9 @@ export class UserSettingsComponent implements OnInit {
 
   private buildFormGroup() {
     return new FormGroup({
-      first_name: new FormControl(this.user?.firstName, { nonNullable: true, validators: Validators.required }),
-      last_name: new FormControl(this.user?.lastName, { nonNullable: true, validators: Validators.required }),
-      email_address: new FormControl(this.user?.emailAddress, { nonNullable: true, validators: Validators.required}),
+      first_name: new FormControl(this.user?.firstName, { nonNullable: true, validators: [Validators.required, Validators.minLength(2), Validators.maxLength(50)] }),
+      last_name: new FormControl(this.user?.lastName, { nonNullable: true, validators: [Validators.required, Validators.minLength(2), Validators.maxLength(100)] }),
+      email_address: new FormControl(this.user?.emailAddress, { nonNullable: true, validators: [Validators.required, Validators.email, Validators.maxLength(200)] }),
       phone_number: new FormControl("")
     });
   }

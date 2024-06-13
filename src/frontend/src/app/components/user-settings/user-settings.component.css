@@ -1,15 +1,37 @@
 .modify-user{
-    margin-left: 220px;
-    margin-top: 50px;
     display: grid;
     grid-template-columns: 50% 50%;
     column-gap: 10px;
-    grid-template-rows: auto auto;
+    grid-template-rows: auto auto auto auto;
 }
 
 .user-settings_container{
-    margin: 0 auto;
-    width: 70%;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    margin: 2em auto;
+    justify-content: center;
+    width: 60vw;
+}
+
+#title_container {
+    align-items: center;
+    display: grid;
+    grid-template-columns: auto min-content;
+    grid-template-rows: auto auto;
+    width: 100%;
+}
+
+#title_container > h1 {
+    grid-column: 1 / span 2;
+    grid-row: 1;
+}
+
+#title_container > button {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0px 2em;
+    z-index: 1;
 }
 
 .input{
@@ -19,9 +41,21 @@
 }
 
 .buttons{
+    border-radius: 20px;
+    column-gap: 2em;
+    display: flex;
+    grid-column: 1 / span 2;
+    grid-row: 4;
+    height: auto;
     margin: 0 auto;
     width: auto;
-    height: auto;
-    border-radius: 20px;
-    margin-right: 20px;
+}
+
+.button {
+    border-color: white !important;
+}
+
+.delete_button {
+    background-color: red !important;
+    margin: auto;
 }
