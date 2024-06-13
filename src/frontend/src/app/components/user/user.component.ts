@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { Dialogs } from '../../util/dialogs';
 import { AppResponse } from '../../models/app_response';
 import Swal from 'sweetalert2';
+import { AppState } from '../../models/app_state';
 
 @Component({
   selector: 'app-user',
@@ -21,7 +22,10 @@ import Swal from 'sweetalert2';
 export class UserComponent implements OnInit, AfterViewInit{
   usersTable!: User[];
   users!: Observable<User[]>;
-  public constructor(private _userService: UserService, private router: Router)
+  public constructor(
+    private _appState: AppState,
+    private _userService: UserService,
+    private router: Router)
   { }
   
   dataSource = new MatTableDataSource<User>(this.usersTable);
@@ -72,6 +76,16 @@ export class UserComponent implements OnInit, AfterViewInit{
   }
 
   public async delete(username:string): Promise<void> {
+    if (this._appState.userName == username) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Advertencia",
+        text: "No puedes eliminarte a tí mismo desde esta tabla, hazlo desde la sección de configuración."
+      });
+
+      return;
+    }
+
     let deleteUser = await Dialogs.showConfirmDialog(
       "¿Está seguro de que desea eliminar este usuario?",
       "Esta acción no se puede revertir."
