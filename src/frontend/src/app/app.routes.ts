@@ -13,8 +13,8 @@ import { LodgingInfoComponent } from './components/lodging-info/lodging-info.com
 import { UserSettingsComponent } from './components/user-settings/user-settings.component';
 import { BookingComponent } from './components/booking/booking.component';
 import { LodgingRoomsComponent } from './components/lodging-rooms/lodging-rooms.component';
-import { CustomerGuard } from './services/customer.guard';
 import { LessorGuard } from './services/lessor.guard';
+import { CustomerOrLessorGuard } from './services/customer_or_lessor.guard';
 
 export const routes: Routes = [
     {path: 'lodging', component: LodgingComponent},
@@ -27,7 +27,7 @@ export const routes: Routes = [
     {path: 'user/settings/:name', component: UserSettingsComponent, canActivate: [LogInGuard]},
     {path: 'user', component: UserComponent, canActivate: [LogInGuard, AdministratorGuard]},
     {path: 'configuration', component:ConfigurationComponent},
-    {path: 'booking', component: BookingComponent, canActivate: [LogInGuard, CustomerGuard]},
+    {path: 'booking', component: BookingComponent, canActivate: [LogInGuard, CustomerOrLessorGuard]},
     {path: '', redirectTo: '/login', pathMatch: 'full'},
     {path: '**', component: ErrorComponent}
 ];

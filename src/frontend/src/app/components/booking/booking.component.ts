@@ -14,12 +14,18 @@ import { MatPaginator } from '@angular/material/paginator';
 import { UserRoleEnum } from '../../models/user';
 import moment from 'moment';
 import { NgIf } from '@angular/common';
-import { BookingStatus } from '../../models/booking';
+import { Booking, BookingStatus } from '../../models/booking';
+import { Lodging } from '../../models/lodging';
+import { LodgingService } from '../../services/lodging.service';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [RouterOutlet, MatCheckboxModule, MatTableModule, MatIconModule, MatPaginator, NgIf],
+  imports: [MatFormFieldModule, MatSelectModule, MatInputModule, FormsModule, ReactiveFormsModule, RouterOutlet, MatCheckboxModule, MatTableModule, MatIconModule, MatPaginator, NgIf],
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.css'],
   providers: [
@@ -31,6 +37,9 @@ export class BookingComponent implements AfterViewInit, OnInit {
 
   public isLessor: boolean = false;
   public bookings: any[] = [];
+  public lessorLodgings: Lodging[] = [];
+  public selectedLodging!: Lodging;
+  public lodgingFormControl = new FormControl<number | null>(null);
   public bookingDataSource: MatTableDataSource<any> = new MatTableDataSource<any>();
   public displayedColumns: string[] = ['booking_id', 'lodging', 'status', 'start_date', 'end_date', 'payment', 'actions'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -38,8 +47,8 @@ export class BookingComponent implements AfterViewInit, OnInit {
   constructor(
     private bookingService: BookingService,
     private appState: AppState,
-    private userService: UserService,
     public dialog: MatDialog,
+    public lodgingService: LodgingService,
     public notificationService: NotificationService
   ) { }
   ngAfterViewInit(): void {
@@ -50,8 +59,18 @@ export class BookingComponent implements AfterViewInit, OnInit {
     this.isLessor = this.appState.role == UserRoleEnum.Lessor;
 
     if (this.isLessor) {
+      this.displayedColumns = ['booking_id', 'status', 'customer', 'start_date', 'end_date', 'payment', 'actions'];
+    }
+    else {
       this.displayedColumns = ['booking_id', 'lodging', 'status', 'customer', 'start_date', 'end_date', 'payment', 'actions'];
     }
+
+    const userName = this.appState.userName!;
+    this.lessorLodgings = await firstValueFrom(this.lodgingService.getLessorLodgings(userName));
+    this.lodgingFormControl.setValue(this.lessorLodgings[0].id);
+    this.lodgingFormControl.valueChanges.subscribe(_ => {
+      this.loadBookings();
+    });
 
     await this.loadBookings();
   }
@@ -60,14 +79,32 @@ export class BookingComponent implements AfterViewInit, OnInit {
     return booking.status != BookingStatus.Confirmed;
   }
   async loadBookings() {
-    const user = await firstValueFrom(this.userService.getUser(this.appState.userName!));
-    const bookingsResponse = await firstValueFrom(this.bookingService.getBookingsByPersonId(user.userName!));
+    const userName = this.appState.userName!;
+    let bookingsResponse: Booking[] = [];
+    
+    if (this.isLessor && this.lodgingFormControl.value != null) {
+      bookingsResponse = await firstValueFrom(this.bookingService.getLodgingBookings(this.lodgingFormControl.value));
+    }
+    else {
+      bookingsResponse = await firstValueFrom(this.bookingService.getBookingsByPersonId(userName));
+    }
 
     this.bookings = bookingsResponse.map((booking: any) => {
+      let bookingUserName: string;
+      let lodgingName: string;
+      if (this.isLessor) {
+        bookingUserName = booking.userName;
+        lodgingName = this.lessorLodgings.find(lodging => lodging.id == this.lodgingFormControl.value)!.name;
+      }
+      else {
+        bookingUserName = userName;
+        lodgingName = booking.name;
+      }
+
       return {
         booking_id: booking.id,
-        lodging: booking.name,
-        customer: user.userName, 
+        lodging: lodgingName,
+        customer: bookingUserName, 
         status: booking.roomBookings[0]?.status,
         statusDisplay: this.bookingStatuses[booking.roomBookings[0]?.status],
         start_date: booking.roomBookings[0]?.startDate,

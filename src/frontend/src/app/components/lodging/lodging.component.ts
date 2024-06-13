@@ -374,7 +374,7 @@ export class LodgingComponent implements OnInit {
             roomTypeId: new FormControl<number | null>(null),
             discount: new FormControl<number | null>(null)
         });
-    
+        
         this.bookingFormGroup.get('roomTypeId')?.valueChanges.subscribe(() => {
             this.updatePrices();
         });

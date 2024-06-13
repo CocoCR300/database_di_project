@@ -17,6 +17,11 @@
     padding: 20px;
 }
 
+#lessor_lodgings_input {
+    margin: auto;
+    min-width: 50%;
+}
+
 .title {
     margin-bottom: 20px;
     font-size: 24px;

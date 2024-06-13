@@ -26,6 +26,10 @@ export class BookingService extends BaseService
         return this.get<Booking[]>(`Booking/user/${userName}/10000/1`, true);
     }
 
+    public getLodgingBookings(lodgingId: number): Observable<Booking[]> {
+        return this.get<Booking[]>(`Booking/lodging/${lodgingId}/10000/1`, true);
+    }
+
     public changeBookingStatus(userName: string, bookingId: number, bookingStatus: BookingStatus) {
       return this.patch(`booking/user/${userName}/${bookingId}/status`, true, bookingStatus);
     }

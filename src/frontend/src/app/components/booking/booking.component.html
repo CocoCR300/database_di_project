@@ -1,5 +1,13 @@
 <div id="booking-container">
-    <h1 class="title">Mis Reservas</h1>
+    <h1 class="title">{{ isLessor ? "Reservas de mis alojamientos" : "Mis Reservas" }}</h1>
+    <mat-form-field id="lessor_lodgings_input">
+        <mat-label>Mis alojamientos</mat-label>
+        <mat-select [formControl]="lodgingFormControl">
+          @for (lodging of lessorLodgings; track lodging) {
+            <mat-option [value]="lodging.id">{{ lodging.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field> 
 
     <div class="table_container">
         <table mat-table [dataSource]="bookingDataSource" class="mat-elevation-z8 custom-table">
