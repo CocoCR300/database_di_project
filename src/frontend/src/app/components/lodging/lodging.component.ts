@@ -16,8 +16,7 @@ import { UserRoleEnum } from '../../models/user';
 import { UserService } from '../../services/user.service';
 import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BookingService } from '../../services/booking.service';
-import { Booking } from '../../models/booking';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { NotificationService } from '../../services/notification.service';
 import { MatButtonModule } from '@angular/material/button';
 import { server } from '../../services/global';
@@ -33,7 +32,7 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
     selector: 'app-lodging',
     standalone: true,
-    imports: [MatIconModule, MatTableModule, MatSelectModule, AsyncPipe, CurrencyPipe, FormsModule, NgFor, NgIf, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatInputModule, MatPaginatorModule, MatSidenavModule, ReactiveFormsModule],
+    imports: [MatIconModule, MatTableModule, MatSelectModule, AsyncPipe, CurrencyPipe, FormsModule, NgFor, NgIf, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatInputModule, MatPaginatorModule, MatSidenavModule, ReactiveFormsModule, RouterLink],
     providers: [provideMomentDateAdapter()],
     templateUrl: './lodging.component.html',
     styleUrls: ['./lodging.component.scss']

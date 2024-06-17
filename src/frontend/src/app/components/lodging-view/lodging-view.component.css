@@ -1,0 +1,81 @@
+:host {
+    overflow: scroll;
+}
+
+c-carousel {
+    clip-path: rect(0 0 100% 100% round var(--border-radius));
+    margin: auto;
+    width: 40em;
+}
+
+mat-drawer[_ngcontent-ng-c1646113714] {
+    background-color: var(--color-secondary);
+    padding: 7em;
+}
+
+#lodging_title {
+    margin: 0.5em 0px 0px 0px;
+}
+
+#lodging_details {
+    display: grid;
+    gap: 1em;
+    grid-template-columns: min-content auto;
+    text-align: start;
+}
+
+#lodging_info_main {
+    display: flex;
+    height: 100%;
+}
+
+#lodging_info_left_section {
+    align-items: center;
+    display: flex;
+    flex: 3;
+    flex-direction: column;
+    justify-content: center;
+    row-gap: 1em;
+}
+
+#lodging_info_right_section {
+    align-items: center;
+    display: flex;
+    flex: 2;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#rooms_button {
+    align-self: stretch;
+}
+
+.lodging_details_item_full {
+    grid-column: auto / span 2;
+}
+
+.lodging_image {
+    clip-path: rect(0px 0px 100% 100% round var(--border-radius));
+    display: block;
+    height: 30em;
+    object-fit: cover;
+    width: 100%;
+}
+
+.mat-icon {
+    align-self: center;
+}
+
+.phone_numbers {
+    column-gap: 1em;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.phone_numbers > * {
+    margin: 0px;
+}
+
+.text_subtle {
+    font-size: 0.8em;
+}

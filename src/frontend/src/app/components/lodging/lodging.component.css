@@ -170,8 +170,9 @@ mat-paginator {
 
 .lodging_image {
     clip-path: rect(0px 0px 100% 100% round var(--border-radius));
-    object-fit: cover;
     height: 12em;
+    object-fit: cover;
+    width: 100%
 }
 
 .lodging_info {
@@ -186,6 +187,11 @@ mat-paginator {
 
 .lodging_address, .lodging_description, .lodging_details {
     margin: 10px 0;
+}
+
+.normal_anchor {
+    color: var(--color-primary);
+    text-decoration: none;
 }
 
 .price_per_night {

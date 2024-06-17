@@ -1,0 +1,40 @@
+<div id="lodging_info_main">
+    <div id="lodging_info_left_section">
+        <div id="lodging_image_container">
+            <c-carousel>
+                <c-carousel-inner *ngIf="hasPhotos">
+                    <c-carousel-item *ngFor="let photo of lodging!.photos">
+                        <img class="lodging_image" alt="{{lodging!.name}}" loading="lazy" src="{{prependImagesRoute(photo)}}">
+                    </c-carousel-item>
+                </c-carousel-inner>
+                <c-carousel-control [routerLink] caption=" " direction="prev"></c-carousel-control>
+                <c-carousel-control [routerLink] caption=" " direction="next"></c-carousel-control>
+            </c-carousel>
+        </div>
+    </div>
+    <div id="lodging_info_right_section">
+        <h1 id="lodging_title">{{ lodgingName }}</h1>
+        <div id="lodging_details">
+            <p class="lodging_details_item_full">{{ lodgingDescription }}</p>
+            <mat-icon fontIcon="person"></mat-icon>
+            <span>{{ lodgingOwnerName }}</span>
+            <mat-icon fontIcon="location_on"></mat-icon>
+            <span>{{ lodgingAddress }}</span>
+            <mat-icon fontIcon="email"></mat-icon>
+            <span>{{ emailAddress }}</span>
+            <mat-icon fontIcon="phone"></mat-icon>
+            <div class="phone_numbers">
+                <p *ngFor="let phoneNumber of phoneNumbers">{{ phoneNumber }}</p>
+            </div>
+            <div class="lodging_details_item_full">
+                <span class="text_subtle">Beneficios</span>
+                <mat-chip-set>
+                    <mat-chip *ngFor="let perk of perks">{{ perk.name }}</mat-chip>
+                </mat-chip-set>
+            </div>
+            <button *ngIf="!isLessor" mat-flat-button class="lodging_details_item_full" type="submit">Reservar</button>
+            <button *ngIf="isLessor" mat-flat-button [routerLink]="['/lodging', 'edit', lodging!.id]" class="lodging_details_item_full" type="button">Editar</button>
+        </div>
+    </div>
+</div>
+<div>HOLAAAAAAAAAA</div>

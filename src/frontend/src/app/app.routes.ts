@@ -15,9 +15,11 @@ import { BookingComponent } from './components/booking/booking.component';
 import { LodgingRoomsComponent } from './components/lodging-rooms/lodging-rooms.component';
 import { LessorGuard } from './services/lessor.guard';
 import { CustomerOrLessorGuard } from './services/customer_or_lessor.guard';
+import { LodgingViewComponent } from './components/lodging-view/lodging-view.component';
 
 export const routes: Routes = [
     {path: 'lodging', component: LodgingComponent},
+    {path: 'lodging/:id', component: LodgingViewComponent},
     {path: 'lodging/create', component: LodgingInfoComponent, canActivate: [LogInGuard, LessorGuard]},
     {path: 'lodging/edit/:id', component: LodgingInfoComponent, canActivate: [LogInGuard, LessorGuard]},
     {path: 'lodging/:id/rooms', component: LodgingRoomsComponent, canActivate: [LogInGuard, LessorGuard]},
