@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -6,7 +6,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Lodging } from '../../models/lodging';
 import { LodgingService } from '../../services/lodging.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, CurrencyPipe, NgFor, NgIf } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,7 +18,7 @@ import { Perk } from '../../models/perk';
 import { CarouselModule } from '@coreui/angular';
 import { MatDialog } from '@angular/material/dialog';
 import { UserRoleEnum } from '../../models/user';
-import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
+import { MatDrawer, MatDrawerContent, MatSidenavModule } from '@angular/material/sidenav';
 import { BookingSidebarComponent } from "../booking-sidebar/booking-sidebar.component";
 
 @Component({
@@ -26,7 +26,7 @@ import { BookingSidebarComponent } from "../booking-sidebar/booking-sidebar.comp
     standalone: true,
     templateUrl: './lodging-view.component.html',
     styleUrl: './lodging-view.component.css',
-    imports: [AsyncPipe, CarouselModule, FormsModule, MatAutocompleteModule, MatButtonModule,
+    imports: [AsyncPipe, CarouselModule, CurrencyPipe, FormsModule, MatAutocompleteModule, MatButtonModule,
         MatChipsModule, MatSidenavModule, MatIconModule, MatInputModule, MatOptionModule, MatSelectModule, NgFor,
         NgIf, ReactiveFormsModule, RouterLink, BookingSidebarComponent]
 })
@@ -45,6 +45,8 @@ export class LodgingViewComponent implements OnInit
   bookingSidebarComponent!: BookingSidebarComponent;
   @ViewChild(MatDrawer)
   sidebar!: MatDrawer;
+  @ViewChild(MatDrawerContent)
+  sidebarContent!: MatDrawerContent;
 
   hasPhotos = false;
   isLessor = false;
@@ -101,10 +103,24 @@ export class LodgingViewComponent implements OnInit
     this.sidebar.open();
   }
 
+  public scrollToRooms() {
+    const roomsMain = document.getElementById("rooms_main")!;
+    roomsMain.scrollIntoView({ behavior: "smooth" });
+  }
+
   prependImagesRoute(imageFileName: string | null) {
     let imageSrc = "";
     if (imageFileName) {
       imageSrc = `${server.lodgingImages}${imageFileName}`;
+    }
+
+    return imageSrc;
+  }
+
+  prependRoomTypeImagesRoute(image: any) {
+    let imageSrc = "";
+    if (image) {
+      imageSrc = `${server.roomTypeImages}${image.fileName}`;
     }
 
     return imageSrc;
@@ -117,7 +133,6 @@ export class LodgingViewComponent implements OnInit
     if (lodgingIdString !== null) {
       const lodgingId = parseInt(lodgingIdString);
       this.lodging = await firstValueFrom(this._lodgingService.getLodging(lodgingId));
-
       this.lodgingOffersRooms = Lodging.offersRooms(this.lodging);
       this.hasPhotos = this.lodging.photos!.length > 0;
     }

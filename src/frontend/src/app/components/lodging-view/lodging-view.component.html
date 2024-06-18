@@ -6,7 +6,7 @@
         <div id="lodging_info_main">
             <div id="lodging_info_left_section">
                 <div id="lodging_image_container">
-                    <c-carousel>
+                    <c-carousel id="lodging_image_carousel">
                         <c-carousel-inner *ngIf="hasPhotos">
                             <c-carousel-item *ngFor="let photo of lodging!.photos">
                                 <img class="lodging_image" alt="{{lodging!.name}}" loading="lazy" src="{{prependImagesRoute(photo)}}">
@@ -39,11 +39,44 @@
                             <mat-chip *ngFor="let perk of perks">{{ perk.name }}</mat-chip>
                         </mat-chip-set>
                     </div>
-                    <button *ngIf="!isLessor" mat-flat-button class="lodging_details_item_full" type="button" (click)="openBookingSidebar(lodging!)">Reservar</button>
-                    <button *ngIf="isLessor" mat-flat-button [routerLink]="['/lodging', 'edit', lodging!.id]" class="lodging_details_item_full" type="button">Editar</button>
+                    <div *ngIf="!lodgingOffersRooms" id="lodging_extra_info" class="lodging_details_item_full">
+                        <span class="text_subtle">Capacidad</span>
+                        <span class="text_subtle">Precio</span>
+                        <span>{{ lodging!.capacity }} persona(s)</span>
+                        <span>{{ lodging!.perNightPrice | currency }}</span>
+                    </div>
+                    <div id="lodging_buttons_container" class="lodging_details_item_full">
+                        <button *ngIf="lodgingOffersRooms" mat-flat-button type="button" (click)="scrollToRooms()">Ver habitaciones</button>
+                        <button *ngIf="!isLessor" mat-flat-button type="button" (click)="openBookingSidebar(lodging!)">Reservar</button>
+                        <button *ngIf="isLessor" mat-flat-button [routerLink]="['/lodging', 'edit', lodging!.id]" type="button">Editar</button>
+                    </div>
                 </div>
             </div>
         </div>
-        <div>HOLAAAAAAAAAA</div>
+        <div *ngIf="lodgingOffersRooms" id="rooms_main">
+            <h2 id="rooms_title">Habitaciones</h2>
+            <div id="rooms_container">
+                <div *ngFor="let roomType of lodging!.roomTypes" class="room_type_card">
+                    <c-carousel class="room_type_image_carousel">
+                        <c-carousel-inner>
+                            <c-carousel-item *ngFor="let photo of roomType!.photos">
+                                <img class="room_type_image" alt="{{lodging!.name}}" loading="lazy" src="{{prependRoomTypeImagesRoute(photo)}}">
+                            </c-carousel-item>
+                        </c-carousel-inner>
+                        <c-carousel-control [routerLink] caption=" " direction="prev"></c-carousel-control>
+                        <c-carousel-control [routerLink] caption=" " direction="next"></c-carousel-control>
+                    </c-carousel>
+                    <div class="room_type_info_container">
+                        <h3 class="room_type_title">{{ roomType.name }}</h3>
+                        <div class="room_type_details">
+                            <b><span>Capacidad:</span></b>
+                            <span>{{ roomType.capacity }} persona(s)</span>
+                            <b><span>Precio por noche:</span></b>
+                            <span>{{ roomType.perNightPrice | currency }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </mat-drawer-content>
 </mat-drawer-container>

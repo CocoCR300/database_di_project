@@ -8,15 +8,10 @@ mat-drawer {
     width: 40em;
 }
 
-c-carousel {
+#lodging_image_carousel {
     clip-path: rect(0 0 100% 100% round var(--border-radius));
     margin: auto;
     width: 40em;
-}
-
-mat-drawer[_ngcontent-ng-c1646113714] {
-    background-color: var(--color-secondary);
-    padding: 7em;
 }
 
 #lodging_title {
@@ -27,6 +22,7 @@ mat-drawer[_ngcontent-ng-c1646113714] {
     display: grid;
     gap: 1em;
     grid-template-columns: min-content auto;
+    min-width: 20em;
     text-align: start;
 }
 
@@ -50,10 +46,41 @@ mat-drawer[_ngcontent-ng-c1646113714] {
     flex: 2;
     flex-direction: column;
     justify-content: center;
+    margin: 0px 1em;
 }
 
-#rooms_button {
-    align-self: stretch;
+#rooms_main {
+    display: flex;
+    flex-direction: column;
+    min-height: 90vh;
+}
+
+#rooms_title {
+    margin: 0px auto;
+}
+
+#rooms_container {
+    align-self: center;
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1em;
+    justify-content: center;
+    margin: 1em;
+}
+
+#lodging_buttons_container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    justify-self: center;
+    padding: 0px 2em;
+}
+
+#lodging_extra_info {
+    display: grid;
+    flex-direction: column;
+    grid-template-columns: repeat(2, 1fr);
 }
 
 .lodging_details_item_full {
@@ -84,4 +111,44 @@ mat-drawer[_ngcontent-ng-c1646113714] {
 
 .text_subtle {
     font-size: 0.8em;
+}
+
+.room_type_image_carousel {
+    clip-path: rect(0 0 100% 100% round var(--border-radius));
+    width: 20em;
+}
+
+.room_type_image {
+    clip-path: rect(0px 0px 100% 100% round var(--border-radius));
+    display: block;
+    height: 14em;
+    object-fit: cover;
+    width: 100%;
+}
+
+.room_type_info_container {
+    align-self: center;
+    margin: 1em;
+}
+
+.room_type_card {
+    border: 0.1em solid #ddd;
+    border-radius: var(--border-radius);
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+}
+
+.room_type_details {
+    display: grid;
+    gap: 1em;
+    grid-template-columns: min-content auto;
+    text-align: start;
+}
+
+.room_type_details > span {
+    align-self: center;
+}
+
+.room_type_title {
+    margin-top: 0px;
 }
