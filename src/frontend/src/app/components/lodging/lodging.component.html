@@ -107,7 +107,7 @@
                     </div>
                 </div>
                 <div class="buttons_container">
-                    <button mat-flat-button *ngIf="canBook" (click)="openBookingDrawer(lodging)">{{ isUserLogged ? "Reserva" : "Regístrate para reservar" }}</button>
+                    <button mat-flat-button *ngIf="canBook" (click)="openBookingDrawer(lodging)">{{ isUserLogged ? "Reservar" : "Regístrate para reservar" }}</button>
                     <button mat-flat-button *ngIf="isLessor" (click)="editLodging(lodging.id)">Editar</button>
                     <button mat-flat-button *ngIf="canDelete" (click)="deleteLodging(lodging.id)">Eliminar</button>
                 </div>
