@@ -28,7 +28,7 @@ export class BaseService {
                 {
                     let value;
                     if (response.ok) {
-                        if (response.body.totalPages) {
+                        if (Object.hasOwn(response.body, "totalPages")) {
                             value = response.body.values as T;
                         }
                         else {
