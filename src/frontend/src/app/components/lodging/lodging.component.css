@@ -218,6 +218,19 @@ mat-paginator {
     width: 32em;
 }
 
+.text_limit {
+    display: -webkit-box;
+    max-height: 4em;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.text_subtle {
+    font-size: 0.9em;
+}
+
 #title_container {
     align-items: center;
     display: grid;

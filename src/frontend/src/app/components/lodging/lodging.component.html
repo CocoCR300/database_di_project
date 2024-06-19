@@ -123,11 +123,11 @@
                 </a>
                 <div class="lodging_info">
                     <a class="normal_anchor" href="/lodging/{{lodging.id}}"><h2 class="lodging_name">{{ lodging.name }}</h2></a>
-                    <p class="lodging_address">{{ lodging.address }}</p>
-                    <p class="lodging_description">{{ lodging.description }}</p>
+                    <p class="lodging_address text_limit text_subtle">{{ lodging.address }}</p>
+                    <p class="lodging_description text_limit text_subtle">{{ lodging.description }}</p>
                     <div class="lodging_details">
-                        <span *ngIf="!hasRoomTypes(lodging)" class="price_per_night">Precio por noche: {{ lodging.perNightPrice | currency }}</span>
-                        <span *ngIf="hasRoomTypes(lodging)" class="price_per_night">Precio por noche: {{ lodging.roomTypeMinPrice | currency }} — {{ lodging.roomTypeMaxPrice | currency }}</span>
+                        <span *ngIf="!hasRoomTypes(lodging)" class="price_per_night text_subtle">Precio por noche: {{ lodging.perNightPrice | currency }}</span>
+                        <span *ngIf="hasRoomTypes(lodging)" class="price_per_night text_subtle">Precio por noche: {{ lodging.roomTypeMinPrice | currency }} — {{ lodging.roomTypeMaxPrice | currency }}</span>
                     </div>
                 </div>
                 <div class="buttons_container">

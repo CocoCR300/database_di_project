@@ -477,42 +477,42 @@ export class LodgingComponent implements OnInit {
 
         this.canBook = !this.isUserLogged || this._appState.role === UserRoleEnum.Customer;
     
+        let lodgingsObservable: Observable<Lodging[]>;
         if (this.isLessor) {
             this.title = "Mis alojamientos";
-            this._lodgingService.getLessorLodgings(this._appState.userName!).subscribe(lodgings => {
-                this.lodgings = lodgings;
-                this.updatePagedList(0);
-            });
+            lodgingsObservable = this._lodgingService.getLessorLodgings(this._appState.userName!);
         } else {
-            this._lodgingService.getLodgings(10000, 1).subscribe(lodgings => {
-                this.lodgings = lodgings;
-
-                    if (this._appState.role == UserRoleEnum.Customer) {
-                        this.lodgings = this.lodgings
-                            .filter(lodging => !Lodging.offersRooms(lodging) || (lodging.roomTypes != null && lodging.roomTypes.length > 0));
-                    }
-
-                this.lodgings .forEach(lodging => {
-                    if (lodging.roomTypes) {
-                        let min = Infinity, max = 0;
-    
-                        for (const roomType of lodging.roomTypes) {
-                            if (min > roomType.perNightPrice) {
-                                min = roomType.perNightPrice;
-                            }
-    
-                            if (max < roomType.perNightPrice) {
-                                max = roomType.perNightPrice;
-                            }
-                        }
-    
-                        lodging.roomTypeMaxPrice = max;
-                        lodging.roomTypeMinPrice = min;
-                    }
-                });
-                this.updatePagedList(0);
-            });
+            lodgingsObservable = this._lodgingService.getLodgings(10000, 1);
         }
+
+        lodgingsObservable.subscribe(lodgings => {
+            this.lodgings = lodgings;
+
+            if (this._appState.role == UserRoleEnum.Customer) {
+                this.lodgings = this.lodgings
+                    .filter(lodging => !Lodging.offersRooms(lodging) || (lodging.roomTypes != null && lodging.roomTypes.length > 0));
+            }
+
+            this.lodgings.forEach(lodging => {
+                if (lodging.roomTypes) {
+                    let min = Infinity, max = 0;
+
+                    for (const roomType of lodging.roomTypes) {
+                        if (min > roomType.perNightPrice) {
+                            min = roomType.perNightPrice;
+                        }
+
+                        if (max < roomType.perNightPrice) {
+                            max = roomType.perNightPrice;
+                        }
+                    }
+
+                    lodging.roomTypeMaxPrice = max;
+                    lodging.roomTypeMinPrice = min;
+                }
+            });
+            this.updatePagedList(0);
+        });
     
         this.updateValidators();
     }
