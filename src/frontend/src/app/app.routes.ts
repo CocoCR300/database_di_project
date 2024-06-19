@@ -19,7 +19,7 @@ import { LodgingViewComponent } from './components/lodging-view/lodging-view.com
 
 export const routes: Routes = [
     {path: 'lodging', component: LodgingComponent},
-    {path: 'lodging/:id', component: LodgingViewComponent},
+    {path: 'lodging/view/:id', component: LodgingViewComponent},
     {path: 'lodging/create', component: LodgingInfoComponent, canActivate: [LogInGuard, LessorGuard]},
     {path: 'lodging/edit/:id', component: LodgingInfoComponent, canActivate: [LogInGuard, LessorGuard]},
     {path: 'lodging/:id/rooms', component: LodgingRoomsComponent, canActivate: [LogInGuard, LessorGuard]},
