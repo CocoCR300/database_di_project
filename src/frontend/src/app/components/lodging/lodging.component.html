@@ -87,9 +87,33 @@
         <div id="title_container">
             <h1>{{title}}</h1>
             <button mat-flat-button *ngIf="isLessor" type="button" (click)="createLodging()">Crear alojamiento</button>
-            <mat-form-field>
-                <input matInput placeholder="Buscar..." (input)="searchTermChanged($event)">
-            </mat-form-field>
+            <div>
+                <mat-form-field class="search_field">
+                    <input matInput placeholder="Buscar..." (input)="searchTermChanged($event)">
+                </mat-form-field>
+                <mat-form-field class="search_field">
+                    <mat-label>Beneficios adicionales</mat-label>
+                    <mat-chip-grid #perkChipGrid aria-label="Elige los beneficios adicionales del alojamiento">
+                    @for (perk of selectedPerks; track perk) {
+                        <mat-chip-row (removed)="removePerk(perk)">
+                            {{perk.name}}
+                            <button matChipRemove [attr.aria-label]="'remove ' + perk.name">
+                                <mat-icon>cancel</mat-icon>
+                            </button>
+                        </mat-chip-row>
+                    }
+                    </mat-chip-grid>
+                    <input #perkInput [formControl]="perkFormControl"
+                        [matChipInputFor]="perkChipGrid" [matAutocomplete]="auto"
+                        [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                        (matChipInputTokenEnd)="addPerk($event)"/>
+                    <mat-autocomplete #auto="matAutocomplete" (optionSelected)="perkAutoCompleteSelected($event)">
+                    @for (perk of filteredPerks | async; track perk) {
+                        <mat-option [value]="perk">{{perk.name}}</mat-option>
+                    }
+                    </mat-autocomplete>
+                </mat-form-field>
+            </div>
         </div>
 
         <div class="lodgings_container">

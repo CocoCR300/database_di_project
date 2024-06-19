@@ -1,3 +1,7 @@
+mat-chip-grid {
+    max-height: 4em;
+    overflow: scroll;
+}
 mat-drawer {
     background-color: var(--color-secondary);
     padding: 2em;
@@ -105,10 +109,13 @@ mat-paginator {
     z-index: 1;
 }
 
-#title_container > mat-form-field {
+#title_container > div {
+    display: flex;
+    flex-wrap: wrap;
     grid-column: 1 / span 2;
     grid-row: 2;
     justify-self: center;
+    justify-content: center;
 }
 
 mat-drawer {
@@ -205,6 +212,12 @@ mat-paginator {
     margin-top: 5px;
 }
 
+.search_field {
+    margin: 0px 0.5em;
+    min-width: 20em;
+    width: 32em;
+}
+
 #title_container {
     align-items: center;
     display: grid;
@@ -224,7 +237,8 @@ mat-paginator {
     z-index: 1;
 }
 
-#title_container > mat-form-field {
+#title_container > div {
+    display: flex;
     grid-column: 1 / span 2;
     grid-row: 2;
     justify-self: center;

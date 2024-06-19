@@ -2,7 +2,7 @@ import moment from 'moment';
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { LodgingService } from '../../services/lodging.service';
 import { Dialogs } from '../../util/dialogs';
-import { firstValueFrom } from 'rxjs';
+import { Observable, firstValueFrom, map, of, startWith } from 'rxjs';
 import { Lodging } from '../../models/lodging';
 import { AsyncPipe, CurrencyPipe, NgFor, NgIf } from '@angular/common';
 import { AppResponse } from '../../models/app_response';
@@ -28,17 +28,21 @@ import { BookingRequestData } from '../../models/booking-request-data';
 import { RoomRequest } from '../../models/room-request';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
+import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
+import { Perk } from '../../models/perk';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
 
 @Component({
     selector: 'app-lodging',
     standalone: true,
-    imports: [MatIconModule, MatTableModule, MatSelectModule, AsyncPipe, CurrencyPipe, FormsModule, NgFor, NgIf, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatInputModule, MatPaginatorModule, MatSidenavModule, ReactiveFormsModule, RouterLink],
+    imports: [MatAutocompleteModule, MatChipsModule, MatIconModule, MatTableModule, MatSelectModule, AsyncPipe, CurrencyPipe, FormsModule, NgFor, NgIf, MatButtonModule, MatDatepickerModule, MatFormFieldModule, MatInputModule, MatPaginatorModule, MatSidenavModule, ReactiveFormsModule, RouterLink],
     providers: [provideMomentDateAdapter()],
     templateUrl: './lodging.component.html',
     styleUrls: ['./lodging.component.scss']
 })
 export class LodgingComponent implements OnInit {
-    lodgings: Lodging[] = [];
+    separatorKeysCodes: number[] = [ENTER, COMMA];
 
     @ViewChild('bookingForm')
     bookingForm!: NgForm;
@@ -48,6 +52,7 @@ export class LodgingComponent implements OnInit {
     sidebar!: MatDrawer;
 
     bookingFormGroup!: FormGroup;
+    perkFormControl = new FormControl<string>("");
     canBook = false;
     canDelete = false;
     isLessor = false;
@@ -60,12 +65,17 @@ export class LodgingComponent implements OnInit {
     selectedLodging!: Lodging | null;
     title: string = "Alojamientos";
     searchTerm = "";
+    perks: Perk[] = [];
+    _filteredPerks: Perk[] = [];
+    filteredPerks: Observable<Perk[]> = of<Perk[]>([]);
+    selectedPerks: Perk[] = [];
     searchTermCurrentTimeout!: any;
     selectedRoomTypePrice: number = 0;
     selectedTotalPrice: number = 0;
     public temporaryBookings: BookingRequestData[] = [];
     public dataSource: MatTableDataSource<BookingRequestData>;
     displayedColumns: string[] = ['roomTypeId', 'startDate', 'endDate', 'discount', 'actions'];
+    lodgings: Lodging[] = [];
 
     public constructor(
         private _appState: AppState,
@@ -119,6 +129,42 @@ export class LodgingComponent implements OnInit {
         this.router.navigate(["lodging/edit", lodgingId]);
     }
 
+    addPerk(event: MatChipInputEvent) {
+        const value = (event.value || '').trim();
+
+        if (value) {
+            const perk = this._filteredPerks.find(perk => perk.name === value);
+
+            if (perk && !this.selectedPerks.find(perk0 => perk0.id === perk.id)) {
+                this.selectedPerks.push(perk);
+            }
+        }
+
+        event.chipInput!.clear();
+        this.perkFormControl.setValue(null);
+        this.filterLodgings(this);
+    }
+
+    perkAutoCompleteSelected(event: MatAutocompleteSelectedEvent) {
+        const perk = event.option.value as Perk;
+
+        if (!this.selectedPerks.find(perk0 => perk0.id === perk.id)) {
+            this.selectedPerks.push(perk);
+        }
+
+        this.perkFormControl.setValue(null);
+        this.filterLodgings(this);
+    }
+
+    removePerk(perk: Perk) {
+        const index = this.selectedPerks.findIndex(perk0 => perk0.id === perk.id);
+
+        if (index >= 0) {
+            this.selectedPerks.splice(index, 1);
+            this.filterLodgings(this);
+        }
+    }
+
     public async addTemporaryBooking() {
         if (this.bookingFormGroup.valid && this.selectedLodging) {
             const startDate = this.bookingFormGroup.get('startDate')?.value;
@@ -142,8 +188,8 @@ export class LodgingComponent implements OnInit {
             };
 
             this.temporaryBookings.push(bookingRequestData);
-            this.dataSource.data = [...this.temporaryBookings]; // Actualiza la referencia de datos con una nueva copia
-            this.cdr.detectChanges(); // Fuerza la detección de cambios
+            this.dataSource.data = [...this.temporaryBookings];
+            this.cdr.detectChanges();
             this.bookingFormGroup.get('roomTypeId')!.reset();
             this.bookingFormGroup.get('roomTypeId')!.setErrors(null);
 
@@ -280,12 +326,23 @@ export class LodgingComponent implements OnInit {
 
     public filterLodgings(component: LodgingComponent) {
         this.searchTermCurrentTimeout = null;
-        if (component.searchTerm != "") {
+        if (component.searchTerm != "" || component.selectedPerks.length > 0) {
             const searchTermUppercase = component.searchTerm.toLocaleUpperCase();
             component._filteredLodgings = component.lodgings.filter(lodging => {
-                return lodging.name.toLocaleUpperCase().includes(searchTermUppercase)
-                        || lodging.description.toLocaleUpperCase().includes(searchTermUppercase)
-                        || lodging.address.toLocaleUpperCase().includes(searchTermUppercase);
+                let foundPerks = !lodging.perks;
+                if (lodging.perks) {
+                    foundPerks = lodging.perks.length > 0 && lodging.perks.every(perk => component.selectedPerks.find(perk0 => perk0.id === perk.id));
+                }
+
+                if (component.searchTerm != "") {
+                    return lodging.name.toLocaleUpperCase().includes(searchTermUppercase)
+                            || lodging.description.toLocaleUpperCase().includes(searchTermUppercase)
+                            || lodging.address.toLocaleUpperCase().includes(searchTermUppercase)
+                            || foundPerks;
+                }
+                else {
+                    return foundPerks;
+                }
             });
         } else {
             component._filteredLodgings = null;
@@ -366,7 +423,34 @@ export class LodgingComponent implements OnInit {
         this.pagedLodgings = lodgings.slice(startIndex, endIndex);
     }
 
+    private filterPerks(value: Perk | string): Perk[] {
+        if (!(value instanceof String)) { // Don't know why this happens
+        return [];
+        }
+
+        const filterValue = value.toLowerCase();
+
+        const filteredPerks: Perk[] = this.perks.filter(perk => perk.name.toLowerCase().includes(filterValue));
+        return filteredPerks;
+    }
+
     ngOnInit(): void {
+        this._lodgingService.getPerks().subscribe(perks => this.perks = perks);
+
+        this.filteredPerks = this.perkFormControl.valueChanges.pipe(
+            startWith(null),
+            map((perkName: string | null) => {
+                if (perkName) {
+                    this._filteredPerks = this.filterPerks(perkName);
+                }
+                else {
+                    this._filteredPerks = this.perks.slice();
+                }
+
+                return this._filteredPerks;
+            }),
+        );
+
         this.bookingFormGroup = new FormGroup({
             startDate: new FormControl<Date | null>(null, Validators.required),
             endDate: new FormControl<Date | null>(null, Validators.required),
