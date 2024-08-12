@@ -1,255 +1,302 @@
-CREATE DATABASE IF NOT EXISTS restify;
+IF DB_ID('restify') IS NULL
+	CREATE DATABASE restify
+
+GO
 
 USE restify;
 
+GO
+
 -- Tabla "Rol de usuario"
-CREATE TABLE IF NOT EXISTS UserRole (
-  userRoleId	INT 		UNSIGNED	NOT NULL AUTO_INCREMENT,
-  type			VARCHAR(50)				NOT NULL,
+IF OBJECT_ID('UserRole') IS NULL
+	CREATE TABLE UserRole (
+	  userRoleId	INT 					NOT NULL IDENTITY(1,1),
+	  type			VARCHAR(50)				NOT NULL,
   
-  PRIMARY KEY (userRoleId),
+	  CONSTRAINT UNIQUE_UserRole_type UNIQUE (type), -- New convension to name CONSTRAINTS UNIQUE_table_row
+	  PRIMARY KEY (userRoleId)
   
-  UNIQUE INDEX UNIQUE_type (type)
-);
+	);
+
+GO
+
 
 -- Tabla "Usuario"
-CREATE TABLE IF NOT EXISTS User (
-  userName		VARCHAR(50) 				NOT NULL,
-  userRoleId	INT 			UNSIGNED 	NOT NULL,
-  password 		VARCHAR(100) 				NOT NULL,
+IF OBJECT_ID('UserSystem') IS NULL
+	CREATE TABLE UserSystem ( --User is a reserved word
+	  userName		VARCHAR(50) 			NOT NULL,
+	  userRoleId	INT 					NOT NULL,
+	  password 		VARCHAR(100) 			NOT NULL,
   
-  PRIMARY KEY (userName),
+	  PRIMARY KEY (userName),
   
-  UNIQUE INDEX UNIQUE_userName (userName),
+	  CONSTRAINT UNIQUE_UserSystem_userName UNIQUE (userName),
   
-  CONSTRAINT FK_USER_USER_ROLE FOREIGN KEY (userRoleId) REFERENCES UserRole (userRoleId)
-	ON DELETE RESTRICT
-	ON UPDATE CASCADE
-);
+	  CONSTRAINT FK_USER_USER_ROLE FOREIGN KEY (userRoleId) REFERENCES UserRole (userRoleId)
+		ON UPDATE CASCADE --Delete by default is RESTRICT
+	);
+
+GO
 
 
 -- Tabla "Persona"
-CREATE TABLE IF NOT EXISTS Person (
-  personId		INT 			UNSIGNED	NOT NULL    AUTO_INCREMENT,
-  userName 		VARCHAR(50) 				NOT NULL,
-  firstName 	VARCHAR(50) 				NOT NULL,
-  lastName 		VARCHAR(100) 				NOT NULL,
-  emailAddress 	VARCHAR(200) 				NOT NULL,
+IF OBJECT_ID('Person') IS NULL
+	CREATE TABLE Person (
+	  personId		INT 					NOT NULL    IDENTITY,
+	  userName 		VARCHAR(50) 			NOT NULL,
+	  firstName 	VARCHAR(50) 			NOT NULL,
+	  lastName 		VARCHAR(100) 			NOT NULL,
+	  emailAddress 	VARCHAR(200) 			NOT NULL,
   
-  PRIMARY KEY (personId),
+	  PRIMARY KEY (personId),
   
-  UNIQUE INDEX UNIQUE_userName (userName),
+	  CONSTRAINT UNIQUE_Person_userName UNIQUE (userName),
   
-  CONSTRAINT FK_PERSON_USER FOREIGN KEY (userName) REFERENCES User (userName)
-	ON DELETE CASCADE
-	ON UPDATE CASCADE
-);
+	  CONSTRAINT FK_PERSON_USER FOREIGN KEY (userName) REFERENCES UserSystem (userName)
+		-- TODO FIX ON DELETE CASCADE
+		-- TODO FIX ON UPDATE CASCADE
+	);
+
+GO
 
 -- Tabla "Número de telefono de persona"
-CREATE TABLE IF NOT EXISTS PersonPhoneNumber (
-  personId 		INT 		UNSIGNED 	NOT NULL,
-  phoneNumber 	CHAR(30) 				NOT NULL,
+IF OBJECT_ID('PersonPhoneNumber') IS NULL
+	CREATE TABLE PersonPhoneNumber (
+	  personId 		INT 					NOT NULL,
+	  phoneNumber 	CHAR(30) 				NOT NULL,
   
-  INDEX FK_INDEX_PERSON_PHONE_NUMBER (personId),
+	  INDEX FK_INDEX_PERSON_PHONE_NUMBER (personId),
   
-  CONSTRAINT FK_PERSON_PHONE_NUMBER FOREIGN KEY (personId) REFERENCES Person (personId)
-	ON DELETE CASCADE
-	ON UPDATE CASCADE
-);
+	  CONSTRAINT FK_PERSON_PHONE_NUMBER FOREIGN KEY (personId) REFERENCES Person (personId)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+	);
+
+GO
 
 -- Tabla "Alojamiento"
-CREATE TABLE IF NOT EXISTS Lodging (
-  lodgingId 	INT 			UNSIGNED 	NOT NULL      AUTO_INCREMENT,
-  ownerPersonId INT 			UNSIGNED 	NOT NULL,
-  lodgingType 	CHAR(50) 					NOT NULL,
-  name 			VARCHAR(100) 				NOT NULL,
-  address 		VARCHAR(300) 				NOT NULL,
-  description 	VARCHAR(1000) 				NOT NULL,
-  emailAddress	VARCHAR(200)				NOT NULL,	
+IF OBJECT_ID('Lodging') IS NULL
+	CREATE TABLE Lodging (
+	  lodgingId 	INT 					NOT NULL      IDENTITY,
+	  ownerPersonId INT 					NOT NULL,
+	  lodgingType 	CHAR(50) 				NOT NULL,
+	  name 			VARCHAR(100) 			NOT NULL,
+	  address 		VARCHAR(300) 			NOT NULL,
+	  description 	VARCHAR(1000) 			NOT NULL,
+	  emailAddress	VARCHAR(200)			NOT NULL,	
   
-  PRIMARY KEY (lodgingId),
+	  PRIMARY KEY (lodgingId),
   
-  INDEX FK_INDEX_LODGING_PERSON (ownerPersonId),
+	  INDEX FK_INDEX_LODGING_PERSON (ownerPersonId),
   
-  CONSTRAINT FK_LODGING_PERSON FOREIGN KEY (ownerPersonId) REFERENCES Person (personId)
-	ON DELETE RESTRICT
-	ON UPDATE CASCADE
-);
+	  CONSTRAINT FK_LODGING_PERSON FOREIGN KEY (ownerPersonId) REFERENCES Person (personId)
+		-- TODO FIX ON UPDATE CASCADE
+	);
+
+GO
 
 -- Tabla "Número de telefono de alojamiento"
-CREATE TABLE IF NOT EXISTS LodgingPhoneNumber (
-  lodgingId 		INT 		UNSIGNED 	NOT NULL,
-  phoneNumber 		CHAR(30) 				NOT NULL,
+IF OBJECT_ID('LodgingPhoneNumber') IS NULL
+	CREATE TABLE LodgingPhoneNumber (
+	  lodgingId 		INT 				NOT NULL,
+	  phoneNumber 		CHAR(30) 			NOT NULL,
   
-  INDEX FK_INDEX_LODGING_PHONE_NUMBER (lodgingId),
+	  INDEX FK_INDEX_LODGING_PHONE_NUMBER (lodgingId),
   
-  CONSTRAINT FK_LODGING_PHONE_NUMBER FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
-	ON DELETE CASCADE
-	ON UPDATE CASCADE
-);
+	  CONSTRAINT FK_LODGING_PHONE_NUMBER FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+	);
+
+GO
 
 -- Tabla "Foto de alojamiento"
-CREATE TABLE IF NOT EXISTS LodgingPhoto (
-	lodgingId	INT			UNSIGNED	NOT NULL	AUTO_INCREMENT,
-	fileName	VARCHAR(75)				NOT NULL,
-	ordering	TINYINT		UNSIGNED	NOT NULL,
+IF OBJECT_ID('LodgingPhoto') IS NULL
+	CREATE TABLE LodgingPhoto (
+		lodgingId	INT						NOT NULL,
+		fileName	VARCHAR(75)				NOT NULL,
+		ordering	TINYINT					NOT NULL,
 	
-			INDEX FK_INDEX_LODGING_LODGING_PHOTO (lodgingId),
-	UNIQUE	INDEX UNIQUE_fileName (fileName),
+		INDEX FK_INDEX_LODGING_LODGING_PHOTO (lodgingId),
+		CONSTRAINT UNIQUE_LodgingPhoto_fileName UNIQUE (fileName),
 	
-	CONSTRAINT FK_LODGING_LODGING_PHOTO	FOREIGN KEY (lodgingId)	REFERENCES Lodging (lodgingId)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
-);
+		CONSTRAINT FK_LODGING_LODGING_PHOTO	FOREIGN KEY (lodgingId)	REFERENCES Lodging (lodgingId)
+			-- TODO FIX ON DELETE
+			-- TODO FIX ON UPDATE CASCADE
+	);
+
+GO
 
 -- Tabla "Beneficio adicional"
-CREATE TABLE IF NOT EXISTS Perk (
-	perkId	INT			UNSIGNED	NOT NULL	AUTO_INCREMENT,
-	name	VARCHAR(50)				NOT NULL,
+IF OBJECT_ID('Perk') IS NULL
+	CREATE TABLE Perk (
+		perkId	INT							NOT NULL	IDENTITY,
+		name	VARCHAR(50)					NOT NULL,
 	
-	PRIMARY KEY (perkId),
+		PRIMARY KEY (perkId),
 	
-	UNIQUE INDEX UNIQUE_name (name)
-);
+		CONSTRAINT UNIQUE_Perk_name UNIQUE (name),
+	);
+
+GO
 
 -- Tabla "Alojamiento beneficio adicional"
-CREATE TABLE IF NOT EXISTS LodgingPerk (
-	lodgingId	INT			UNSIGNED	NOT NULL,
-	perkId		INT			UNSIGNED	NOT NULL,
+IF OBJECT_ID('LodgingPerk') IS NULL
+	CREATE TABLE LodgingPerk (
+		lodgingId	INT						NOT NULL,
+		perkId		INT						NOT NULL,
 	
-	INDEX FK_INDEX_LODGING_LODGING_PERK	(lodgingId),
-	INDEX FK_INDEX_PERK_LODGING_PERK	(perkId),
+		INDEX FK_INDEX_LODGING_LODGING_PERK	(lodgingId),
+		INDEX FK_INDEX_PERK_LODGING_PERK	(perkId),
 	
-	CONSTRAINT FK_LODGING_LODGING_PERK	FOREIGN KEY (lodgingId)	REFERENCES Lodging (lodgingId)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE,
-	CONSTRAINT FK_PERK_LODGING_PERK		FOREIGN KEY (perkId)	REFERENCES Perk (perkId)
-		ON DELETE RESTRICT
-		ON UPDATE CASCADE
-);
+		CONSTRAINT FK_LODGING_LODGING_PERK	FOREIGN KEY (lodgingId)	REFERENCES Lodging (lodgingId)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE,
+		CONSTRAINT FK_PERK_LODGING_PERK		FOREIGN KEY (perkId)	REFERENCES Perk (perkId)
+			ON UPDATE CASCADE
+	);
+
+GO
 
 -- Tabla "Reservación"
-CREATE TABLE IF NOT EXISTS Booking (
-  bookingId 		INT 		UNSIGNED 	NOT NULL	AUTO_INCREMENT,
-  customerPersonId 	INT 		UNSIGNED 	NOT NULL,
-  lodgingId 		INT 		UNSIGNED 	NOT NULL,
+IF OBJECT_ID('Booking') IS NULL
+	CREATE TABLE Booking (
+	  bookingId 		INT 				NOT NULL	IDENTITY,
+	  customerPersonId 	INT 				NOT NULL,
+	  lodgingId 		INT 				NOT NULL,
   
-  PRIMARY KEY (bookingId),
+	  PRIMARY KEY (bookingId),
   
-  INDEX FK_INDEX_BOOKING_LODGING 	(lodgingId),
-  INDEX FK_INDEX_BOOKING_PERSON 	(customerPersonId),
+	  INDEX FK_INDEX_BOOKING_LODGING 	(lodgingId),
+	  INDEX FK_INDEX_BOOKING_PERSON 	(customerPersonId),
   
-  CONSTRAINT FK_BOOKING_LODGING FOREIGN KEY (lodgingId) 		REFERENCES Lodging (lodgingId)
-	ON DELETE RESTRICT
-	ON UPDATE CASCADE,
-  CONSTRAINT FK_BOOKING_PERSON	FOREIGN KEY (customerPersonId) 	REFERENCES Person (personId)
-	ON DELETE CASCADE
-	ON UPDATE CASCADE
-);
+	  CONSTRAINT FK_BOOKING_LODGING FOREIGN KEY (lodgingId) 		REFERENCES Lodging (lodgingId),
+		-- TODO FIX ON UPDATE CASCADE
+	  CONSTRAINT FK_BOOKING_PERSON	FOREIGN KEY (customerPersonId) 	REFERENCES Person (personId)
+		-- TODO FIX ON DELETE CASCADE
+		-- TODO FIX ON UPDATE CASCADE
+	);
+
+GO
 
 -- Tabla "Pago"
-CREATE TABLE IF NOT EXISTS Payment (
-  paymentId 			INT 		UNSIGNED 	NOT NULL	AUTO_INCREMENT,
-  bookingId 			INT 		UNSIGNED,
-  amount				DECIMAL		UNSIGNED	NOT NULL,
-  dateAndTime 			DATETIME 				NOT NULL,
-  invoiceImageFileName	CHAR(75)					NULL	DEFAULT NULL,
+IF OBJECT_ID('Payment') IS NULL
+	CREATE TABLE Payment (
+	  paymentId 			INT 			NOT NULL	IDENTITY,
+	  bookingId 			INT,
+	  amount				DECIMAL			NOT NULL,
+	  dateAndTime 			DATETIME 		NOT NULL,
+	  invoiceImageFileName	CHAR(75)		NULL		DEFAULT NULL,
   
-  PRIMARY KEY (paymentId),
+	  PRIMARY KEY (paymentId),
   
-  INDEX FK_INDEX_PAYMENT_BOOKING (bookingId),
+	  INDEX FK_INDEX_PAYMENT_BOOKING (bookingId),
   
-  CONSTRAINT FK_PAYMENT_BOOKING FOREIGN KEY (bookingId) REFERENCES Booking (bookingId)
-	ON DELETE SET NULL
-	ON UPDATE CASCADE
-);
+	  CONSTRAINT FK_PAYMENT_BOOKING FOREIGN KEY (bookingId) REFERENCES Booking (bookingId)
+		ON DELETE SET NULL
+		-- TODO FIX ON UPDATE CASCADE
+	);
+
+GO
 
 -- Tabla "Tipo de habitación"
-CREATE TABLE IF NOT EXISTS RoomType (
-	roomTypeId		INT 		UNSIGNED	NOT NULL	AUTO_INCREMENT,
-	lodgingId		INT			UNSIGNED	NOT NULL,
-	name			VARCHAR(75)				NOT NULL,
-	perNightPrice 	DECIMAL 	UNSIGNED 	NOT NULL,
-	fees			DECIMAL 	UNSIGNED 	NOT NULL,
-	capacity		INT 		UNSIGNED	NOT NULL,
+IF OBJECT_ID('RoomType') IS NULL
+	CREATE TABLE RoomType (
+		roomTypeId		INT 				NOT NULL	IDENTITY,
+		lodgingId		INT					NOT NULL,
+		name			VARCHAR(75)			NOT NULL,
+		perNightPrice 	DECIMAL 			NOT NULL,
+		fees			DECIMAL 			NOT NULL,
+		capacity		INT 				NOT NULL,
 	
-	PRIMARY KEY (roomTypeId),
+		PRIMARY KEY (roomTypeId),
 	
-	INDEX FK_INDEX_LODGING_ROOM_TYPE (lodgingId),
+		INDEX FK_INDEX_LODGING_ROOM_TYPE (lodgingId),
   
-	CONSTRAINT FK_LODGING_ROOM_TYPE FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
-);
+		CONSTRAINT FK_LODGING_ROOM_TYPE FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
+			-- TODO FIX ON DELETE CASCADE
+			-- TODO FIX ON UPDATE CASCADE
+	);
+
+GO
 
 -- Tabla "Foto de tipo de habitación"
-CREATE TABLE IF NOT EXISTS RoomTypePhoto (
-	roomTypeId	INT			UNSIGNED	NOT NULL,
-	fileName	CHAR(75)				NOT NULL,
-	ordering	TINYINT		UNSIGNED	NOT NULL,
+IF OBJECT_ID('RoomTypePhoto') IS NULL
+	CREATE TABLE RoomTypePhoto (
+		roomTypeId	INT						NOT NULL,
+		fileName	CHAR(75)				NOT NULL,
+		ordering	TINYINT					NOT NULL,
 	
-			INDEX FK_INDEX_ROOM_TYPE_ROOM_TYPE_PHOTO (roomTypeId),
-	UNIQUE	INDEX UNIQUE_fileName (fileName),
+		INDEX FK_INDEX_ROOM_TYPE_ROOM_TYPE_PHOTO (roomTypeId),
+		CONSTRAINT UNIQUE_RoomTypePhoto_fileName UNIQUE (fileName),
   
-	CONSTRAINT FK_ROOM_TYPE_ROOM_TYPE_PHOTO FOREIGN KEY (roomTypeId) REFERENCES RoomType (roomTypeId)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
-);
+		CONSTRAINT FK_ROOM_TYPE_ROOM_TYPE_PHOTO FOREIGN KEY (roomTypeId) REFERENCES RoomType (roomTypeId)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+	);
+
+GO
 
 -- Tabla "Habitación"
-CREATE TABLE IF NOT EXISTS Room (
-  roomNumber   	INT 	UNSIGNED 	NOT NULL,
-  lodgingId   	INT 	UNSIGNED 	NOT NULL,
-  roomTypeId	INT		UNSIGNED	NOT NULL,
+IF OBJECT_ID('Room') IS NULL
+	CREATE TABLE Room (
+	  roomNumber   	INT 					NOT NULL,
+	  lodgingId   	INT 					NOT NULL,
+	  roomTypeId	INT						NOT NULL,
   
-  PRIMARY KEY (lodgingId, roomNumber),
+	  PRIMARY KEY (lodgingId, roomNumber),
   
-  INDEX FK_INDEX_LODGING_ROOM (lodgingId),
-  INDEX FK_INDEX_ROOM_ROOM_TYPE (roomTypeId),
+	  INDEX FK_INDEX_LODGING_ROOM (lodgingId),
+	  INDEX FK_INDEX_ROOM_ROOM_TYPE (roomTypeId),
   
-  CONSTRAINT FK_LODGING_ROOM FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
-	ON DELETE NO ACTION
-	ON UPDATE CASCADE,
-  CONSTRAINT FK_ROOM_ROOM_TYPE FOREIGN KEY (roomTypeId) REFERENCES RoomType (roomTypeId)
-	ON DELETE CASCADE
-	ON UPDATE CASCADE
-);
+	  CONSTRAINT FK_LODGING_ROOM FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE,
+	  CONSTRAINT FK_ROOM_ROOM_TYPE FOREIGN KEY (roomTypeId) REFERENCES RoomType (roomTypeId)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+	);
+
+GO
 
 -- Tabla "Reservación de habitación"
-CREATE TABLE IF NOT EXISTS RoomBooking (
-  roomBookingId INT 		UNSIGNED 	NOT NULL AUTO_INCREMENT,
-  bookingId 	INT 		UNSIGNED 	NOT NULL,
-  lodgingId 	INT 		UNSIGNED 	NOT NULL,
-  roomNumber 	INT 		UNSIGNED 	NOT NULL,
-  cost			DECIMAL 	UNSIGNED 	NOT NULL,
-  fees			DECIMAL 	UNSIGNED 	NOT NULL,
-  discount		DECIMAL		UNSIGNED	NOT NULL,
-  status		CHAR(50)				NOT NULL,
-  startDate 	DATE					NOT NULL,
-  endDate 		DATE 					NOT NULL,
+IF OBJECT_ID('RoomBooking') IS NULL
+	CREATE TABLE RoomBooking (
+	  roomBookingId INT 					NOT NULL IDENTITY,
+	  bookingId 	INT 					NOT NULL,
+	  lodgingId 	INT 					NOT NULL,
+	  roomNumber 	INT 					NOT NULL,
+	  cost			DECIMAL 				NOT NULL,
+	  fees			DECIMAL 				NOT NULL,
+	  discount		DECIMAL					NOT NULL,
+	  status		CHAR(50)				NOT NULL,
+	  startDate 	DATE					NOT NULL,
+	  endDate 		DATE 					NOT NULL,
   
-  PRIMARY KEY (roomBookingId),
+	  PRIMARY KEY (roomBookingId),
   
-  INDEX FK_INDEX_ROOM_ROOM_BOOKING (roomNumber),
-  INDEX FK_INDEX_BOOKING_ROOM_BOOKING (bookingId),
-  INDEX FK_INDEX_LODGING_ROOM_BOOKING (lodgingId),
+	  INDEX FK_INDEX_ROOM_ROOM_BOOKING (roomNumber),
+	  INDEX FK_INDEX_BOOKING_ROOM_BOOKING (bookingId),
+	  INDEX FK_INDEX_LODGING_ROOM_BOOKING (lodgingId),
   
-  CONSTRAINT FK_ROOM_ROOM_BOOKING		FOREIGN KEY (lodgingId, roomNumber)	REFERENCES Room (lodgingId, roomNumber)
-	ON DELETE NO ACTION
-	ON UPDATE CASCADE,
-  CONSTRAINT FK_BOOKING_ROOM_BOOKING 	FOREIGN KEY (bookingId)				REFERENCES Booking (bookingId)
-	ON DELETE CASCADE
-	ON UPDATE CASCADE,
-  CONSTRAINT FK_LODGING_ROOM_BOOKING 	FOREIGN KEY (lodgingId)				REFERENCES Lodging (lodgingId)
-	ON DELETE NO ACTION
-	ON UPDATE CASCADE
-);
+	  CONSTRAINT FK_ROOM_ROOM_BOOKING		FOREIGN KEY (lodgingId, roomNumber)	REFERENCES Room (lodgingId, roomNumber)
+		ON DELETE NO ACTION,
+		-- TODO FIX ON UPDATE CASCADE
+	  CONSTRAINT FK_BOOKING_ROOM_BOOKING 	FOREIGN KEY (bookingId)				REFERENCES Booking (bookingId),
+		-- TODO FIX ON DELETE CASCADE
+		-- TODO FIX ON UPDATE CASCADE
+	  CONSTRAINT FK_LODGING_ROOM_BOOKING 	FOREIGN KEY (lodgingId)				REFERENCES Lodging (lodgingId)
+		ON DELETE NO ACTION
+		-- TODO FIX ON UPDATE CASCADE
+	);
+
+GO
 
 -- Insertar datos en UserRole
 INSERT INTO UserRole (type) VALUES ('Administrator'), ('Customer'), ('Lessor');
 
 -- Insertar datos en User
-INSERT INTO User (userName, userRoleId, password) VALUES 
+INSERT INTO UserSystem (userName, userRoleId, password) VALUES 
 ('admin', 1, 'password123'),
 ('customer', 2, 'password123'),
 ('lessor', 3, 'password123');
