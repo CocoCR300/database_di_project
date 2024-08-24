@@ -4,6 +4,8 @@ IF OBJECT_ID('RoomBookingList') IS NOT NULL
     DROP TYPE RoomBookingList;
 GO
 
+-- https://stackoverflow.com/a/42451702
+-- https://stackoverflow.com/a/33773336
 CREATE TYPE RoomBookingList AS TABLE
 (
     roomNumber INT NOT NULL,
@@ -29,6 +31,8 @@ AS BEGIN
 
     INSERT INTO Booking (customerPersonId, lodgingId) VALUES (@customerId, @lodgingId);
     DECLARE @bookingId INT;
+    -- https://stackoverflow.com/a/7917724
+    -- https://learn.microsoft.com/en-us/sql/t-sql/functions/scope-identity-transact-sql?view=sql-server-ver16
     SET @bookingId = SCOPE_IDENTITY(); -- Should return the last ID generated in this scope (in this case, the stored procedure)
 
     INSERT INTO RoomBooking
