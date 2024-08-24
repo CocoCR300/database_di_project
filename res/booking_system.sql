@@ -1,3 +1,6 @@
+-- In MS SQL Server NO ACTION works the same way as RESTRICT on MySQL
+-- Look for "Delete Rule": https://learn.microsoft.com/en-us/sql/relational-databases/tables/modify-foreign-key-relationships?view=sql-server-ver16#SSMSProcedure
+
 IF DB_ID('restify') IS NULL
 	CREATE DATABASE restify
 
@@ -22,18 +25,19 @@ GO
 
 
 -- Tabla "Usuario"
-IF OBJECT_ID('UserSystem') IS NULL
-	CREATE TABLE UserSystem ( --User is a reserved word
+IF OBJECT_ID('User') IS NULL
+	CREATE TABLE [User] (
 	  userName		VARCHAR(50) 			NOT NULL,
 	  userRoleId	INT 					NOT NULL,
 	  password 		VARCHAR(100) 			NOT NULL,
   
 	  PRIMARY KEY (userName),
   
-	  CONSTRAINT UNIQUE_UserSystem_userName UNIQUE (userName),
+	  CONSTRAINT UNIQUE_User_userName UNIQUE (userName),
   
 	  CONSTRAINT FK_USER_USER_ROLE FOREIGN KEY (userRoleId) REFERENCES UserRole (userRoleId)
-		ON UPDATE CASCADE --Delete by default is RESTRICT
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE
 	);
 
 GO
@@ -52,9 +56,9 @@ IF OBJECT_ID('Person') IS NULL
   
 	  CONSTRAINT UNIQUE_Person_userName UNIQUE (userName),
   
-	  CONSTRAINT FK_PERSON_USER FOREIGN KEY (userName) REFERENCES UserSystem (userName)
-		-- TODO FIX ON DELETE CASCADE
-		-- TODO FIX ON UPDATE CASCADE
+	  CONSTRAINT FK_PERSON_USER FOREIGN KEY (userName) REFERENCES [User] (userName)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
 	);
 
 GO
@@ -90,7 +94,8 @@ IF OBJECT_ID('Lodging') IS NULL
 	  INDEX FK_INDEX_LODGING_PERSON (ownerPersonId),
   
 	  CONSTRAINT FK_LODGING_PERSON FOREIGN KEY (ownerPersonId) REFERENCES Person (personId)
-		-- TODO FIX ON UPDATE CASCADE
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE
 	);
 
 GO
@@ -121,8 +126,8 @@ IF OBJECT_ID('LodgingPhoto') IS NULL
 		CONSTRAINT UNIQUE_LodgingPhoto_fileName UNIQUE (fileName),
 	
 		CONSTRAINT FK_LODGING_LODGING_PHOTO	FOREIGN KEY (lodgingId)	REFERENCES Lodging (lodgingId)
-			-- TODO FIX ON DELETE
-			-- TODO FIX ON UPDATE CASCADE
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
 	);
 
 GO
@@ -153,6 +158,7 @@ IF OBJECT_ID('LodgingPerk') IS NULL
 			ON DELETE CASCADE
 			ON UPDATE CASCADE,
 		CONSTRAINT FK_PERK_LODGING_PERK		FOREIGN KEY (perkId)	REFERENCES Perk (perkId)
+			ON DELETE NO ACTION
 			ON UPDATE CASCADE
 	);
 
@@ -170,11 +176,12 @@ IF OBJECT_ID('Booking') IS NULL
 	  INDEX FK_INDEX_BOOKING_LODGING 	(lodgingId),
 	  INDEX FK_INDEX_BOOKING_PERSON 	(customerPersonId),
   
-	  CONSTRAINT FK_BOOKING_LODGING FOREIGN KEY (lodgingId) 		REFERENCES Lodging (lodgingId),
-		-- TODO FIX ON UPDATE CASCADE
+	  CONSTRAINT FK_BOOKING_LODGING FOREIGN KEY (lodgingId) 		REFERENCES Lodging (lodgingId)
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE,
 	  CONSTRAINT FK_BOOKING_PERSON	FOREIGN KEY (customerPersonId) 	REFERENCES Person (personId)
-		-- TODO FIX ON DELETE CASCADE
-		-- TODO FIX ON UPDATE CASCADE
+		ON DELETE NO ACTION -- Cycles or multiple cascade paths if CASCADE 
+		ON UPDATE NO ACTION -- Cycles or multiple cascade paths if CASCADE
 	);
 
 GO
@@ -194,7 +201,7 @@ IF OBJECT_ID('Payment') IS NULL
   
 	  CONSTRAINT FK_PAYMENT_BOOKING FOREIGN KEY (bookingId) REFERENCES Booking (bookingId)
 		ON DELETE SET NULL
-		-- TODO FIX ON UPDATE CASCADE
+		ON UPDATE CASCADE
 	);
 
 GO
@@ -214,8 +221,8 @@ IF OBJECT_ID('RoomType') IS NULL
 		INDEX FK_INDEX_LODGING_ROOM_TYPE (lodgingId),
   
 		CONSTRAINT FK_LODGING_ROOM_TYPE FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
-			-- TODO FIX ON DELETE CASCADE
-			-- TODO FIX ON UPDATE CASCADE
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
 	);
 
 GO
@@ -253,8 +260,8 @@ IF OBJECT_ID('Room') IS NULL
 		ON DELETE NO ACTION
 		ON UPDATE CASCADE,
 	  CONSTRAINT FK_ROOM_ROOM_TYPE FOREIGN KEY (roomTypeId) REFERENCES RoomType (roomTypeId)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
+		ON DELETE NO ACTION -- Cycles or multiple cascade paths if CASCADE
+		ON UPDATE NO ACTION	-- Cycles or multiple cascade paths if CASCADE
 	);
 
 GO
@@ -280,14 +287,14 @@ IF OBJECT_ID('RoomBooking') IS NULL
 	  INDEX FK_INDEX_LODGING_ROOM_BOOKING (lodgingId),
   
 	  CONSTRAINT FK_ROOM_ROOM_BOOKING		FOREIGN KEY (lodgingId, roomNumber)	REFERENCES Room (lodgingId, roomNumber)
-		ON DELETE NO ACTION,
-		-- TODO FIX ON UPDATE CASCADE
-	  CONSTRAINT FK_BOOKING_ROOM_BOOKING 	FOREIGN KEY (bookingId)				REFERENCES Booking (bookingId),
-		-- TODO FIX ON DELETE CASCADE
-		-- TODO FIX ON UPDATE CASCADE
+		ON DELETE NO ACTION
+		ON UPDATE CASCADE,
+	  CONSTRAINT FK_BOOKING_ROOM_BOOKING 	FOREIGN KEY (bookingId)				REFERENCES Booking (bookingId)
+		ON DELETE NO ACTION  -- Cycles or multiple cascade paths if CASCADE
+		ON UPDATE NO ACTION, -- Cycles or multiple cascade paths if CASCADE
 	  CONSTRAINT FK_LODGING_ROOM_BOOKING 	FOREIGN KEY (lodgingId)				REFERENCES Lodging (lodgingId)
 		ON DELETE NO ACTION
-		-- TODO FIX ON UPDATE CASCADE
+		ON UPDATE NO ACTION -- Cycles or multiple cascade paths if CASCADE
 	);
 
 GO
@@ -296,7 +303,7 @@ GO
 INSERT INTO UserRole (type) VALUES ('Administrator'), ('Customer'), ('Lessor');
 
 -- Insertar datos en User
-INSERT INTO UserSystem (userName, userRoleId, password) VALUES 
+INSERT INTO [User] (userName, userRoleId, password) VALUES 
 ('admin', 1, 'password123'),
 ('customer', 2, 'password123'),
 ('lessor', 3, 'password123');
