@@ -1,7 +1,7 @@
 USE restify
 
 IF OBJECT_ID('pa_crear_reservacion') IS NOT NULL
-    DROP PROCEDURE pa_crear_reservacion;
+    DROP PROCEDURE pa_crear_reservacion; 
 GO
 
 IF OBJECT_ID('pa_crear_alojamiento') IS NOT NULL
@@ -277,7 +277,27 @@ AS BEGIN
         JOIN @photos AS n ON n.fileName = lp.fileName
         WHERE LodgingPhoto.lodgingId = @lodgingId;
 END
+GO
+---
+--- Procedimientos almacenados de Payment
+---
 
+-- Realiza el pago, y modifica el estado de la reserva
+CREATE PROCEDURE pa_realizar_pago
+	@roomBookingId INT,
+	@invoiceImageFileName VARCHAR (150)
+AS BEGIN
+	DECLARE @amount INT;
+	SET @amount = (SELECT cost - discount + fees
+	FROM RoomBooking WHERE roomBookingId = @roomBookingId);
+
+	INSERT INTO Payment (bookingId, amount, dateAndTime, invoiceImageFileName) VALUES 
+	(@roomBookingId, @amount, GETDATE(), @invoiceImageFileName);
+
+	UPDATE RoomBooking SET status = 'Confirmed' WHERE @roomBookingId = roomBookingId;
+END
+
+-- Consulta sobre el estado
 -- TESTS
 -- DECLARE @roomBookings RoomBookingList;
 -- INSERT INTO @roomBookings VALUES
