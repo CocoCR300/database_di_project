@@ -297,6 +297,222 @@ AS BEGIN
 	UPDATE RoomBooking SET status = 'Confirmed' WHERE @roomBookingId = roomBookingId;
 END
 
+--
+-- Procedimientos almacenados de Usuario y Persona
+--
+	
+-- Ingresar un usuario en el sistema
+IF OBJECT_ID('pa_insertar_usuario_y_persona') IS NOT NULL
+    DROP PROCEDURE pa_insertar_usuario_y_persona;
+GO
+
+CREATE PROCEDURE pa_insertar_usuario_y_persona
+    @userName VARCHAR(50),
+    @userRoleId INT,
+    @password VARCHAR(100),
+    @firstName VARCHAR(50),
+    @lastName VARCHAR(100),
+    @emailAddress VARCHAR(200)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
+        BEGIN
+            RAISERROR('El usuario ya existe.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
+        INSERT INTO [User] (userName, userRoleId, password)
+        VALUES (@userName, @userRoleId, @password);
+
+        IF EXISTS (SELECT 1 FROM Person WHERE userName = @userName)
+        BEGIN
+            RAISERROR('La persona ya existe.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+        INSERT INTO Person (userName, firstName, lastName, emailAddress)
+        VALUES (@userName, @firstName, @lastName, @emailAddress);
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+
+        -- Manejo del error
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        DECLARE @ErrorSeverity INT;
+        DECLARE @ErrorState INT;
+
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+
+
+--Actualizar el usuario
+IF OBJECT_ID('pa_actualizar_usuario_y_persona') IS NOT NULL
+    DROP PROCEDURE pa_actualizar_usuario_y_persona;
+GO
+
+CREATE PROCEDURE pa_actualizar_usuario_y_persona
+    @userName VARCHAR(50),
+    @newPassword VARCHAR(100),
+    @newFirstName VARCHAR(50),
+    @newLastName VARCHAR(100),
+    @newEmailAddress VARCHAR(200)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF NOT EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
+        BEGIN
+            RAISERROR('El usuario no existe.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+		
+        UPDATE [User]
+        SET password = @newPassword
+        WHERE userName = @userName;
+
+        IF NOT EXISTS (SELECT 1 FROM Person WHERE userName = @userName)
+        BEGIN
+            RAISERROR('La persona no existe', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
+        UPDATE Person
+        SET firstName = @newFirstName,
+            lastName = @newLastName,
+            emailAddress = @newEmailAddress
+        WHERE userName = @userName;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        DECLARE @ErrorSeverity INT;
+        DECLARE @ErrorState INT;
+
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+
+
+--Eliminar un usuario
+IF OBJECT_ID('pa_eliminar_usuario_y_persona') IS NOT NULL
+    DROP PROCEDURE pa_eliminar_usuario_y_persona;
+GO
+
+CREATE PROCEDURE pa_eliminar_usuario_y_persona
+    @userName VARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF NOT EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
+        BEGIN
+            RAISERROR('El usuario no existe.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
+        IF NOT EXISTS (SELECT 1 FROM Person WHERE userName = @userName)
+        BEGIN
+            RAISERROR('La persona correspondiente no existe.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
+        DELETE FROM Person
+        WHERE userName = @userName;
+        DELETE FROM [User]
+        WHERE userName = @userName;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        DECLARE @ErrorSeverity INT;
+        DECLARE @ErrorState INT;
+
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+
+
+--Obtener todas las personas
+IF OBJECT_ID('pa_obtener_todas_las_personas') IS NOT NULL
+    DROP PROCEDURE pa_obtener_todas_las_personas;
+GO
+
+CREATE PROCEDURE pa_obtener_todas_las_personas
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        SELECT 
+            personId,
+            userName,
+            firstName,
+            lastName,
+            emailAddress
+        FROM Person;
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        DECLARE @ErrorSeverity INT;
+        DECLARE @ErrorState INT;
+
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+
+
+
+--
+
 -- Consulta sobre el estado
 -- TESTS
 -- DECLARE @roomBookings RoomBookingList;
