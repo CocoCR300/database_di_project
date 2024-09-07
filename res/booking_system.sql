@@ -18,7 +18,6 @@ IF OBJECT_ID('UserRole') IS NULL
   
 	  CONSTRAINT UNIQUE_UserRole_type UNIQUE (type), -- New convension to name CONSTRAINTS UNIQUE_table_row
 	  PRIMARY KEY (userRoleId)
-  
 	);
 
 GO
@@ -186,22 +185,50 @@ IF OBJECT_ID('Booking') IS NULL
 
 GO
 
+-- Tabla "Información de pago"
+IF OBJECT_ID('PaymentInformation') IS NULL
+	CREATE TABLE PaymentInformation (
+		paymentInformationId	INT				NOT NULL IDENTITY(1, 1),
+		personId				INT				NOT NULL,
+		cardNumber				CHAR(16)		NOT NULL,
+		cardExpiryDate			DATE			NOT NULL,
+		cardSecurityCode		CHAR(4)			NOT NULL,
+		cardHolderName			VARCHAR(100)	NOT NULL
+
+		PRIMARY KEY (paymentInformationId),
+
+		INDEX FK_INDEX_PAYMENT_INFORMATION_PERSON (personId),
+
+		CONSTRAINT FK_PAYMENT_INFORMATION_PERSON FOREIGN KEY (personId)
+			REFERENCES Person (personId)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
+	);
+
+GO
+
 -- Tabla "Pago"
 IF OBJECT_ID('Payment') IS NULL
 	CREATE TABLE Payment (
-	  paymentId 			INT 			NOT NULL	IDENTITY,
-	  bookingId 			INT,
-	  amount				DECIMAL			NOT NULL,
-	  dateAndTime 			DATETIME 		NOT NULL,
-	  invoiceImageFileName	CHAR(75)		NULL		DEFAULT NULL,
+		paymentId 				INT 			NOT NULL	IDENTITY(1, 1),
+		bookingId 				INT,
+		paymentInformationId	INT,
+		amount					DECIMAL			NOT NULL,
+		dateAndTime 			DATETIME 		NOT NULL,
   
-	  PRIMARY KEY (paymentId),
+		PRIMARY KEY (paymentId),
+
+		INDEX FK_INDEX_PAYMENT_BOOKING (bookingId),
+		INDEX FK_INDEX_PAYMENT_PAYMENT_INFORMATION (paymentInformationId),
   
-	  INDEX FK_INDEX_PAYMENT_BOOKING (bookingId),
-  
-	  CONSTRAINT FK_PAYMENT_BOOKING FOREIGN KEY (bookingId) REFERENCES Booking (bookingId)
-		ON DELETE SET NULL
-		ON UPDATE CASCADE
+		CONSTRAINT FK_PAYMENT_BOOKING FOREIGN KEY (bookingId) REFERENCES Booking (bookingId)
+			ON DELETE SET NULL
+			ON UPDATE CASCADE,
+
+		CONSTRAINT FK_PAYMENT_PAYMENT_INFORMATION FOREIGN KEY (paymentInformationId)
+			REFERENCES PaymentInformation (paymentInformationId)
+			ON DELETE SET NULL
+			ON UPDATE NO ACTION -- Cycles or multiple cascade paths if CASCADE
 	);
 
 GO
