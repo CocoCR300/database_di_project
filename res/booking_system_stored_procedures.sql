@@ -1,4 +1,12 @@
 USE restify
+GO
+
+EXEC sp_addmessage 50001, 16, N'El usuario con el nombre especificado no existe.', @lang = N'us_english';
+EXEC sp_addmessage 50002, 16, N'Ya existe un usuario con el nombre especificado.', @lang = N'us_english';
+
+EXEC sp_addmessage 50100, 16, N'No existe una persona asociada al nombre de usuario especificado.', @lang = N'us_english';
+EXEC sp_addmessage 50101, 16, N'Ya existe una persona asociada al nombre de usuario especificado.', @lang = N'us_english';
+GO
 
 IF OBJECT_ID('paCrearReservacion') IS NOT NULL
     DROP PROCEDURE paCrearReservacion; 
@@ -104,16 +112,26 @@ AS BEGIN
     DECLARE @customerId INT;
     EXECUTE paIdPersonaUsuario @userName, @personId = @customerId OUTPUT;
 
-    INSERT INTO Booking (customerPersonId, lodgingId) VALUES (@customerId, @lodgingId);
-    DECLARE @bookingId INT;
-    -- https://stackoverflow.com/a/7917724
-    -- https://learn.microsoft.com/en-us/sql/t-sql/functions/scope-identity-transact-sql?view=sql-server-ver16
-    SET @bookingId = SCOPE_IDENTITY(); -- Should return the last ID generated in this scope (in this case, the stored procedure)
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    INSERT INTO RoomBooking
-        (bookingId, lodgingId, roomNumber, cost, fees, discount, status, startDate, endDate)
-        SELECT @bookingId, @lodgingId, roomNumber, cost * IIF(DATEDIFF(DAY, startDate, endDate) = 0, 1, DATEDIFF(DAY, startDate, endDate)), fees, discount, 'Created', startDate, endDate
-            FROM @roomBookings;
+        INSERT INTO Booking (customerPersonId, lodgingId) VALUES (@customerId, @lodgingId);
+        DECLARE @bookingId INT;
+        -- https://stackoverflow.com/a/7917724
+        -- https://learn.microsoft.com/en-us/sql/t-sql/functions/scope-identity-transact-sql?view=sql-server-ver16
+        SET @bookingId = SCOPE_IDENTITY(); -- Should return the last ID generated in this scope (in this case, the stored procedure)
+
+        INSERT INTO RoomBooking
+            (bookingId, lodgingId, roomNumber, cost, fees, discount, status, startDate, endDate)
+            SELECT @bookingId, @lodgingId, roomNumber, cost * IIF(DATEDIFF(DAY, startDate, endDate) = 0, 1, DATEDIFF(DAY, startDate, endDate)), fees, discount, 'Created', startDate, endDate
+                FROM @roomBookings;
+        
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END
 GO
 
@@ -148,13 +166,23 @@ AS BEGIN
     DECLARE @personId INT;
     EXECUTE paIdPersonaUsuario @userName, @personId = @personId OUTPUT;
     
-    DELETE rb FROM RoomBooking AS rb
-        JOIN Booking AS b ON b.bookingId = rb.bookingId
-        WHERE b.customerPersonId = @personId AND status = 'Cancelled';
-    
-    DELETE b FROM Booking AS b
-        LEFT JOIN RoomBooking AS rb ON rb.bookingId = b.bookingId
-        WHERE customerPersonId = @personId AND rb.roomBookingId IS NULL;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        DELETE rb FROM RoomBooking AS rb
+            JOIN Booking AS b ON b.bookingId = rb.bookingId
+            WHERE b.customerPersonId = @personId AND status = 'Cancelled';
+        
+        DELETE b FROM Booking AS b
+            LEFT JOIN RoomBooking AS rb ON rb.bookingId = b.bookingId
+            WHERE customerPersonId = @personId AND rb.roomBookingId IS NULL;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END
 GO
 
@@ -194,26 +222,36 @@ AS BEGIN
     DECLARE @ownerId INT;
     EXECUTE paIdPersonaUsuario @ownerUsername, @personId = @ownerId OUTPUT;
 
-    INSERT INTO Lodging (ownerPersonId, lodgingType, name, address, description, emailAddress)
-        VALUES (@ownerId, @lodgingType, @name, @address, @description, @emailAddress);
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    DECLARE @lodgingId INT;
-    SET @lodgingId = SCOPE_IDENTITY();
-    
-    INSERT INTO RoomType (lodgingId, name, perNightPrice, fees, capacity)
-        SELECT @lodgingId, name, perNightPrice, fees, capacity FROM @roomTypes;
+        INSERT INTO Lodging (ownerPersonId, lodgingType, name, address, description, emailAddress)
+            VALUES (@ownerId, @lodgingType, @name, @address, @description, @emailAddress);
 
-    INSERT INTO Room (roomNumber, lodgingId, roomTypeId)
-        SELECT roomNumber, @lodgingId, roomTypeId FROM @rooms;
+        DECLARE @lodgingId INT;
+        SET @lodgingId = SCOPE_IDENTITY();
+        
+        INSERT INTO RoomType (lodgingId, name, perNightPrice, fees, capacity)
+            SELECT @lodgingId, name, perNightPrice, fees, capacity FROM @roomTypes;
 
-    INSERT INTO LodgingPhoneNumber (lodgingId, phoneNumber)
-        SELECT @lodgingId, phoneNumber FROM @phoneNumbers;
+        INSERT INTO Room (roomNumber, lodgingId, roomTypeId)
+            SELECT roomNumber, @lodgingId, roomTypeId FROM @rooms;
 
-    INSERT INTO LodgingPhoto (lodgingId, fileName, ordering)
-        SELECT @lodgingId, fileName, ordering FROM @photos;
+        INSERT INTO LodgingPhoneNumber (lodgingId, phoneNumber)
+            SELECT @lodgingId, phoneNumber FROM @phoneNumbers;
 
-    INSERT INTO LodgingPerk (lodgingId, perkId)
-        SELECT @lodgingId, id FROM @perks;
+        INSERT INTO LodgingPhoto (lodgingId, fileName, ordering)
+            SELECT @lodgingId, fileName, ordering FROM @photos;
+
+        INSERT INTO LodgingPerk (lodgingId, perkId)
+            SELECT @lodgingId, id FROM @perks;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END
 GO
 
@@ -282,6 +320,10 @@ GO
 --- Procedimientos almacenados de Payment
 ---
 
+IF OBJECT_ID('paRealizarPago') IS NOT NULL
+    DROP PROCEDURE paRealizarPago;
+GO
+
 -- Realiza el pago, y modifica el estado de la reserva
 CREATE PROCEDURE paRealizarPago
 	@roomBookingId INT,
@@ -296,6 +338,7 @@ AS BEGIN
 
 	UPDATE RoomBooking SET status = 'Confirmed' WHERE @roomBookingId = roomBookingId;
 END
+GO
 
 --
 -- Procedimientos almacenados de Usuario y Persona
@@ -322,20 +365,17 @@ BEGIN
 
         IF EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
         BEGIN
-            RAISERROR('El usuario ya existe.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
+            RAISERROR(50002, -1, -1);
         END
 
         INSERT INTO [User] (userName, userRoleId, password)
         VALUES (@userName, @userRoleId, @password);
 
         IF EXISTS (SELECT 1 FROM Person WHERE userName = @userName)
-        BEGIN
-            RAISERROR('La persona ya existe.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
+        BEGIN;
+            RAISERROR(50101, -1, -1);
         END
+
         INSERT INTO Person (userName, firstName, lastName, emailAddress)
         VALUES (@userName, @firstName, @lastName, @emailAddress);
 
@@ -343,18 +383,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
-
-        -- Manejo del error
-        DECLARE @ErrorMessage NVARCHAR(4000);
-        DECLARE @ErrorSeverity INT;
-        DECLARE @ErrorState INT;
-
-        SELECT 
-            @ErrorMessage = ERROR_MESSAGE(),
-            @ErrorSeverity = ERROR_SEVERITY(),
-            @ErrorState = ERROR_STATE();
-
-        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+        THROW;
     END CATCH
 END;
 GO
@@ -380,43 +409,27 @@ BEGIN
 
         IF NOT EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
         BEGIN
-            RAISERROR('El usuario no existe.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
+            RAISERROR(50001, -1, -1);
         END
 		
-        UPDATE [User]
-        SET password = @newPassword
-        WHERE userName = @userName;
+        UPDATE [User] SET password = @newPassword WHERE userName = @userName;
 
         IF NOT EXISTS (SELECT 1 FROM Person WHERE userName = @userName)
         BEGIN
-            RAISERROR('La persona no existe', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
+            RAISERROR(50100, -1, -1);
         END
 
         UPDATE Person
-        SET firstName = @newFirstName,
-            lastName = @newLastName,
-            emailAddress = @newEmailAddress
-        WHERE userName = @userName;
+            SET firstName = @newFirstName,
+                lastName = @newLastName,
+                emailAddress = @newEmailAddress
+            WHERE userName = @userName;
 
         COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
-
-        DECLARE @ErrorMessage NVARCHAR(4000);
-        DECLARE @ErrorSeverity INT;
-        DECLARE @ErrorState INT;
-
-        SELECT 
-            @ErrorMessage = ERROR_MESSAGE(),
-            @ErrorSeverity = ERROR_SEVERITY(),
-            @ErrorState = ERROR_STATE();
-
-        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+        THROW;
     END CATCH
 END;
 GO
@@ -438,44 +451,28 @@ BEGIN
 
         IF NOT EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
         BEGIN
-            RAISERROR('El usuario no existe.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
+            RAISERROR(50001, -1, -1);
         END
 
         IF NOT EXISTS (SELECT 1 FROM Person WHERE userName = @userName)
         BEGIN
-            RAISERROR('La persona correspondiente no existe.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
+            RAISERROR(50100, -1, -1);
         END
 
-        DELETE FROM Person
-        WHERE userName = @userName;
-        DELETE FROM [User]
-        WHERE userName = @userName;
+        DELETE FROM Person WHERE userName = @userName;
+        DELETE FROM [User] WHERE userName = @userName;
 
         COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
-
-        DECLARE @ErrorMessage NVARCHAR(4000);
-        DECLARE @ErrorSeverity INT;
-        DECLARE @ErrorState INT;
-
-        SELECT 
-            @ErrorMessage = ERROR_MESSAGE(),
-            @ErrorSeverity = ERROR_SEVERITY(),
-            @ErrorState = ERROR_STATE();
-
-        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+        THROW;
     END CATCH
 END;
 GO
 
 
---Obtener todas las personas
+-- Obtener todas las personas
 IF OBJECT_ID('paObtenerTodasLasPersonas') IS NOT NULL
     DROP PROCEDURE paObtenerTodasLasPersonas;
 GO
@@ -485,28 +482,14 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    BEGIN TRY
-        SELECT 
-            personId,
-            userName,
-            firstName,
-            lastName,
-            emailAddress
-        FROM Person;
-    END TRY
-    BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000);
-        DECLARE @ErrorSeverity INT;
-        DECLARE @ErrorState INT;
-
-        SELECT 
-            @ErrorMessage = ERROR_MESSAGE(),
-            @ErrorSeverity = ERROR_SEVERITY(),
-            @ErrorState = ERROR_STATE();
-
-        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
-    END CATCH
-END;
+    SELECT 
+        personId,
+        userName,
+        firstName,
+        lastName,
+        emailAddress
+    FROM Person;
+END
 GO
 
 
@@ -524,4 +507,4 @@ GO
 -- EXEC paReservacionesUsuario 'customer';
 -- EXEC paEliminarReservacionesCanceladasUsuario 'customer';
 -- EXEC paCambiarEstadoReservacion 1, 'Confirmed';
-EXEC paHabitacionesDisponiblesAlojamiento 1, 2, '2022-03-01', '2022-03-02';
+-- EXEC paHabitacionesDisponiblesAlojamiento 1, 2, '2022-03-01', '2022-03-02';
