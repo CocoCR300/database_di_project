@@ -3,7 +3,9 @@
 
 IF DB_ID('restify') IS NULL
 	CREATE DATABASE restify
-
+			ON (NAME = N'restify', FILENAME = N'C:\Users\Admin\Documents\Bases de datos\SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\restify.mdf', SIZE = 1024MB, FILEGROWTH = 256MB, MAXSIZE = UNLIMITED)
+	LOG ON (NAME = N'restify_log', FILENAME = N'C:\Users\Admin\Documents\Bases de datos\SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\restify_log.ldf', SIZE = 200MB, FILEGROWTH = 50MB, MAXSIZE = 500MB)
+	COLLATE Modern_Spanish_CI_AI
 GO
 
 USE restify;
