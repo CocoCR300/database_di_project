@@ -1,15 +1,15 @@
 USE restify
 
-IF OBJECT_ID('pa_crear_reservacion') IS NOT NULL
-    DROP PROCEDURE pa_crear_reservacion; 
+IF OBJECT_ID('paCrearReservacion') IS NOT NULL
+    DROP PROCEDURE paCrearReservacion; 
 GO
 
-IF OBJECT_ID('pa_crear_alojamiento') IS NOT NULL
-    DROP PROCEDURE pa_crear_alojamiento;
+IF OBJECT_ID('paCrearAlojamiento') IS NOT NULL
+    DROP PROCEDURE paCrearAlojamiento;
 GO
 
-IF OBJECT_ID('pa_actualizar_orden_fotos') IS NOT NULL
-    DROP PROCEDURE pa_actualizar_orden_fotos;
+IF OBJECT_ID('paActualizarOrdenFotos') IS NOT NULL
+    DROP PROCEDURE paActualizarOrdenFotos;
 GO
 
 IF TYPE_ID('IdList') IS NOT NULL
@@ -78,11 +78,11 @@ GO
 -- Procedimientos almacenados de Usuario
 --
 
-IF OBJECT_ID('pa_id_persona_usuario') IS NOT NULL
-    DROP PROCEDURE pa_id_persona_usuario;
+IF OBJECT_ID('paIdPersonaUsuario') IS NOT NULL
+    DROP PROCEDURE paIdPersonaUsuario;
 GO
 
-CREATE PROCEDURE pa_id_persona_usuario
+CREATE PROCEDURE paIdPersonaUsuario
     @userName VARCHAR(50),
     @personId INT OUTPUT
 AS BEGIN
@@ -96,13 +96,13 @@ GO
 
 -- Crea una reservación, que puede incluir múltiples habitaciones,
 -- especificadas en una tabla pasada por el último parámetro 
-CREATE PROCEDURE pa_crear_reservacion
+CREATE PROCEDURE paCrearReservacion
     @userName VARCHAR(50),
     @lodgingId INT,
     @roomBookings RoomBookingList READONLY
 AS BEGIN
     DECLARE @customerId INT;
-    EXECUTE pa_id_persona_usuario @userName, @personId = @customerId OUTPUT;
+    EXECUTE paIdPersonaUsuario @userName, @personId = @customerId OUTPUT;
 
     INSERT INTO Booking (customerPersonId, lodgingId) VALUES (@customerId, @lodgingId);
     DECLARE @bookingId INT;
@@ -117,11 +117,11 @@ AS BEGIN
 END
 GO
 
-IF OBJECT_ID('pa_reservaciones_usuario') IS NOT NULL
-    DROP PROCEDURE pa_reservaciones_usuario;
+IF OBJECT_ID('paReservacionesUsuario') IS NOT NULL
+    DROP PROCEDURE paReservacionesUsuario;
 GO
 
-CREATE PROCEDURE pa_reservaciones_usuario
+CREATE PROCEDURE paReservacionesUsuario
     @userName VARCHAR(50),
     @status CHAR(50) = NULL
 AS BEGIN
@@ -138,15 +138,15 @@ AS BEGIN
 END
 GO
 
-IF OBJECT_ID('pa_eliminar_reservaciones_canceladas_usuario') IS NOT NULL
-    DROP PROCEDURE pa_eliminar_reservaciones_canceladas_usuario;
+IF OBJECT_ID('paEliminarReservacionesCanceladasUsuario') IS NOT NULL
+    DROP PROCEDURE paEliminarReservacionesCanceladasUsuario;
 GO
 
-CREATE PROCEDURE pa_eliminar_reservaciones_canceladas_usuario
+CREATE PROCEDURE paEliminarReservacionesCanceladasUsuario
     @userName VARCHAR(50)
 AS BEGIN
     DECLARE @personId INT;
-    EXECUTE pa_id_persona_usuario @userName, @personId = @personId OUTPUT;
+    EXECUTE paIdPersonaUsuario @userName, @personId = @personId OUTPUT;
     
     DELETE rb FROM RoomBooking AS rb
         JOIN Booking AS b ON b.bookingId = rb.bookingId
@@ -158,11 +158,11 @@ AS BEGIN
 END
 GO
 
-IF OBJECT_ID('pa_cambiar_estado_reservacion') IS NOT NULL
-    DROP PROCEDURE pa_cambiar_estado_reservacion;
+IF OBJECT_ID('paCambiarEstadoReservacion') IS NOT NULL
+    DROP PROCEDURE paCambiarEstadoReservacion;
 GO
 
-CREATE PROCEDURE pa_cambiar_estado_reservacion
+CREATE PROCEDURE paCambiarEstadoReservacion
     @bookingId INT,
     @status CHAR(50)
 AS BEGIN
@@ -178,7 +178,7 @@ GO
 -- Crea un alojamiento, incluyendo varios tipos de habitación, números de habitación,
 -- números de teléfono, fotos y beneficios que deben pasarse en una tabla en los parámetros
 -- correspondientes
-CREATE PROCEDURE pa_crear_alojamiento
+CREATE PROCEDURE paCrearAlojamiento
     @ownerUsername  VARCHAR(50),
     @lodgingType    CHAR(50),
     @name           VARCHAR(100),
@@ -192,7 +192,7 @@ CREATE PROCEDURE pa_crear_alojamiento
     @perks          IdList          READONLY
 AS BEGIN
     DECLARE @ownerId INT;
-    EXECUTE pa_id_persona_usuario @ownerUsername, @personId = @ownerId OUTPUT;
+    EXECUTE paIdPersonaUsuario @ownerUsername, @personId = @ownerId OUTPUT;
 
     INSERT INTO Lodging (ownerPersonId, lodgingType, name, address, description, emailAddress)
         VALUES (@ownerId, @lodgingType, @name, @address, @description, @emailAddress);
@@ -217,13 +217,13 @@ AS BEGIN
 END
 GO
 
-IF OBJECT_ID('pa_habitaciones_disponibles_alojamiento') IS NOT NULL
-    DROP PROCEDURE pa_habitaciones_disponibles_alojamiento;
+IF OBJECT_ID('paHabitacionesDisponiblesAlojamiento') IS NOT NULL
+    DROP PROCEDURE paHabitacionesDisponiblesAlojamiento;
 GO
 
 -- Obtiene los números de habitación de un alojamiento y tipo especifico de
 -- habitación, que no estén reservados en un periodo de tiempo determinado 
-CREATE PROCEDURE pa_habitaciones_disponibles_alojamiento
+CREATE PROCEDURE paHabitacionesDisponiblesAlojamiento
     @lodgingId  INT,
     @roomTypeId INT,
     @startDate  DATE,
@@ -241,11 +241,11 @@ AS BEGIN
 END
 GO
 
-IF OBJECT_ID('pa_eliminar_alojamiento') IS NOT NULL
-    DROP PROCEDURE pa_eliminar_alojamiento;
+IF OBJECT_ID('paEliminarAlojamiento') IS NOT NULL
+    DROP PROCEDURE paEliminarAlojamiento;
 GO
 
-CREATE PROCEDURE pa_eliminar_alojamiento
+CREATE PROCEDURE paEliminarAlojamiento
     @lodgingId INT
 AS BEGIN
     DELETE FROM RoomBooking WHERE lodgingId = @lodgingId;
@@ -268,7 +268,7 @@ GO
 
 -- Actualiza el campo orden de los registros de fotos en los que su nombre de archivo
 -- coincidan con los de la tabla pasada a través del último parámetro
-CREATE PROCEDURE pa_actualizar_orden_fotos
+CREATE PROCEDURE paActualizarOrdenFotos
     @lodgingId  INT,
     @photos     PhotoList READONLY
 AS BEGIN
@@ -283,7 +283,7 @@ GO
 ---
 
 -- Realiza el pago, y modifica el estado de la reserva
-CREATE PROCEDURE pa_realizar_pago
+CREATE PROCEDURE paRealizarPago
 	@roomBookingId INT,
 	@invoiceImageFileName VARCHAR (150)
 AS BEGIN
@@ -302,11 +302,11 @@ END
 --
 	
 -- Ingresar un usuario en el sistema
-IF OBJECT_ID('pa_insertar_usuario_y_persona') IS NOT NULL
-    DROP PROCEDURE pa_insertar_usuario_y_persona;
+IF OBJECT_ID('paInsertarUsuarioYPersona') IS NOT NULL
+    DROP PROCEDURE paInsertarUsuarioYPersona;
 GO
 
-CREATE PROCEDURE pa_insertar_usuario_y_persona
+CREATE PROCEDURE paInsertarUsuarioYPersona
     @userName VARCHAR(50),
     @userRoleId INT,
     @password VARCHAR(100),
@@ -361,11 +361,11 @@ GO
 
 
 --Actualizar el usuario
-IF OBJECT_ID('pa_actualizar_usuario_y_persona') IS NOT NULL
-    DROP PROCEDURE pa_actualizar_usuario_y_persona;
+IF OBJECT_ID('paActualizarUsuarioYPersona') IS NOT NULL
+    DROP PROCEDURE paActualizarUsuarioYPersona;
 GO
 
-CREATE PROCEDURE pa_actualizar_usuario_y_persona
+CREATE PROCEDURE paActualizarUsuarioYPersona
     @userName VARCHAR(50),
     @newPassword VARCHAR(100),
     @newFirstName VARCHAR(50),
@@ -423,11 +423,11 @@ GO
 
 
 --Eliminar un usuario
-IF OBJECT_ID('pa_eliminar_usuario_y_persona') IS NOT NULL
-    DROP PROCEDURE pa_eliminar_usuario_y_persona;
+IF OBJECT_ID('paEliminarUsuarioYPersona') IS NOT NULL
+    DROP PROCEDURE paEliminarUsuarioYPersona;
 GO
 
-CREATE PROCEDURE pa_eliminar_usuario_y_persona
+CREATE PROCEDURE paEliminarUsuarioYPersona
     @userName VARCHAR(50)
 AS
 BEGIN
@@ -476,11 +476,11 @@ GO
 
 
 --Obtener todas las personas
-IF OBJECT_ID('pa_obtener_todas_las_personas') IS NOT NULL
-    DROP PROCEDURE pa_obtener_todas_las_personas;
+IF OBJECT_ID('paObtenerTodasLasPersonas') IS NOT NULL
+    DROP PROCEDURE paObtenerTodasLasPersonas;
 GO
 
-CREATE PROCEDURE pa_obtener_todas_las_personas
+CREATE PROCEDURE paObtenerTodasLasPersonas
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -519,9 +519,9 @@ GO
 -- INSERT INTO @roomBookings VALUES
 --     (101, 10000, 0, 0, '2000-02-01', '2000-02-01'),
 --     (102, 20000, 10, 10, '2023-02-01', '2022-02-02');
--- EXECUTE pa_crear_reservacion 'customer', 1, @roomBookings;
+-- EXECUTE paCrearReservacion 'customer', 1, @roomBookings;
 
--- EXEC pa_reservaciones_usuario 'customer';
--- EXEC pa_eliminar_reservaciones_canceladas_usuario 'customer';
--- EXEC pa_cambiar_estado_reservacion 1, 'Confirmed';
-EXEC pa_habitaciones_disponibles_alojamiento 1, 2, '2022-03-01', '2022-03-02';
+-- EXEC paReservacionesUsuario 'customer';
+-- EXEC paEliminarReservacionesCanceladasUsuario 'customer';
+-- EXEC paCambiarEstadoReservacion 1, 'Confirmed';
+EXEC paHabitacionesDisponiblesAlojamiento 1, 2, '2022-03-01', '2022-03-02';
