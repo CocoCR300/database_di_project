@@ -88,7 +88,7 @@ public class LodgingController : BaseController
         IEnumerable<Lodging> lodgings = lodgingsQuery.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(perkIds))
         {
-            if (TryParseCommaSeparatedList(perkIds, uint.TryParse, out uint[]? perkIdsArray))
+            if (TryParseCommaSeparatedList(perkIds, int.TryParse, out int[]? perkIdsArray))
             {
                 lodgings = lodgings.Where(l => perkIdsArray.All(p => l.Perks.Any(p1 => p == p1.Id)));
             }
@@ -239,7 +239,7 @@ public class LodgingController : BaseController
     }
 
     [HttpGet("{lodgingId}")]
-    public ObjectResult Get(uint lodgingId)
+    public ObjectResult Get(int lodgingId)
     {
         var lodging = _context.Lodging
             .Where(l => l.Id == lodgingId)
@@ -380,7 +380,7 @@ public class LodgingController : BaseController
     }
 
     [HttpDelete("{lodgingId}")]
-    public ObjectResult Delete(uint lodgingId)
+    public ObjectResult Delete(int lodgingId)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -402,7 +402,7 @@ public class LodgingController : BaseController
     }
         
     [HttpDelete("{lodgingId}/perk")]
-    public ObjectResult DeletePerks(uint lodgingId, uint[] perkIds)
+    public ObjectResult DeletePerks(int lodgingId, int[] perkIds)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -413,7 +413,7 @@ public class LodgingController : BaseController
             bool noneExists = true;
             for (int i = 0; i < lodging.Perks.Count; ++i)
             {
-                uint perkId = lodging.Perks[i].Id;
+                int perkId = lodging.Perks[i].Id;
                 if (perkIds.Contains(perkId))
                 {
                     noneExists = false;
@@ -436,7 +436,7 @@ public class LodgingController : BaseController
     }
     
     [HttpDelete("{lodgingId}/phone_number")]
-    public ObjectResult DeletePhoneNumbers(uint lodgingId, string[] phoneNumbers)
+    public ObjectResult DeletePhoneNumbers(int lodgingId, string[] phoneNumbers)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -469,7 +469,7 @@ public class LodgingController : BaseController
     }
     
     [HttpDelete("{lodgingId}/photo")]
-    public ObjectResult DeletePhotos(uint lodgingId, string[] fileNames)
+    public ObjectResult DeletePhotos(int lodgingId, string[] fileNames)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -512,7 +512,7 @@ public class LodgingController : BaseController
     
     
     [HttpPost("{lodgingId}/perk")]
-    public ObjectResult StorePerks(uint lodgingId, uint[] perkIds)
+    public ObjectResult StorePerks(int lodgingId, int[] perkIds)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -542,7 +542,7 @@ public class LodgingController : BaseController
     }
         
     [HttpPost("{lodgingId}/phone_number")]
-    public ObjectResult StorePhoneNumbers(uint lodgingId, string[] phoneNumbers)
+    public ObjectResult StorePhoneNumbers(int lodgingId, string[] phoneNumbers)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -566,7 +566,7 @@ public class LodgingController : BaseController
     }
 
     [HttpPost("{lodgingId}/photo")]
-    public async Task<ObjectResult> StorePhotos(uint lodgingId, [FromForm] IFormFileCollection files)
+    public async Task<ObjectResult> StorePhotos(int lodgingId, [FromForm] IFormFileCollection files)
     {
         if (!ModelState.IsValid)
         {
@@ -637,7 +637,7 @@ public class LodgingController : BaseController
     }
     
     [HttpPatch("{lodgingId}/photo")]
-    public ObjectResult ModifyPhotos(uint lodgingId, ImageData[] images)
+    public ObjectResult ModifyPhotos(int lodgingId, ImageData[] images)
     {
         if (!ModelState.IsValid)
         {
@@ -663,7 +663,7 @@ public class LodgingController : BaseController
     }
     
     [HttpPatch("{lodgingId}")]
-    public ObjectResult Update(uint lodgingId, LodgingPatchRequestData data)
+    public ObjectResult Update(int lodgingId, LodgingPatchRequestData data)
     {
         if (!ModelState.IsValid)
         {
@@ -738,7 +738,7 @@ public class LodgingRequestData
     public string   EmailAddress { get; set; }
     [Required(ErrorMessage = "El identificador del arrendador es obligatorio.")]
     [Exists<Person>(ErrorMessage = "No existe un arrendador con el identificador especificado.")]
-    public uint     OwnerId { get; set; }
+    public int     OwnerId { get; set; }
     public uint?    Capacity { get; set; }
     public decimal? Fees { get; set; }
     public decimal? PerNightPrice { get; set; }
@@ -757,7 +757,7 @@ public class LodgingPatchRequestData
     [EmailAddress(ErrorMessage = "El correo electrónico es inválido.")]
     public string?   EmailAddress { get; set; }
     [Exists<Person>(ErrorMessage = "No existe un arrendador con el identificador especificado.")]
-    public uint?    OwnerId { get; set; }
+    public int?    OwnerId { get; set; }
     public uint?    Capacity { get; set; }
     public decimal? Fees { get; set; }
     public decimal? PerNightPrice { get; set; }

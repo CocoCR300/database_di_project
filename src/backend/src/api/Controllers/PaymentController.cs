@@ -23,7 +23,7 @@ public class PaymentController : BaseController
     
     [HttpGet("user/{userName}/{pageSize}/{page}")]
     public async Task<ObjectResult> Get(string userName,
-        [FromQuery] uint? lodgingId,
+        [FromQuery] int? lodgingId,
         [FromQuery] DateOnly? startDate,
         [FromQuery] DateOnly? endDate,
         [Range(0, int.MaxValue)] int pageSize = 10,
@@ -49,7 +49,7 @@ public class PaymentController : BaseController
     }
     
     [HttpGet("lodging/{lodgingId}")]
-    public async Task<ObjectResult> Get(uint lodgingId,
+    public async Task<ObjectResult> Get(int lodgingId,
         [FromQuery] DateOnly? startDate,
         [FromQuery] DateOnly? endDate,
         [Range(0, int.MaxValue)] int pageSize = 10,
@@ -72,7 +72,7 @@ public class PaymentController : BaseController
     }
     
     [HttpPost("{bookingId}")]
-    public ObjectResult Store(uint bookingId, [FromForm] PaymentRequestData data)
+    public ObjectResult Store(int bookingId, [FromForm] PaymentRequestData data)
     {
         Booking? booking = _context.Find<Booking>(bookingId);
 
@@ -86,17 +86,17 @@ public class PaymentController : BaseController
             return NotFound("Ya hay un pago asociado a esta reservación.");
         }
 
-        string fileExtension = Path.GetExtension(data.InvoiceImageFile.FileName).ToLowerInvariant();
-        
-        string fileName;
-        if (!fileExtension.Equals(string.Empty))
-        {
-            fileName = $"{Guid.NewGuid().ToString()}{fileExtension}";
-        }
-        else
-        {
-            fileName = Guid.NewGuid().ToString();
-        }
+        //string fileExtension = Path.GetExtension(data.InvoiceImageFile.FileName).ToLowerInvariant();
+        //
+        //string fileName;
+        //if (!fileExtension.Equals(string.Empty))
+        //{
+        //    fileName = $"{Guid.NewGuid().ToString()}{fileExtension}";
+        //}
+        //else
+        //{
+        //    fileName = Guid.NewGuid().ToString();
+        //}
 
         _context.Entry(booking).Collection(b => b.RoomBookings).Load();
         foreach (RoomBooking roomBooking in booking.RoomBookings)
@@ -108,20 +108,20 @@ public class PaymentController : BaseController
         {
             DateAndTime = data.DateAndTime,
             Amount = data.Amount,
-            InvoiceImageFileName = fileName,
-            BookingId = booking.Id
+            BookingId = booking.Id,
+            PaymentInformationId= data.PaymentInformationId
         };
         _context.SaveChanges();
 
-        string? path = _configuration["InvoiceImageFilesPath"];
-        Directory.CreateDirectory(path);
-        
-        string filePath = Path.Combine(path, fileName);
+        //string? path = _configuration["InvoiceImageFilesPath"];
+        //Directory.CreateDirectory(path);
+        //
+        //string filePath = Path.Combine(path, fileName);
 
-        using (FileStream fileStream = System.IO.File.Create(filePath))
-        {
-            data.InvoiceImageFile.CopyTo(fileStream);
-        }
+        //using (FileStream fileStream = System.IO.File.Create(filePath))
+        //{
+        //    data.InvoiceImageFile.CopyTo(fileStream);
+        //}
         
         return Created(booking.Payment);
     }
@@ -133,5 +133,5 @@ public record PaymentRequestData
 	public DateTimeOffset	DateAndTime { get; set; }
     [Required]
 	public decimal			Amount { get; set; }
-	public IFormFile        InvoiceImageFile { get; set; }
+    public int              PaymentInformationId { get; set; }
 }

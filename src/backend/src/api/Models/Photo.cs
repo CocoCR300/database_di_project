@@ -8,10 +8,10 @@ public class Photo
 
 public class LodgingPhoto : Photo
 {
-    public uint LodgingId { get; set; }
+    public int LodgingId { get; set; }
 }
 
 public class RoomTypePhoto : Photo
 {
-    public uint RoomTypeId { get; set; }
+    public int RoomTypeId { get; set; }
 }

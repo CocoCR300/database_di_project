@@ -20,8 +20,8 @@ public class RoomController : BaseController
     }
     
     [HttpGet("{lodgingId}/available/{roomTypeId}/{bookingStartDate}/{bookingEndDate}")]
-    public ObjectResult GetAvailableRoomsOfType(uint lodgingId,
-        uint roomTypeId, DateOnly bookingStartDate, DateOnly bookingEndDate)
+    public ObjectResult GetAvailableRoomsOfType(int lodgingId,
+        int roomTypeId, DateOnly bookingStartDate, DateOnly bookingEndDate)
     {
         IQueryable<uint> bookedRoomsNumbers = _context.RoomBooking
             .Where(r => r.LodgingId == lodgingId && r.Room.TypeId == roomTypeId
@@ -37,7 +37,7 @@ public class RoomController : BaseController
     }
     
     [HttpGet("{lodgingId}")]
-    public ObjectResult GetRooms(uint lodgingId)
+    public ObjectResult GetRooms(int lodgingId)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -54,7 +54,7 @@ public class RoomController : BaseController
     }
     
     [HttpDelete("{lodgingId}")]
-    public ObjectResult DeleteRooms(uint lodgingId, uint[] roomNumbers)
+    public ObjectResult DeleteRooms(int lodgingId, uint[] roomNumbers)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -88,7 +88,7 @@ public class RoomController : BaseController
     }
     
     [HttpPost("{lodgingId}")]
-    public ObjectResult StoreRooms(uint lodgingId, RoomRequestData[] rooms)
+    public ObjectResult StoreRooms(int lodgingId, RoomRequestData[] rooms)
     {
         if (!ModelState.IsValid)
         {
@@ -108,7 +108,7 @@ public class RoomController : BaseController
             .Select(r => r.Number)
             .OrderBy(r => r)
             .ToArray();
-        uint[] roomTypeIdsOrdered = lodging.RoomTypes
+        int[] roomTypeIdsOrdered = lodging.RoomTypes
             .Select(r => r.Id)
             .OrderBy(r => r)
             .ToArray();
@@ -151,7 +151,7 @@ public class RoomController : BaseController
     }
     
     [HttpPost("{lodgingId}/sequence")]
-    public ObjectResult StoreRoomSequence(uint lodgingId, RoomSequenceRequestData roomSequenceData)
+    public ObjectResult StoreRoomSequence(int lodgingId, RoomSequenceRequestData roomSequenceData)
     {
         if (!ModelState.IsValid)
         {
@@ -217,7 +217,7 @@ public class RoomRequestData
     public uint Number { get; set; }
     [Required(ErrorMessage = "El identificador del tipo de habitación es obligatorio.")]
     [Exists<RoomType>(ErrorMessage = "No existe un tipo de habitación con el identificador especificado.")]
-    public uint TypeId { get; set; }
+    public int TypeId { get; set; }
 }
 
 public record RoomSequenceRequestData
@@ -228,5 +228,5 @@ public record RoomSequenceRequestData
     public uint EndNumber { get; init; }
     [Required(ErrorMessage = "El identificador del tipo de habitación es obligatorio.")]
     [Exists<RoomType>(ErrorMessage = "No existe un tipo de habitación con el identificador especificado.")]
-    public uint TypeId { get; init; }
+    public int TypeId { get; init; }
 }

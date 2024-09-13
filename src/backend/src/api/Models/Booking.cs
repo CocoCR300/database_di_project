@@ -2,9 +2,9 @@
 
 public class Booking
 {
-	public uint				Id { get; set; }
-	public uint				CustomerId { get; set; }
-	public uint				LodgingId { get; set; }
+	public int				Id { get; set; }
+	public int				CustomerId { get; set; }
+	public int				LodgingId { get; set; }
 
 	public List<RoomBooking>	RoomBookings { get; }
 	public Payment?				Payment { get; set; }

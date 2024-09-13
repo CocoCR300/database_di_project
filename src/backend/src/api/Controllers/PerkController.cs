@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using MySqlConnector;
 using Restify.API.Data;
 using Restify.API.Models;
 using Z.EntityFramework.Plus;
@@ -57,11 +56,12 @@ public class PerkController : BaseController
         }
         catch (Exception ex)
         {
-            if (ex.InnerException is MySqlException
-                    { ErrorCode: MySqlErrorCode.DuplicateUnique or MySqlErrorCode.DuplicateKeyEntry })
-            {
-                return NotAcceptable("Ya existe un beneficio con uno de los nombres especificados.");
-            }
+            // TODO
+            //if (ex.InnerException is MySqlException
+            //        { ErrorCode: MySqlErrorCode.DuplicateUnique or MySqlErrorCode.DuplicateKeyEntry })
+            //{
+            //    return NotAcceptable("Ya existe un beneficio con uno de los nombres especificados.");
+            //}
             
             return NotAcceptable("Ha ocurrido un error al insertar los datos.");
         }
@@ -70,7 +70,7 @@ public class PerkController : BaseController
     }
 
     [HttpDelete]
-    public ObjectResult Delete(uint[] perkIds)
+    public ObjectResult Delete(int[] perkIds)
     {
         int rows;
         try
@@ -102,7 +102,7 @@ public class PerkController : BaseController
     {
         if (ModelState.IsValid)
         {
-            IEnumerable<uint> perkIds = data.Select(p => p.Id);
+            IEnumerable<int> perkIds = data.Select(p => p.Id);
             var existingPerks = _context.Perks.Where(p => perkIds.Contains(p.Id))
                 .ToDictionary(p => p.Id, p => p);
             if (existingPerks.Count == 0)
@@ -141,7 +141,7 @@ public class PerkController : BaseController
 public class PerkUpdateRequestData
 {
     [Required(ErrorMessage = "El identificador del beneficio adicional es obligatorio.")]
-    public uint     Id { get; set; }
+    public int     Id { get; set; }
     [Required(ErrorMessage = "El nombre del beneficio adicional es obligatorio.")]
     [MaxLength(50, ErrorMessage = "El nombre del beneficio adicional debe tener 50 carácteres como máximo.")]
     public string   Name { get; set; }

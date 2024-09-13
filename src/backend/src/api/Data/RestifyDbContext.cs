@@ -21,8 +21,8 @@ namespace Restify.API.Data
 		{
 			if (!optionsBuilder.IsConfigured)
 			{
-				string connectionString = "server=localhost;user=root;password=;database=restify";
-				optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+				string connectionString = "Integrated Security=True;Initial Catalog=restify;Server=Catalog";
+				optionsBuilder.UseSqlServer(connectionString);
 			}
 		}
 
@@ -111,6 +111,10 @@ namespace Restify.API.Data
 				person.HasOne(p => p.User)
 					.WithOne(u => u.Person)
 					.HasForeignKey<Person>(p => p.UserName);
+
+				person.HasMany(p => p.PaymentInformations)
+					.WithOne()
+					.HasForeignKey(p => p.PersonId);
 
 				person.OwnsMany(p => p.PhoneNumbers,
 					phoneNumber =>
@@ -261,6 +265,36 @@ namespace Restify.API.Data
 				booking.Navigation(b => b.Lodging).AutoInclude(false);
 			});
 
+			modelBuilder.Entity<PaymentInformation>(paymentInformation =>
+			{
+				paymentInformation.HasKey(p => p.Id);
+
+				paymentInformation.Property(p => p.Id)
+					.IsRequired()
+					.HasColumnName("paymentInformationId");
+
+				paymentInformation.Property(p => p.CardExpiryDate)
+					.IsRequired();
+
+				paymentInformation.Property(p => p.CardHolderName)
+					.IsRequired()
+					.HasMaxLength(100)
+					.HasColumnType("CHAR(100)");
+
+				paymentInformation.Property(p => p.CardNumber)
+					.IsRequired()
+					.HasMaxLength(16)
+					.HasColumnType("CHAR(16)");
+
+				paymentInformation.Property(p => p.CardSecurityCode)
+					.IsRequired()
+					.HasMaxLength(4)
+					.HasColumnType("CHAR(4)");
+
+				paymentInformation.Property(p => p.PersonId)
+					.IsRequired();
+			});
+
 			modelBuilder.Entity<Payment>(payment =>
 			{
 				payment.HasKey(p => p.Id);
@@ -278,9 +312,12 @@ namespace Restify.API.Data
 				payment.Property(p => p.Amount)
 					.IsRequired();
 				
-				payment.Property(p => p.InvoiceImageFileName)
-					.IsRequired()
-					.HasMaxLength(75);
+				payment.Property(p => p.PaymentInformationId)
+					.IsRequired();
+
+				payment.HasOne<PaymentInformation>()
+					.WithOne()
+					.HasForeignKey<Payment>(p => p.PaymentInformationId);
 
 				payment.HasOne<Booking>()
 					.WithOne(b => b.Payment)

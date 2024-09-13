@@ -2,10 +2,10 @@
 
 public class UserRole
 {
-	public const uint Administrator	= 1;
-	public const uint Customer		= 2;
-	public const uint Lessor		= 3;
+	public const int Administrator	= 1;
+	public const int Customer		= 2;
+	public const int Lessor		= 3;
 	
-	public uint		Id { get; set; }
+	public int		Id { get; set; }
 	public string	Type { get; set; }
 }

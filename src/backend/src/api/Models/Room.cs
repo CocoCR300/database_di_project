@@ -2,9 +2,9 @@
 
 public class Room
 {
-	public uint	LodgingId { get; set; }
+	public int	LodgingId { get; set; }
 	public uint	Number { get; set; }
-	public uint	TypeId { get; set; }
+	public int	TypeId { get; set; }
 
 	public Lodging	Lodging { get; }
 	public RoomType	Type { get; }

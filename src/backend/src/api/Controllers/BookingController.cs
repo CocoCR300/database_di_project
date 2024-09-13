@@ -29,7 +29,7 @@ public class BookingController : BaseController
     }
     
     [HttpGet("lodging/{lodgingId}/{pageSize}/{page}")]
-    public async Task<ObjectResult> GetLodgingBookings(uint lodgingId,
+    public async Task<ObjectResult> GetLodgingBookings(int lodgingId,
         [FromQuery] DateOnly? startDate,
         [FromQuery] DateOnly? endDate,
         [Range(0, int.MaxValue)] int pageSize = 10,
@@ -55,7 +55,7 @@ public class BookingController : BaseController
     
     [HttpGet("user/{userName}/{pageSize}/{page}")]
     public async Task<ObjectResult> GetUserBookings(string userName,
-        [FromQuery] uint? lodgingId,
+        [FromQuery] int? lodgingId,
         [FromQuery] DateOnly? startDate,
         [FromQuery] DateOnly? endDate,
         [Range(0, int.MaxValue)] int pageSize = 10,
@@ -112,7 +112,7 @@ public class BookingController : BaseController
     }
 
     [HttpDelete("lodging/{lodgingId}")]
-    public ObjectResult DeleteLodgingBookings(uint lodgingId, uint[] bookingIds)
+    public ObjectResult DeleteLodgingBookings(int lodgingId, int[] bookingIds)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -141,7 +141,7 @@ public class BookingController : BaseController
     }
     
     [HttpDelete("user/{userName}")]
-    public ObjectResult DeleteUserBookings(string userName, uint[] bookingIds)
+    public ObjectResult DeleteUserBookings(string userName, int[] bookingIds)
     {
         User? user = _context.Find<User>(userName);
 
@@ -171,7 +171,7 @@ public class BookingController : BaseController
     }
 
     [HttpPatch("user/{userName}/{bookingId}/status")]
-    public ObjectResult ChangeBookingStatus(string userName, uint bookingId, [FromBody] BookingStatus newBookingStatus)
+    public ObjectResult ChangeBookingStatus(string userName, int bookingId, [FromBody] BookingStatus newBookingStatus)
     {
         User? user = _context.Find<User>(userName);
 
@@ -229,7 +229,7 @@ public class BookingController : BaseController
             return NotFound("No existe una reservación asociada al cliente, con el identificador especificado.");
         }
 
-        List<uint> nonExistentRoomBookingIdsToDelete = new List<uint>();
+        List<int> nonExistentRoomBookingIdsToDelete = new List<int>();
         if (bookingData.RoomsBookingsToDelete != null)
         {
             foreach (var roomBookingId in bookingData.RoomsBookingsToDelete)
@@ -263,7 +263,7 @@ public class BookingController : BaseController
         }
 
         bool lodgingDoesNotOfferRooms = !Lodging.OffersRooms(booking.Lodging);
-        uint roomTypeId = 0; 
+        int roomTypeId = 0; 
         
         if (lodgingDoesNotOfferRooms)
         {
@@ -271,7 +271,7 @@ public class BookingController : BaseController
         }
 
         bool invalidUpdateData = false;
-        List<uint> invalidRoomBookingIds = new List<uint>();
+        List<int> invalidRoomBookingIds = new List<int>();
         if (bookingData.RoomsBookingsToUpdate != null)
         {
             if (newRoomBookingsByRoomNumber == null)
@@ -279,7 +279,7 @@ public class BookingController : BaseController
                 newRoomBookingsByRoomNumber = new Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>();
             }
             
-            Dictionary<uint, List<Room>>? availableRoomsByType = null;
+            Dictionary<int, List<Room>>? availableRoomsByType = null;
             foreach (RoomBookingPatchRequestData roomBookingData in bookingData.RoomsBookingsToUpdate)
             {
                 RoomBooking? roomBooking = booking.RoomBookings.FirstOrDefault(
@@ -419,7 +419,7 @@ public class BookingController : BaseController
         bool lodgingDoesNotOfferRooms = !Lodging.OffersRooms(lodging);
         if (lodgingDoesNotOfferRooms)
         {
-            uint roomTypeId = lodging.RoomTypes[0].Id;
+            int roomTypeId = lodging.RoomTypes[0].Id;
             foreach (RoomBookingRequestData data in roomBookingsData)
             {
                 data.RoomTypeId = roomTypeId;
@@ -491,12 +491,12 @@ public class BookingController : BaseController
         return null;
     }
 
-    private Dictionary<uint, List<Room>> GetAvailableRoomsByType(
-        uint lodgingId,
-        IList<IGrouping<uint, IRoomBookingRequestData>> requestedRoomsDataByType,
-        uint[]? roomBookingsToExclude = null)
+    private Dictionary<int, List<Room>> GetAvailableRoomsByType(
+        int lodgingId,
+        IList<IGrouping<int, IRoomBookingRequestData>> requestedRoomsDataByType,
+        int[]? roomBookingsToExclude = null)
     {
-        Dictionary<uint, List<Room>> availableRoomsByType = new Dictionary<uint, List<Room>>(requestedRoomsDataByType.Count);
+        Dictionary<int, List<Room>> availableRoomsByType = new Dictionary<int, List<Room>>(requestedRoomsDataByType.Count);
         foreach (var requestedRoomData in requestedRoomsDataByType)
         {
             StringBuilder sqlQuery = new StringBuilder($"""
@@ -567,7 +567,7 @@ public class BookingController : BaseController
 
 public interface IRoomBookingRequestData
 {
-    uint        RoomTypeId { get; }
+    int        RoomTypeId { get; }
     DateOnly?   StartDate { get; }
     DateOnly?   EndDate { get; }
     decimal?    Discount { get; }
@@ -577,7 +577,7 @@ public interface IRoomBookingRequestData
 public record RoomBookingRequestData : IRoomBookingRequestData
 {
     [Required(ErrorMessage = "El identificador del tipo de habitación es obligatorio.")]
-    public uint        RoomTypeId { get; set; }
+    public int        RoomTypeId { get; set; }
     [Required(ErrorMessage = "La fecha de inicio de la reservación de la habitación es obligatoria.")]
     public DateOnly?   StartDate { get; init; }
     [Required(ErrorMessage = "La fecha de finalización de la reservación es obligatoria.")]
@@ -589,9 +589,9 @@ public record RoomBookingRequestData : IRoomBookingRequestData
 public record RoomBookingPatchRequestData : IRoomBookingRequestData
 {
     [Required(ErrorMessage = "El identificador de la reservación de la habitación es obligatorio.")]
-    public uint          RoomBookingId { get; init; }
+    public int          RoomBookingId { get; init; }
     [Required(ErrorMessage = "El identificador del tipo de habitación es obligatorio.")]
-    public uint          RoomTypeId { get; set; }
+    public int          RoomTypeId { get; set; }
     public DateOnly?     StartDate { get; init; }
     public DateOnly?     EndDate { get; init; }
     public decimal?      Discount { get; init; }
@@ -601,10 +601,10 @@ public record BookingRequestData
 {
     [Required(ErrorMessage = "El identificador del cliente es obligatorio.")]
     [Exists<Person>(ErrorMessage = "No existe un cliente con el identificador especificado.")]
-    public uint CustomerId { get; init; }
+    public int CustomerId { get; init; }
     [Required(ErrorMessage = "El identificador del alojamiento es obligatorio.")]
     [Exists<Lodging>(ErrorMessage = "No existe un alojamiento con el identificador especificado.")]
-    public uint LodgingId { get; init; }
+    public int LodgingId { get; init; }
     public RoomBookingRequestData[] Rooms { get; init; }
 }
 
@@ -614,8 +614,8 @@ public record BookingPatchRequestData
 {
     [Required(ErrorMessage = "El identificador de la reservación es obligatorio.")]
     [Exists<Booking>(ErrorMessage = "No existe una reservación con el identificador especificado.")]
-    public uint BookingId { get; init; }
+    public int BookingId { get; init; }
     public RoomBookingRequestData[]? RoomsBookingsToAdd { get; init; }
-    public uint[]? RoomsBookingsToDelete { get; init; }
+    public int[]? RoomsBookingsToDelete { get; init; }
     public RoomBookingPatchRequestData[]? RoomsBookingsToUpdate { get; init; }
 }

@@ -25,7 +25,7 @@ namespace Restify.API.Controllers
         }
 
         [HttpGet("{pageSize}/{page}")]
-        public ObjectResult Get(uint? roleId,
+        public ObjectResult Get(int? roleId,
             [Range(0, int.MaxValue)] int pageSize = 10,
             [Range(0, int.MaxValue)] int page = 1)
         {
@@ -318,7 +318,7 @@ namespace Restify.API.Controllers
         public string   Password { get; set; }
         [Required]
         [Exists<UserRole>]
-		public uint     RoleId { get; set; }
+		public int     RoleId { get; set; }
 	}
     
     public class UserPatchRequestData
@@ -338,7 +338,7 @@ namespace Restify.API.Controllers
         [MaxLength(50)]
         public string?  LastName { get; set; }
         [Exists<UserRole>]
-		public uint?    RoleId { get; set; }
+		public int?    RoleId { get; set; }
 	}
 
     public class PasswordRequestData

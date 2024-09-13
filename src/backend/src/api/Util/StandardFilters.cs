@@ -6,7 +6,7 @@ namespace Restify.API.Util;
 public static class StandardFilters
 {
     [Pure]
-    public static IQueryable<Booking> BookingByLodging(IQueryable<Booking> bookings, uint? lodgingId)
+    public static IQueryable<Booking> BookingByLodging(IQueryable<Booking> bookings, int? lodgingId)
     {
         if (lodgingId.HasValue)
         {

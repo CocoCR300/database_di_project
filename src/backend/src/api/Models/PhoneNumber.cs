@@ -7,10 +7,10 @@ public class PhoneNumber
 
 public class LodgingPhoneNumber : PhoneNumber
 {
-	public uint LodgingId { get; set; }
+	public int LodgingId { get; set; }
 }
 
 public class PersonPhoneNumber : PhoneNumber
 {
-	public uint PersonId { get; set; }
+	public int PersonId { get; set; }
 }

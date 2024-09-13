@@ -22,7 +22,7 @@ public class RoomTypeController : BaseController
     }
     
     [HttpGet("{lodgingId}")]
-    public ObjectResult GetRoomTypes(uint lodgingId,
+    public ObjectResult GetRoomTypes(int lodgingId,
         [FromQuery] uint? minCapacity,
         [FromQuery] decimal? minPerNightPrice,
         [FromQuery] decimal? maxPerNightPrice)
@@ -73,7 +73,7 @@ public class RoomTypeController : BaseController
     }
     
     [HttpDelete("{lodgingId}")]
-    public ObjectResult DeleteRoomTypes(uint lodgingId, uint[] roomTypeIds)
+    public ObjectResult DeleteRoomTypes(int lodgingId, int[] roomTypeIds)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -88,7 +88,7 @@ public class RoomTypeController : BaseController
         bool noneExists = true;
         for (int i = 0; i < lodging.RoomTypes.Count; ++i)
         {
-            uint roomTypeId = lodging.RoomTypes[i].Id;
+            int roomTypeId = lodging.RoomTypes[i].Id;
             if (roomTypeIds.Contains(roomTypeId))
             {
                 noneExists = false;
@@ -109,7 +109,7 @@ public class RoomTypeController : BaseController
     }
     
     [HttpDelete("{lodgingId}/{roomTypeId}/photo")]
-    public ObjectResult DeleteRoomTypePhotos(uint lodgingId, uint roomTypeId, string[] fileNames)
+    public ObjectResult DeleteRoomTypePhotos(int lodgingId, int roomTypeId, string[] fileNames)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -162,7 +162,7 @@ public class RoomTypeController : BaseController
     }
     
     [HttpPost("{lodgingId}")]
-    public ObjectResult StoreRoomTypes(uint lodgingId, RoomTypeRequestData[] roomTypes)
+    public ObjectResult StoreRoomTypes(int lodgingId, RoomTypeRequestData[] roomTypes)
     {
         if (!ModelState.IsValid)
         {
@@ -210,7 +210,7 @@ public class RoomTypeController : BaseController
     }
         
     [HttpPost("{lodgingId}/{roomTypeId}/photo")]
-    public async Task<ObjectResult> StoreRoomTypePhotos(uint lodgingId, uint roomTypeId, [FromForm] IFormFileCollection files)
+    public async Task<ObjectResult> StoreRoomTypePhotos(int lodgingId, int roomTypeId, [FromForm] IFormFileCollection files)
     {
         if (!ModelState.IsValid)
         {
@@ -290,7 +290,7 @@ public class RoomTypeController : BaseController
     }
     
     [HttpPatch("{lodgingId}/{roomTypeId}")]
-    public ObjectResult Update(uint lodgingId, uint roomTypeId, RoomTypePatchRequestData data)
+    public ObjectResult Update(int lodgingId, int roomTypeId, RoomTypePatchRequestData data)
     {
         if (!ModelState.IsValid)
         {

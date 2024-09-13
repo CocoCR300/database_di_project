@@ -2,6 +2,6 @@
 
 public class LodgingPerk
 {
-    public  uint LodgingId  { get; set; }
-    public  uint PerkId     { get; set; }
+    public  int LodgingId  { get; set; }
+    public  int PerkId     { get; set; }
 }

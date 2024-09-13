@@ -2,7 +2,7 @@
 
 public class User
 {
-	public uint		RoleId { get; set; }
+	public int		RoleId { get; set; }
 	public string   Name { get; set; }
 	public string   Password { get; set; }
 

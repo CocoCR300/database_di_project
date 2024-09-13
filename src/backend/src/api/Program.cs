@@ -17,11 +17,20 @@ builder.Services.AddTransient<AuthenticationUtil>();
 builder.Services.AddDbContext<RestifyDbContext>(
 	options =>
 	{
-		string connectionString = "server=localhost;user=root;password=;database=restify";
-		options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
-			.LogTo(Console.WriteLine, LogLevel.Information)
-			.EnableSensitiveDataLogging()
-			.EnableDetailedErrors();
+		string connectionString;
+		if (builder.Environment.IsDevelopment())
+		{
+			connectionString = builder.Configuration.GetConnectionString("Local");
+			options.UseSqlServer(connectionString)
+				.LogTo(Console.WriteLine, LogLevel.Information)
+				.EnableSensitiveDataLogging()
+				.EnableDetailedErrors();
+		}
+		else
+		{
+			connectionString = builder.Configuration.GetConnectionString("Remote");
+			options.UseSqlServer(connectionString);
+		}
 	});
 
 builder.Services.AddControllers()
