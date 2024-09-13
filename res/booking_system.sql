@@ -18,7 +18,7 @@ IF DB_ID('restify') IS NULL
             SIZE = 200MB,
             FILEGROWTH = 50MB,
             MAXSIZE = 1GB)
-	COLLATE Modern_Spanish_CS_AS;
+	COLLATE Modern_Spanish_CI_AS;
 
 GO
 
