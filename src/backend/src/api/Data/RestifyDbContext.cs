@@ -11,6 +11,7 @@ namespace Restify.API.Data
 		
 		public DbSet<Booking> Booking { get; set; }
 		public DbSet<Lodging> Lodging { get; set; }
+		public DbSet<PaymentInformation> PaymentInformation { get; set; }
 		public DbSet<Perk> Perks { get; set; }
 		public DbSet<Room> Room { get; set; }
 		public DbSet<RoomBooking> RoomBooking { get; set; }
@@ -41,7 +42,7 @@ namespace Restify.API.Data
 		{
 			SqlParameter paymentId = CreateOutputSqlParameter("@paymentId", SqlDbType.Int);
 			SqlParameter paymentAmount = CreateOutputSqlParameter("@paymentAmount", SqlDbType.Decimal);
-			SqlParameter dateAndTime = CreateOutputSqlParameter("@dateAndTime", SqlDbType.DateTime);
+			SqlParameter dateAndTime = CreateOutputSqlParameter("@dateAndTime", SqlDbType.DateTimeOffset);
 			int returnCode = await ExecuteStoredProcedure("paRealizarPago",
 				CreateInputSqlParameter("@bookingId", payment.BookingId),
 				CreateInputSqlParameter("@paymentInformationId", payment.PaymentInformationId),

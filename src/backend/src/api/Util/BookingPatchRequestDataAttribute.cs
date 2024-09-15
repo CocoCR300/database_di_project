@@ -1,10 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Restify.API.Controllers;
-using Restify.API.Models;
 
 namespace Restify.API.Util
 {
-	public class BookingPatchRequestDataValidationAttribute : ValidationAttribute
+	public class BookingPatchRequestDataAttribute : ValidationAttribute
 	{
 		protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
 		{

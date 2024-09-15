@@ -609,7 +609,7 @@ public record BookingRequestData
 }
 
 
-[BookingPatchRequestDataValidation]
+[BookingPatchRequestData]
 public record BookingPatchRequestData
 {
     [Required(ErrorMessage = "El identificador de la reservación es obligatorio.")]

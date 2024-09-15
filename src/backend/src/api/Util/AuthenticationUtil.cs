@@ -54,6 +54,11 @@ public class AuthenticationUtil
         return hash;
     }
 
+    public string? GetUserName(ClaimsPrincipal claimsPrincipal)
+    {
+        return claimsPrincipal.Claims.FirstOrDefault(c => c.Type == UserNameClaimName)?.Value;
+    }
+
     public ClaimsPrincipal? ValidateToken(string token)
     {
         ClaimsPrincipal? claims = null;

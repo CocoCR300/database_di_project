@@ -49,6 +49,14 @@ public class BaseController : Controller
         return Ok(new Response(message));
     }
 
+    public ObjectResult Unauthorized(string message)
+    {
+        return new ObjectResult(new Response(message))
+        {
+            StatusCode = StatusCodes.Status401Unauthorized
+        };
+    }
+
     protected bool TryParseCommaSeparatedList<T>(string parameter, ParseFunction<T> parseFunction, [NotNullWhen(true)] out T[]? values)
     {
         string[] parameterArray = parameter.Split(',');
