@@ -348,9 +348,6 @@ GO
 --
 
 
-USE restify
-GO
-
 EXEC sp_addmessage 50001, 16, N'El usuario con el nombre especificado no existe.', @lang = N'us_english';
 EXEC sp_addmessage 50002, 16, N'Ya existe un usuario con el nombre especificado.', @lang = N'us_english';
 
@@ -677,31 +674,52 @@ GO
 
 -- Realiza el pago, y modifica el estado de la reserva
 CREATE PROCEDURE paRealizarPago
-	@bookingId INT,
-	@personId INT,
-	@paymentInformationId INT
+	@bookingId				INT,
+	@paymentInformationId	INT,
+	@paymentId				INT			OUTPUT,
+	@paymentAmount			DECIMAL		OUTPUT,
+	@dateAndTime			DATETIME	OUTPUT
 AS BEGIN
 	DECLARE @amount INT;
-	DECLARE @existingPaymentInformation INT;
-	SELECT @amount = SUM(cost - discount + fees) FROM
-		RoomBooking WHERE bookingId = @bookingId;
-	SELECT @existingPaymentInformation = paymentInformationId FROM PaymentInformation
-		WHERE personId = @personId AND paymentInformationId = @paymentInformationId;
+	DECLARE @paymentInformationPersonId INT = NULL;
+	DECLARE @existingPaymentId INT = NULL;
+	DECLARE @personId INT;
+
+	SELECT @personId = customerPersonId FROM Booking WHERE bookingId = @bookingId;
+	SELECT @amount = SUM(cost - discount + fees) FROM RoomBooking
+		WHERE bookingId = @bookingId;
+	SELECT @paymentInformationPersonId = personId FROM PaymentInformation
+		WHERE paymentInformationId = @paymentInformationId;
+
+	IF @personId <> @paymentInformationPersonId
+	BEGIN
+		RETURN 1;
+	END
+
+	SELECT @existingPaymentId = paymentId FROM Payment WHERE bookingId = @bookingId;
+
+	IF @existingPaymentId IS NOT NULL
+	BEGIN
+		RETURN 2;
+	END
 
 	BEGIN TRY
-		BEGIN TRANSACTION
-		IF @existingPaymentInformation IS NULL
-			RAISERROR('La información de pago especificada no corresponde al usuario.', 16, 1);
+		BEGIN TRANSACTION;
+		DECLARE @result TABLE (id INT, amount DECIMAL, dateAndTime DATETIME);
 
-		INSERT INTO Payment (bookingId, paymentInformationId, amount, dateAndTime) VALUES 
-			(@bookingId, @paymentInformationId, @amount, GETDATE());
+		INSERT INTO Payment (bookingId, paymentInformationId, amount, dateAndTime)
+			OUTPUT INSERTED.paymentId, INSERTED.amount, INSERTED.dateAndTime INTO @result
+			VALUES (@bookingId, @paymentInformationId, @amount, GETDATE());
 
 		UPDATE RoomBooking SET status = 'Confirmed' WHERE bookingId = @bookingId;
-		COMMIT TRANSACTION
+		SELECT @paymentId = id, @paymentAmount = amount, @dateAndTime = dateAndTime FROM @result;
+
+		COMMIT TRANSACTION;
+		RETURN 0;
 	END TRY
 	BEGIN CATCH
-		ROLLBACK TRANSACTION
-		THROW
+		ROLLBACK TRANSACTION;
+		THROW;
 	END CATCH
 END
 
@@ -717,36 +735,36 @@ IF OBJECT_ID('paInsertarUsuarioYPersona') IS NOT NULL
 GO
 
 CREATE PROCEDURE paInsertarUsuarioYPersona
-    @userName VARCHAR(50),
-    @userRoleId INT,
-    @password VARCHAR(100),
-    @firstName VARCHAR(50),
-    @lastName VARCHAR(100),
-    @emailAddress VARCHAR(200)
+    @userName		VARCHAR(50),
+    @userRoleId		INT,
+    @password		VARCHAR(100),
+    @firstName		VARCHAR(50),
+    @lastName		VARCHAR(100),
+    @emailAddress	VARCHAR(200)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    BEGIN TRY
+    IF EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
+    BEGIN
+        RETURN 1;
+    END
+
+    IF EXISTS (SELECT 1 FROM Person WHERE userName = @userName)
+    BEGIN
+        RETURN 2;
+    END
+
+	BEGIN TRY
         BEGIN TRANSACTION;
-
-        IF EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
-        BEGIN
-            RAISERROR(50002, -1, -1);
-        END
-
-        INSERT INTO [User] (userName, userRoleId, password)
-        VALUES (@userName, @userRoleId, @password);
-
-        IF EXISTS (SELECT 1 FROM Person WHERE userName = @userName)
-        BEGIN;
-            RAISERROR(50101, -1, -1);
-        END
+		INSERT INTO [User] (userName, userRoleId, password)
+			VALUES (@userName, @userRoleId, @password);
 
         INSERT INTO Person (userName, firstName, lastName, emailAddress)
-        VALUES (@userName, @firstName, @lastName, @emailAddress);
+			VALUES (@userName, @firstName, @lastName, @emailAddress);
 
         COMMIT TRANSACTION;
+		RETURN 0;
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
@@ -762,37 +780,35 @@ IF OBJECT_ID('paActualizarUsuarioYPersona') IS NOT NULL
 GO
 
 CREATE PROCEDURE paActualizarUsuarioYPersona
-    @userName VARCHAR(50),
-    @newPassword VARCHAR(100),
-    @newFirstName VARCHAR(50),
-    @newLastName VARCHAR(100),
-    @newEmailAddress VARCHAR(200)
-AS
-BEGIN
+    @userName			VARCHAR(50),
+    @newPassword		VARCHAR(100),
+    @newFirstName		VARCHAR(50),
+    @newLastName		VARCHAR(100),
+    @newEmailAddress	VARCHAR(200)
+AS BEGIN
     SET NOCOUNT ON;
 
-    BEGIN TRY
-        BEGIN TRANSACTION;
+    IF NOT EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
+    BEGIN
+        RETURN 1;
+    END
 
-        IF NOT EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
-        BEGIN
-            RAISERROR(50001, -1, -1);
-        END
-		
-        UPDATE [User] SET password = @newPassword WHERE userName = @userName;
+    IF NOT EXISTS (SELECT 1 FROM Person WHERE userName = @userName)
+    BEGIN
+        return 2;
+    END
 
-        IF NOT EXISTS (SELECT 1 FROM Person WHERE userName = @userName)
-        BEGIN
-            RAISERROR(50100, -1, -1);
-        END
+	BEGIN TRY
+		BEGIN TRANSACTION;
+		UPDATE [User] SET password = @newPassword WHERE userName = @userName;
 
-        UPDATE Person
-            SET firstName = @newFirstName,
-                lastName = @newLastName,
-                emailAddress = @newEmailAddress
+        UPDATE Person SET	firstName		= @newFirstName,
+							lastName		= @newLastName,
+							emailAddress	= @newEmailAddress
             WHERE userName = @userName;
 
         COMMIT TRANSACTION;
+		RETURN 0;
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
@@ -813,23 +829,33 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    BEGIN TRY
-        BEGIN TRANSACTION;
+    IF NOT EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
+    BEGIN
+		RETURN 1;
+    END
 
-        IF NOT EXISTS (SELECT 1 FROM [User] WHERE userName = @userName)
-        BEGIN
-            RAISERROR(50001, -1, -1);
-        END
+	DECLARE @personId INT;
+	EXECUTE paIdPersonaUsuario @userName, @personId OUTPUT;
 
-        IF NOT EXISTS (SELECT 1 FROM Person WHERE userName = @userName)
-        BEGIN
-            RAISERROR(50100, -1, -1);
-        END
+    IF @personId IS NULL
+    BEGIN
+		RETURN 2;
+    END
 
-        DELETE FROM Person WHERE userName = @userName;
-        DELETE FROM [User] WHERE userName = @userName;
+	BEGIN TRY
+		BEGIN TRANSACTION;
+
+		DELETE rb FROM RoomBooking AS rb JOIN Booking AS b ON b.bookingId = rb.bookingId
+			WHERE b.customerPersonId = @personId;
+
+		DELETE FROM Booking WHERE customerPersonId = @personId;
+
+		DELETE FROM PersonPhoneNumber	WHERE personId = @personId;
+        DELETE FROM Person				WHERE userName = @userName;
+        DELETE FROM [User]				WHERE userName = @userName;
 
         COMMIT TRANSACTION;
+		RETURN 0;
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;

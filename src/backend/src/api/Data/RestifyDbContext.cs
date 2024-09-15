@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Data;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Restify.API.Models;
 
 namespace Restify.API.Data
@@ -17,6 +19,86 @@ namespace Restify.API.Data
 		public RestifyDbContext() { }
 		public RestifyDbContext(DbContextOptions<RestifyDbContext> options) : base(options) { }
 
+		public Task<int> InsertUserAndPerson(User user)
+		{
+			return ExecuteStoredProcedure("paInsertarUsuarioYPersona", 
+				CreateInputSqlParameter("@userName", user.Name),
+				CreateInputSqlParameter("@userRoleId", user.RoleId),
+				CreateInputSqlParameter("@password", user.Password),
+				CreateInputSqlParameter("@firstName", user.Person.FirstName),
+				CreateInputSqlParameter("@lastName", user.Person.LastName),
+				CreateInputSqlParameter("@emailAddress", user.Person.EmailAddress)
+			);
+		}
+		
+		public Task<int> DeleteUserAndPerson(string userName)
+		{
+			return ExecuteStoredProcedure("paEliminarUsuarioYPersona",
+				CreateInputSqlParameter("@userName", userName));
+		}
+
+		public async Task<int> RegisterPayment(Payment payment)
+		{
+			SqlParameter paymentId = CreateOutputSqlParameter("@paymentId", SqlDbType.Int);
+			SqlParameter paymentAmount = CreateOutputSqlParameter("@paymentAmount", SqlDbType.Decimal);
+			SqlParameter dateAndTime = CreateOutputSqlParameter("@dateAndTime", SqlDbType.DateTime);
+			int returnCode = await ExecuteStoredProcedure("paRealizarPago",
+				CreateInputSqlParameter("@bookingId", payment.BookingId),
+				CreateInputSqlParameter("@paymentInformationId", payment.PaymentInformationId),
+				paymentId,
+				paymentAmount,
+				dateAndTime
+			);
+
+			if (returnCode == 0)
+			{
+				payment.Id = (int) paymentId.Value;
+				payment.Amount = (decimal) paymentAmount.Value;
+				payment.DateAndTime = (DateTime) dateAndTime.Value;
+			}
+			
+			return returnCode;
+		}
+
+		private SqlParameter CreateInputSqlParameter(string parameterName, object value)
+		{
+			return new SqlParameter
+			{
+				Direction = ParameterDirection.Input,
+				ParameterName = parameterName,
+				Value = value
+			};
+		}
+		
+		private SqlParameter CreateOutputSqlParameter(string parameterName, SqlDbType parameterType)
+		{
+			return new SqlParameter(parameterName, parameterType)
+			{
+				Direction = ParameterDirection.Output
+			};
+		}
+
+		private async Task<int> ExecuteStoredProcedure(string procedureName,
+			params SqlParameter[] parameters)
+		{
+			SqlParameter returnValue = new SqlParameter("@returnValue", SqlDbType.Int)
+			{
+				Direction = ParameterDirection.ReturnValue
+			};
+			
+			using (var command = Database.GetDbConnection().CreateCommand())
+			{
+				command.CommandText = procedureName;
+				command.CommandType = CommandType.StoredProcedure;
+				command.Parameters.Add(returnValue);
+				command.Parameters.AddRange(parameters);
+
+				Database.OpenConnection();
+				await command.ExecuteNonQueryAsync();
+				return (int) returnValue.Value;
+			}
+		}
+		
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			if (!optionsBuilder.IsConfigured)

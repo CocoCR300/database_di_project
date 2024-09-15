@@ -72,7 +72,7 @@ public class PaymentController : BaseController
     }
     
     [HttpPost("{bookingId}")]
-    public ObjectResult Store(int bookingId, [FromForm] PaymentRequestData data)
+    public async Task<ObjectResult> Store(int bookingId, [FromForm] PaymentRequestData data)
     {
         Booking? booking = _context.Find<Booking>(bookingId);
 
@@ -85,53 +85,30 @@ public class PaymentController : BaseController
         {
             return NotFound("Ya hay un pago asociado a esta reservación.");
         }
-
-        //string fileExtension = Path.GetExtension(data.InvoiceImageFile.FileName).ToLowerInvariant();
-        //
-        //string fileName;
-        //if (!fileExtension.Equals(string.Empty))
-        //{
-        //    fileName = $"{Guid.NewGuid().ToString()}{fileExtension}";
-        //}
-        //else
-        //{
-        //    fileName = Guid.NewGuid().ToString();
-        //}
-
-        _context.Entry(booking).Collection(b => b.RoomBookings).Load();
-        foreach (RoomBooking roomBooking in booking.RoomBookings)
+        
+        Payment payment = new Payment
         {
-            roomBooking.Status = BookingStatus.Confirmed;
+            BookingId = booking.Id,
+            PaymentInformationId = data.PaymentInformationId
+        };
+        int returnCode = await _context.RegisterPayment(payment);
+
+        if (returnCode == 1)
+        {
+            return BadRequest("La información de pago especificada no corresponde al usuario.");
+        }
+
+        if (returnCode == 2)
+        {
+            return BadRequest("La reservación especificada ya fue pagada.");
         }
         
-        booking.Payment = new Payment
-        {
-            DateAndTime = data.DateAndTime,
-            Amount = data.Amount,
-            BookingId = booking.Id,
-            PaymentInformationId= data.PaymentInformationId
-        };
-        _context.SaveChanges();
-
-        //string? path = _configuration["InvoiceImageFilesPath"];
-        //Directory.CreateDirectory(path);
-        //
-        //string filePath = Path.Combine(path, fileName);
-
-        //using (FileStream fileStream = System.IO.File.Create(filePath))
-        //{
-        //    data.InvoiceImageFile.CopyTo(fileStream);
-        //}
-        
-        return Created(booking.Payment);
+        return Created(payment);
     }
 }
 
 public record PaymentRequestData
 {
     [Required]
-	public DateTimeOffset	DateAndTime { get; set; }
-    [Required]
-	public decimal			Amount { get; set; }
     public int              PaymentInformationId { get; set; }
 }

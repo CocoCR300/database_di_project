@@ -107,7 +107,7 @@ namespace Restify.API.Controllers
         }
         
         [HttpPost("signup")]
-        public ObjectResult SignUp(UserRequestData data)
+        public async Task<ObjectResult> SignUp(UserRequestData data)
         {
             if (!ModelState.IsValid)
             {
@@ -126,30 +126,27 @@ namespace Restify.API.Controllers
                     EmailAddress = data.EmailAddress
                 }
             };
+
+            int returnCode = await _context.InsertUserAndPerson(user);
+            if (returnCode != 0)
+            {
+                return BadRequest("Ya existe un usuario con el nombre especificado.");
+            }
             
-            _context.User.Add(user);
-            _context.SaveChanges();
-            
+            _context.Attach(user).Reference(u => u.Role).Load();
             var token = _authenticationUtil.GenerateJwtToken(user);
             return Ok(token);
         }
 
         [HttpDelete("{userName}")]
-        public ObjectResult Delete(string userName)
+        public async Task<ObjectResult> Delete(string userName)
         {
-            User? user = _context.Find<User>(userName);
-
-            if (user != null)
+            int returnCode = await _context.DeleteUserAndPerson(userName);
+            if (returnCode == 0)
             {
-                _context.Entry(user.Person).Collection(p => p.PhoneNumbers).Load();
-
-                _context.Remove(user.Person);
-                _context.Remove(user);
-                _context.SaveChanges();
-                
                 return Ok("El usuario ha sido eliminado con éxito.");
             }
-
+            
             return NotFound("No existe un usuario con el nombre especificado.");
         }
 
