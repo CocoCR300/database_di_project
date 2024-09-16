@@ -81,7 +81,7 @@ public class BookingController : BaseController
     }
     
     [HttpPost]
-    public ObjectResult Post(BookingRequestData data)
+    public async Task<ObjectResult> Post(BookingRequestData data)
     {
         if (!ModelState.IsValid)
         {
@@ -101,14 +101,16 @@ public class BookingController : BaseController
             
         Booking booking = new Booking(roomBookingsToAdd!)
         {
-            CustomerId = data.CustomerId,
             LodgingId = data.LodgingId
         };
-            
-        _context.Booking.Add(booking);
-        _context.SaveChanges();
 
-        return Created(booking);
+        _ = await _context.InsertBooking(data.UserName, booking);
+
+        IEnumerable<RoomBookingResponse> roomBookingResponses = _context.RoomBooking
+            .Where(rb => rb.BookingId == booking.Id)
+            .Select(rb => new RoomBookingResponse(rb.Id, rb.RoomNumber));
+            
+        return Created(new BookingResponse(booking.Id, roomBookingResponses));
     }
 
     [HttpDelete("lodging/{lodgingId}")]
@@ -245,7 +247,7 @@ public class BookingController : BaseController
             }
         }
 
-        Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>? newRoomBookingsByRoomNumber = null;
+        Dictionary<int, List<(DateOnly StartDate, DateOnly EndDate)>>? newRoomBookingsByRoomNumber = null;
         if (bookingData.RoomsBookingsToAdd != null)
         {
             ObjectResult? result = GetRoomBookingsToAdd(booking.Lodging, bookingData.RoomsBookingsToAdd,
@@ -276,7 +278,7 @@ public class BookingController : BaseController
         {
             if (newRoomBookingsByRoomNumber == null)
             {
-                newRoomBookingsByRoomNumber = new Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>();
+                newRoomBookingsByRoomNumber = new Dictionary<int, List<(DateOnly StartDate, DateOnly EndDate)>>();
             }
             
             Dictionary<int, List<Room>>? availableRoomsByType = null;
@@ -414,7 +416,7 @@ public class BookingController : BaseController
     private ObjectResult? GetRoomBookingsToAdd(Lodging lodging,
         RoomBookingRequestData[] roomBookingsData,
         out List<RoomBooking>? roomBookingsToAdd,
-        out Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>? roomBookingDatesByRoomNumber)
+        out Dictionary<int, List<(DateOnly StartDate, DateOnly EndDate)>>? roomBookingDatesByRoomNumber)
     {
         bool lodgingDoesNotOfferRooms = !Lodging.OffersRooms(lodging);
         if (lodgingDoesNotOfferRooms)
@@ -431,7 +433,7 @@ public class BookingController : BaseController
             .ToArray();
         
         var availableRoomsByType = GetAvailableRoomsByType(lodging.Id, requestedRoomsDataByType);
-        var availableRoomsNewBookings = new Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>>();
+        var availableRoomsNewBookings = new Dictionary<int, List<(DateOnly StartDate, DateOnly EndDate)>>();
 
         List<RoomBooking> roomBookings = new List<RoomBooking>();
         // You can't have enough nested for loops, can you?
@@ -538,8 +540,8 @@ public class BookingController : BaseController
         return availableRoomsByType;
     }
 
-    private bool IsRoomStillAvailable(uint roomNumber, IRoomBookingRequestData roomBookingData,
-        Dictionary<uint, List<(DateOnly StartDate, DateOnly EndDate)>> availableRoomsNewBookings,
+    private bool IsRoomStillAvailable(int roomNumber, IRoomBookingRequestData roomBookingData,
+        Dictionary<int, List<(DateOnly StartDate, DateOnly EndDate)>> availableRoomsNewBookings,
         out List<(DateOnly StartDate, DateOnly EndDate)> newBookings)
     {
         bool isAvailable = true;
@@ -599,9 +601,9 @@ public record RoomBookingPatchRequestData : IRoomBookingRequestData
 
 public record BookingRequestData
 {
-    [Required(ErrorMessage = "El identificador del cliente es obligatorio.")]
-    [Exists<Person>(ErrorMessage = "No existe un cliente con el identificador especificado.")]
-    public int CustomerId { get; init; }
+    [Required(ErrorMessage = "El identificador del usuario es obligatorio.")]
+    [Exists<User>(ErrorMessage = "No existe un usuario con el identificador especificado.")]
+    public string UserName { get; init; }
     [Required(ErrorMessage = "El identificador del alojamiento es obligatorio.")]
     [Exists<Lodging>(ErrorMessage = "No existe un alojamiento con el identificador especificado.")]
     public int LodgingId { get; init; }
@@ -619,3 +621,13 @@ public record BookingPatchRequestData
     public int[]? RoomsBookingsToDelete { get; init; }
     public RoomBookingPatchRequestData[]? RoomsBookingsToUpdate { get; init; }
 }
+
+public record BookingResponse(
+    int BookingId,
+    IEnumerable<RoomBookingResponse> roomBookings
+);
+
+public record RoomBookingResponse(
+    int roomBookingId,
+    int roomNumber
+);

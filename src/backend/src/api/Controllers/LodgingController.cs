@@ -341,7 +341,7 @@ public class LodgingController : BaseController
 
             decimal perNightPrice = data.PerNightPrice.Value,
                     fees = data.Fees.Value;
-            uint capacity = data.Capacity.Value;
+            int capacity = data.Capacity.Value;
             
             roomTypes = new List<RoomType>
             {
@@ -739,7 +739,7 @@ public class LodgingRequestData
     [Required(ErrorMessage = "El identificador del arrendador es obligatorio.")]
     [Exists<Person>(ErrorMessage = "No existe un arrendador con el identificador especificado.")]
     public int     OwnerId { get; set; }
-    public uint?    Capacity { get; set; }
+    public int?    Capacity { get; set; }
     public decimal? Fees { get; set; }
     public decimal? PerNightPrice { get; set; }
 }
@@ -758,7 +758,7 @@ public class LodgingPatchRequestData
     public string?   EmailAddress { get; set; }
     [Exists<Person>(ErrorMessage = "No existe un arrendador con el identificador especificado.")]
     public int?    OwnerId { get; set; }
-    public uint?    Capacity { get; set; }
+    public int?    Capacity { get; set; }
     public decimal? Fees { get; set; }
     public decimal? PerNightPrice { get; set; }
 }

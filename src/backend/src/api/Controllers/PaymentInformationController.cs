@@ -41,15 +41,12 @@ public class PaymentInformationController: BaseController
         {
             return NotFound("No existe un usuario con el nombre especificado.");
         }
-
-        _context.Entry(user).Reference(u => u.Person).Load();
         
-        return Ok(_context.PaymentInformation.Where(
-            p => p.PersonId == user.Person.Id));
+        return Ok(_context.GetUserPaymentInformation(user.Name));
     }
 
     [HttpPost]
-    public ObjectResult Post(PaymentInformationRequestData requestData)
+    public async Task<ObjectResult> Post(PaymentInformationRequestData requestData)
     {
         string? userName = _authenticationUtil.GetUserName(User);
         if (userName == null)
@@ -75,9 +72,13 @@ public class PaymentInformationController: BaseController
             CardSecurityCode    = requestData.CardSecurityCode
         };
 
-        _context.Add(paymentInformation);
-        _context.SaveChanges();
-        
+        int returnCode = await _context.InsertPaymentInformation(user.Name, paymentInformation);
+
+        if (returnCode != 0)
+        {
+            return BadRequest("El usuario ya posee información de pago con el número de tarjeta especificado.");
+        }
+
         return Created(new PaymentInformationResponse(paymentInformation.Id));
     }
 

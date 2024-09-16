@@ -452,21 +452,22 @@ GO
 -- Crea una reservación, que puede incluir múltiples habitaciones,
 -- especificadas en una tabla pasada por el último parámetro 
 CREATE PROCEDURE paCrearReservacion
-    @userName VARCHAR(50),
-    @lodgingId INT,
-    @roomBookings RoomBookingList READONLY
+    @userName		VARCHAR(50),
+    @lodgingId		INT,
+    @roomBookings	RoomBookingList READONLY,
+	@bookingId		INT OUTPUT
 AS BEGIN
     DECLARE @customerId INT;
+	DECLARE @result TABLE (id INT);
     EXECUTE paIdPersonaUsuario @userName, @personId = @customerId OUTPUT;
-
+	
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        INSERT INTO Booking (customerPersonId, lodgingId) VALUES (@customerId, @lodgingId);
-        DECLARE @bookingId INT;
-        -- https://stackoverflow.com/a/7917724
-        -- https://learn.microsoft.com/en-us/sql/t-sql/functions/scope-identity-transact-sql?view=sql-server-ver16
-        SET @bookingId = SCOPE_IDENTITY(); -- Should return the last ID generated in this scope (in this case, the stored procedure)
+        INSERT INTO Booking (customerPersonId, lodgingId)
+			OUTPUT INSERTED.bookingId INTO @result
+			VALUES (@customerId, @lodgingId);
+        SELECT @bookingId = id FROM @result;
 
         INSERT INTO RoomBooking
             (bookingId, lodgingId, roomNumber, cost, fees, discount, status, startDate, endDate)
@@ -474,6 +475,7 @@ AS BEGIN
                 FROM @roomBookings;
         
         COMMIT TRANSACTION;
+		RETURN 0;
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
@@ -662,6 +664,63 @@ AS BEGIN
         JOIN @photos AS n ON n.fileName = lp.fileName
         WHERE LodgingPhoto.lodgingId = @lodgingId;
 END
+GO
+
+--
+-- Procedimientos almacenados de PaymentInformation
+--
+
+IF OBJECT_ID('paObtenerInformacionPagoUsuario') IS NOT NULL
+	DROP PROCEDURE paObtenerInformacionPagoUsuario;
+GO
+
+CREATE PROCEDURE paObtenerInformacionPagoUsuario
+	@userName VARCHAR(50)
+AS BEGIN
+	DECLARE @personId INT;
+	EXEC paIdPersonaUsuario @userName, @personId OUTPUT;
+	
+	SELECT * FROM PaymentInformation
+		WHERE personId = @personId;
+END
+
+GO
+
+IF OBJECT_ID('paInsertarInformacionPago') IS NOT NULL
+	DROP PROCEDURE paInsertarInformacionPago;
+GO
+
+CREATE PROCEDURE paInsertarInformacionPago
+	@userName				VARCHAR(50),
+	@cardNumber				CHAR(16),
+	@cardExpiryDate			DATE,
+	@cardHolderName			VARCHAR(100),
+	@cardSecurityCode		CHAR(4),
+	@paymentInformationId	INT OUTPUT
+AS BEGIN
+	DECLARE @existingPaymentInformationId INT;
+	DECLARE @personId INT;
+
+	EXEC paIdPersonaUsuario @userName, @personId OUTPUT;
+
+	SELECT @existingPaymentInformationId = paymentInformationId
+		FROM PaymentInformation
+		WHERE cardNumber = @cardNumber AND personId = @personId;
+
+	IF @existingPaymentInformationId IS NOT NULL
+	BEGIN
+		RETURN 1;
+	END
+
+	DECLARE @result TABLE (id INT);
+	INSERT INTO PaymentInformation (personId, cardNumber, cardExpiryDate, cardHolderName, cardSecurityCode)
+		OUTPUT INSERTED.paymentInformationId INTO @result
+		VALUES (@personId, @cardNumber, @cardExpiryDate, @cardHolderName, @cardSecurityCode);
+
+	SELECT @paymentInformationId = id FROM @result;
+	RETURN 0;
+END
+
 GO
 
 ---
@@ -862,25 +921,4 @@ BEGIN
         THROW;
     END CATCH
 END;
-GO
-
-
--- Obtener todas las personas
-IF OBJECT_ID('paObtenerTodasLasPersonas') IS NOT NULL
-    DROP PROCEDURE paObtenerTodasLasPersonas;
-GO
-
-CREATE PROCEDURE paObtenerTodasLasPersonas
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    SELECT 
-        personId,
-        userName,
-        firstName,
-        lastName,
-        emailAddress
-    FROM Person;
-END
 GO

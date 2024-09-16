@@ -3,7 +3,7 @@
 public class Room
 {
 	public int	LodgingId { get; set; }
-	public uint	Number { get; set; }
+	public int	Number { get; set; }
 	public int	TypeId { get; set; }
 
 	public Lodging	Lodging { get; }

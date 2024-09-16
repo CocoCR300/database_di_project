@@ -23,7 +23,7 @@ public class RoomTypeController : BaseController
     
     [HttpGet("{lodgingId}")]
     public ObjectResult GetRoomTypes(int lodgingId,
-        [FromQuery] uint? minCapacity,
+        [FromQuery] int? minCapacity,
         [FromQuery] decimal? minPerNightPrice,
         [FromQuery] decimal? maxPerNightPrice)
     {
@@ -334,7 +334,7 @@ public class RoomTypeRequestData
     [Required(ErrorMessage = "El nombre del tipo de habitación es obligatorio.")]
     public string Name { get; set; }
     [Required(ErrorMessage = "La capacidad del tipo de habitación es obligatorio.")]
-    public uint Capacity { get; set; }
+    public int Capacity { get; set; }
 }
 
 public class RoomTypePatchRequestData 
@@ -343,5 +343,5 @@ public class RoomTypePatchRequestData
     public decimal? PerNightPrice { get; set; }
     [NotEmptyOrWhiteSpace]
     public string? Name { get; set; }
-    public uint? Capacity { get; set; }
+    public int? Capacity { get; set; }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient.Server;
 using Microsoft.EntityFrameworkCore;
 using Restify.API.Models;
 
@@ -20,6 +21,52 @@ namespace Restify.API.Data
 		public RestifyDbContext() { }
 		public RestifyDbContext(DbContextOptions<RestifyDbContext> options) : base(options) { }
 
+		public async Task<int> InsertBooking(string userName, Booking booking)
+		{
+			SqlMetaData[] tableSchema = new SqlMetaData[]
+			{
+				new SqlMetaData("roomNumber", SqlDbType.Int),
+				new SqlMetaData("cost", SqlDbType.Decimal),
+				new SqlMetaData("fees", SqlDbType.Decimal),
+				new SqlMetaData("discount", SqlDbType.Decimal),
+				new SqlMetaData("startDate", SqlDbType.VarChar, 10),
+				new SqlMetaData("endDate", SqlDbType.VarChar, 10)
+			};
+
+			//And a table as a list of those records
+			List<SqlDataRecord> table = new List<SqlDataRecord>();
+
+			foreach (RoomBooking roomBooking in booking.RoomBookings)
+			{
+				var tableRow = new SqlDataRecord(tableSchema);
+				tableRow.SetInt32(0, roomBooking.RoomNumber);
+				tableRow.SetDecimal(1, roomBooking.Cost);
+				tableRow.SetDecimal(2, roomBooking.Fees);
+				tableRow.SetDecimal(3, roomBooking.Discount);
+				tableRow.SetString(4, roomBooking.StartDate.ToString("O"));
+				tableRow.SetString(5, roomBooking.EndDate.ToString("O"));
+				table.Add(tableRow);
+			}
+
+			SqlParameter bookingId = CreateOutputSqlParameter("@bookingId", SqlDbType.Int);
+			int returnCode = await ExecuteStoredProcedure("paCrearReservacion",
+				CreateInputSqlParameter("@userName", userName),
+				CreateInputSqlParameter("@lodgingId", booking.LodgingId),
+				new SqlParameter("@roomBookings", SqlDbType.Structured)
+				{
+					Direction = ParameterDirection.Input,
+					TypeName = "RoomBookingList",
+					Value = table
+				},
+				bookingId);
+
+			if (returnCode == 0)
+			{
+				booking.Id = (int) bookingId.Value;
+			}
+
+			return returnCode;
+		}
 		public Task<int> InsertUserAndPerson(User user)
 		{
 			return ExecuteStoredProcedure("paInsertarUsuarioYPersona", 
@@ -56,6 +103,32 @@ namespace Restify.API.Data
 				payment.Id = (int) paymentId.Value;
 				payment.Amount = (decimal) paymentAmount.Value;
 				payment.DateAndTime = (DateTime) dateAndTime.Value;
+			}
+			
+			return returnCode;
+		}
+
+		public IQueryable<PaymentInformation> GetUserPaymentInformation(string userName)
+		{
+			return PaymentInformation.FromSql($"EXEC paObtenerInformacionPagoUsuario {userName}");
+		}
+
+		public async Task<int> InsertPaymentInformation(string userName, PaymentInformation paymentInformation)
+		{
+			SqlParameter paymentInformationId = CreateOutputSqlParameter("@paymentInformationId",
+				SqlDbType.Int);
+			
+			int returnCode = await ExecuteStoredProcedure("paInsertarInformacionPago",
+				CreateInputSqlParameter("@userName", userName),
+				CreateInputSqlParameter("@cardNumber", paymentInformation.CardNumber),
+				CreateInputSqlParameter("@cardExpiryDate", paymentInformation.CardExpiryDate),
+				CreateInputSqlParameter("@cardHolderName", paymentInformation.CardHolderName),
+				CreateInputSqlParameter("@cardSecurityCode", paymentInformation.CardSecurityCode),
+				paymentInformationId);
+
+			if (returnCode == 0)
+			{
+				paymentInformation.Id = (int) paymentInformationId.Value;
 			}
 			
 			return returnCode;

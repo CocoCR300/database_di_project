@@ -11,7 +11,7 @@ public class RoomBooking
 	public int				BookingId { get; set; }
 	public int				LodgingId { get; set; }
 	public int				Id { get; set; }
-	public uint				RoomNumber { get; set; }
+	public int				RoomNumber { get; set; }
 
 	public Booking	Booking { get; }
 	public Room		Room { get; }

@@ -23,7 +23,7 @@ public class RoomController : BaseController
     public ObjectResult GetAvailableRoomsOfType(int lodgingId,
         int roomTypeId, DateOnly bookingStartDate, DateOnly bookingEndDate)
     {
-        IQueryable<uint> bookedRoomsNumbers = _context.RoomBooking
+        IQueryable<int> bookedRoomsNumbers = _context.RoomBooking
             .Where(r => r.LodgingId == lodgingId && r.Room.TypeId == roomTypeId
                                                  && (r.Status == BookingStatus.Created ||
                                                      r.Status == BookingStatus.Confirmed)
@@ -54,7 +54,7 @@ public class RoomController : BaseController
     }
     
     [HttpDelete("{lodgingId}")]
-    public ObjectResult DeleteRooms(int lodgingId, uint[] roomNumbers)
+    public ObjectResult DeleteRooms(int lodgingId, int[] roomNumbers)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
@@ -69,7 +69,7 @@ public class RoomController : BaseController
         bool noneExists = true;
         for (int i = 0; i < lodging.Rooms.Count; ++i)
         {
-            uint roomNumber = lodging.Rooms[i].Number;
+            int roomNumber = lodging.Rooms[i].Number;
             if (roomNumbers.Contains(roomNumber))
             {
                 noneExists = false;
@@ -104,7 +104,7 @@ public class RoomController : BaseController
         }
         
         _context.Entry(lodging).Collection(l => l.Rooms).Load();
-        uint[] roomsNumbersOrdered = lodging.Rooms
+        int[] roomsNumbersOrdered = lodging.Rooms
             .Select(r => r.Number)
             .OrderBy(r => r)
             .ToArray();
@@ -113,7 +113,7 @@ public class RoomController : BaseController
             .OrderBy(r => r)
             .ToArray();
 
-        List<uint> existingRoomNumbers = new List<uint>();
+        List<int> existingRoomNumbers = new List<int>();
         foreach (RoomRequestData room in rooms)
         {
             int typeIdIndex = Array.BinarySearch(roomTypeIdsOrdered, room.TypeId);
@@ -180,8 +180,8 @@ public class RoomController : BaseController
             .OrderBy(r => r.Number)
             .ToArray();
 
-        List<uint> existingRoomNumbers = new List<uint>();
-        for(uint roomNumber = roomSequenceData.StartNumber; roomNumber <= roomSequenceData.EndNumber; ++roomNumber)
+        List<int> existingRoomNumbers = new List<int>();
+        for(int roomNumber = roomSequenceData.StartNumber; roomNumber <= roomSequenceData.EndNumber; ++roomNumber)
         {
             int index = Array.BinarySearch(roomsNumbersOrdered, roomNumber);
 
@@ -214,7 +214,7 @@ public class RoomController : BaseController
 public class RoomRequestData 
 {
     [Required(ErrorMessage = "El número de la habitación es obligatorio.")]
-    public uint Number { get; set; }
+    public int Number { get; set; }
     [Required(ErrorMessage = "El identificador del tipo de habitación es obligatorio.")]
     [Exists<RoomType>(ErrorMessage = "No existe un tipo de habitación con el identificador especificado.")]
     public int TypeId { get; set; }
@@ -223,9 +223,9 @@ public class RoomRequestData
 public record RoomSequenceRequestData
 {
     [Required(ErrorMessage = "El número inicial es obligatorio.")]
-    public uint StartNumber { get; init; }
+    public int StartNumber { get; init; }
     [Required(ErrorMessage = "El número final es obligatorio.")]
-    public uint EndNumber { get; init; }
+    public int EndNumber { get; init; }
     [Required(ErrorMessage = "El identificador del tipo de habitación es obligatorio.")]
     [Exists<RoomType>(ErrorMessage = "No existe un tipo de habitación con el identificador especificado.")]
     public int TypeId { get; init; }
