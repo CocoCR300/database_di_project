@@ -67,6 +67,58 @@ namespace Restify.API.Data
 
 			return returnCode;
 		}
+
+		public async Task<int> InsertLodging(Lodging lodging)
+		{
+			SqlParameter lodgingId = CreateOutputSqlParameter("@lodgingId", SqlDbType.Int);
+			int returnCode = await ExecuteStoredProcedure("paCrearAlojamiento",
+				CreateInputSqlParameter("@ownerId", lodging.OwnerId),
+				CreateInputSqlParameter("@lodgingType", lodging.Type),
+				CreateInputSqlParameter("@name", lodging.Name),
+				CreateInputSqlParameter("@address", lodging.Address),
+				CreateInputSqlParameter("@description", lodging.Address),
+				CreateInputSqlParameter("@emailAddress", lodging.Address),
+				lodgingId);
+
+			if (returnCode == 0)
+			{
+				lodging.Id = (int) lodgingId.Value;
+			}
+
+			return returnCode;
+		}
+
+		public async Task<int> InsertLodgingWithoutRooms(Lodging lodging,
+			decimal perNightPrice, decimal fees, int capacity)
+		{
+			SqlParameter lodgingId = CreateOutputSqlParameter("@lodgingId", SqlDbType.Int);
+			int returnCode = await ExecuteStoredProcedure("paCrearAlojamientoSinHabitaciones",
+				CreateInputSqlParameter("@ownerId", lodging.OwnerId),
+				CreateInputSqlParameter("@lodgingType", lodging.Type.ToString()),
+				CreateInputSqlParameter("@name", lodging.Name),
+				CreateInputSqlParameter("@address", lodging.Address),
+				CreateInputSqlParameter("@description", lodging.Description),
+				CreateInputSqlParameter("@emailAddress", lodging.EmailAddress),
+				CreateInputSqlParameter("@perNightPrice", perNightPrice),
+				CreateInputSqlParameter("@fees", fees),
+				CreateInputSqlParameter("@capacity", capacity),
+				lodgingId
+			);
+
+			if (returnCode == 0)
+			{
+				lodging.Id = (int) lodgingId.Value;
+			}
+			
+			return returnCode;
+		}
+
+		public Task<int> DeleteLodging(int lodgingId)
+		{
+			return ExecuteStoredProcedure("paEliminarAlojamiento",
+				CreateInputSqlParameter("@lodgingId", lodgingId));
+		}
+		
 		public Task<int> InsertUserAndPerson(User user)
 		{
 			return ExecuteStoredProcedure("paInsertarUsuarioYPersona", 

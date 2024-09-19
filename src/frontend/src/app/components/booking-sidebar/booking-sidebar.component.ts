@@ -101,7 +101,7 @@ export class BookingSidebarComponent implements OnInit
             const user = await firstValueFrom(this._userService.getUser(this._appState.userName!));
 
             const bookingRequestData: BookingRequestData = {
-                customerId: user.personId!,
+                userName: user.userName!,
                 lodgingId: this.selectedLodging!.id,
                 rooms: [roomRequest]
             };
@@ -134,7 +134,7 @@ export class BookingSidebarComponent implements OnInit
             const user = await firstValueFrom(this._userService.getUser(this._appState.userName!));
     
             const bookingRequestData: BookingRequestData = {
-                customerId: user.personId!,
+                userName: user.userName!,
                 lodgingId: this.selectedLodging!.id,
                 rooms: [{
                     roomTypeId: this.isCompleteLodging() ? 0 : this.bookingFormGroup.get('roomTypeId')?.value,

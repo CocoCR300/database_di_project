@@ -359,10 +359,6 @@ IF OBJECT_ID('paCrearReservacion') IS NOT NULL
     DROP PROCEDURE paCrearReservacion; 
 GO
 
-IF OBJECT_ID('paCrearAlojamiento') IS NOT NULL
-    DROP PROCEDURE paCrearAlojamiento;
-GO
-
 IF OBJECT_ID('paActualizarOrdenFotos') IS NOT NULL
     DROP PROCEDURE paActualizarOrdenFotos;
 GO
@@ -395,7 +391,7 @@ CREATE TYPE IdList AS TABLE
 
 CREATE TYPE PhoneNumberList AS TABLE
 (
-    phoneNumber INT NOT NULL
+    phoneNumber CHAR(30) NOT NULL
 );
 
 CREATE TYPE PhotoList AS TABLE
@@ -552,50 +548,87 @@ GO
 -- Procedimientos almacenados de Lodging y Room
 --
 
--- Crea un alojamiento, incluyendo varios tipos de habitación, números de habitación,
--- números de teléfono, fotos y beneficios que deben pasarse en una tabla en los parámetros
--- correspondientes
+IF OBJECT_ID('paCrearAlojamiento') IS NOT NULL
+    DROP PROCEDURE paCrearAlojamiento;
+GO
+
 CREATE PROCEDURE paCrearAlojamiento
-    @ownerUsername  VARCHAR(50),
+    @ownerId		INT,
     @lodgingType    CHAR(50),
     @name           VARCHAR(100),
     @address        VARCHAR(300),
     @description    VARCHAR(1000),
     @emailAddress   VARCHAR(200),
-    @roomTypes      RoomTypeList    READONLY,
-    @rooms          RoomList        READONLY,
-    @phoneNumbers   PhoneNumberList READONLY,
-    @photos         PhotoList       READONLY,
-    @perks          IdList          READONLY
+	@lodgingId		INT OUTPUT
 AS BEGIN
-    DECLARE @ownerId INT;
-    EXECUTE paIdPersonaUsuario @ownerUsername, @personId = @ownerId OUTPUT;
+	IF @lodgingType = 'Apartment' OR @lodgingType = 'VacationRental'
+	BEGIN
+		RETURN 1;
+	END
 
     BEGIN TRY
         BEGIN TRANSACTION;
 
+		DECLARE @result TABLE (id INT);
         INSERT INTO Lodging (ownerPersonId, lodgingType, name, address, description, emailAddress)
+		    OUTPUT INSERTED.lodgingId INTO @result
             VALUES (@ownerId, @lodgingType, @name, @address, @description, @emailAddress);
-
-        DECLARE @lodgingId INT;
-        SET @lodgingId = SCOPE_IDENTITY();
-        
-        INSERT INTO RoomType (lodgingId, name, perNightPrice, fees, capacity)
-            SELECT @lodgingId, name, perNightPrice, fees, capacity FROM @roomTypes;
-
-        INSERT INTO Room (roomNumber, lodgingId, roomTypeId)
-            SELECT roomNumber, @lodgingId, roomTypeId FROM @rooms;
-
-        INSERT INTO LodgingPhoneNumber (lodgingId, phoneNumber)
-            SELECT @lodgingId, phoneNumber FROM @phoneNumbers;
-
-        INSERT INTO LodgingPhoto (lodgingId, fileName, ordering)
-            SELECT @lodgingId, fileName, ordering FROM @photos;
-
-        INSERT INTO LodgingPerk (lodgingId, perkId)
-            SELECT @lodgingId, id FROM @perks;
+		SELECT @lodgingId = id FROM @result;
 
         COMMIT TRANSACTION;
+		RETURN 0;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
+
+IF OBJECT_ID('paCrearAlojamientoSinHabitaciones') IS NOT NULL
+	DROP PROCEDURE paCrearAlojamientoSinHabitaciones;
+
+GO
+
+-- Crea un alojamiento, estableciendo un unico tipo de habitacion y habitacion
+-- en el mismo, que seran usados para las reservaciones hechas en el alojamiento
+CREATE PROCEDURE paCrearAlojamientoSinHabitaciones
+	@ownerId		INT,
+    @lodgingType    CHAR(50),
+    @name           VARCHAR(100),
+    @address        VARCHAR(300),
+    @description    VARCHAR(1000),
+    @emailAddress   VARCHAR(200),
+	@perNightPrice	DECIMAL,
+	@fees			DECIMAL,
+	@capacity		INT,
+	@lodgingId		INT OUTPUT
+AS BEGIN
+	IF @lodgingType <> 'Apartment' AND @lodgingType <> 'VacationRental'
+	BEGIN
+		RETURN 1;
+	END
+
+    BEGIN TRY
+		BEGIN TRANSACTION;
+
+		DECLARE @result IdList;
+        INSERT INTO Lodging (ownerPersonId, lodgingType, name, address, description, emailAddress)
+		    OUTPUT INSERTED.lodgingId INTO @result
+            VALUES (@ownerId, @lodgingType, @name, @address, @description, @emailAddress);
+		SELECT @lodgingId = id FROM @result;
+        
+		INSERT INTO RoomType (lodgingId, name, perNightPrice, fees, capacity)
+			OUTPUT INSERTED.roomTypeId INTO @result
+            VALUES (@lodgingId, 'Alojamiento', @perNightPrice, @fees, @capacity);
+
+		DECLARE @roomTypeId INT;
+		SELECT @roomTypeId = id FROM @result;
+		INSERT INTO Room (roomNumber, roomTypeId, lodgingId)
+			VALUES (0, @roomTypeId, @lodgingId);
+
+        COMMIT TRANSACTION;
+		RETURN 0;
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
@@ -635,21 +668,33 @@ GO
 CREATE PROCEDURE paEliminarAlojamiento
     @lodgingId INT
 AS BEGIN
-    DELETE FROM RoomBooking WHERE lodgingId = @lodgingId;
+	BEGIN TRY
+		BEGIN TRANSACTION;
 
-    DELETE FROM Booking     WHERE lodgingId = @lodgingId;
+		DELETE FROM RoomBooking WHERE lodgingId = @lodgingId;
 
-    DELETE FROM Room        WHERE lodgingId = @lodgingId;
+		DELETE FROM Booking     WHERE lodgingId = @lodgingId;
 
-    DELETE FROM RoomType    WHERE lodgingId = @lodgingId;
+		DELETE FROM Room        WHERE lodgingId = @lodgingId;
 
-    DELETE FROM LodgingPerk WHERE lodgingId = @lodgingId;
+		DELETE FROM RoomType    WHERE lodgingId = @lodgingId;
 
-    DELETE FROM LodgingPhoneNumber WHERE lodgingId = @lodgingId;
+		DELETE FROM LodgingPerk WHERE lodgingId = @lodgingId;
 
-    DELETE FROM LodgingPhoto WHERE lodgingId = @lodgingId;
+		DELETE FROM LodgingPhoneNumber WHERE lodgingId = @lodgingId;
 
-    DELETE FROM Lodging      WHERE lodgingId = @lodgingId;
+		DELETE FROM LodgingPhoto WHERE lodgingId = @lodgingId;
+
+		DELETE FROM Lodging      WHERE lodgingId = @lodgingId;
+
+		COMMIT TRANSACTION;
+		RETURN 0;
+
+	END TRY
+	BEGIN CATCH
+		ROLLBACK TRANSACTION;
+		THROW
+	END CATCH
 END
 GO
 

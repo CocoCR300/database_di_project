@@ -103,8 +103,13 @@ public class BookingController : BaseController
         {
             LodgingId = data.LodgingId
         };
+    
+        int returnCode = await _context.InsertBooking(data.UserName, booking);
 
-        _ = await _context.InsertBooking(data.UserName, booking);
+        if (returnCode != 0)
+        {
+            return BadRequest("Ha ocurrido un error al realizar la reservación.");
+        }
 
         IEnumerable<RoomBookingResponse> roomBookingResponses = _context.RoomBooking
             .Where(rb => rb.BookingId == booking.Id)

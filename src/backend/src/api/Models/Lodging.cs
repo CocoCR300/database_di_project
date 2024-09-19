@@ -10,7 +10,7 @@ public class Lodging
 	public string	Name { get; set; }
 	public string	EmailAddress { get; set; }
 
-	public List<LodgingPhoneNumber>	PhoneNumbers { get; }
+	public List<LodgingPhoneNumber>		PhoneNumbers { get; }
 	public List<LodgingPhoto>			Photos { get; }
 	public List<Perk>					Perks { get; }
 	public List<Room>					Rooms { get; }
@@ -18,12 +18,6 @@ public class Lodging
 	public Person						Owner { get; }
 	
 	public Lodging() {}
-
-	public Lodging(List<Room>? rooms, List<RoomType>? roomTypes)
-	{
-		Rooms = rooms;
-		RoomTypes = roomTypes;
-	}
 
 	public static bool OffersRooms(Lodging lodging)
 	{

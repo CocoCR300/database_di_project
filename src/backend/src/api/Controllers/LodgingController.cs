@@ -322,47 +322,14 @@ public class LodgingController : BaseController
     }
 
     [HttpPost]
-    public ObjectResult Post(LodgingRequestData data)
+    public async Task<ObjectResult> Post(LodgingRequestData data)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        List<Room> rooms = null;
-        List<RoomType> roomTypes = null;
-        if (!Lodging.TypeOffersRooms(data.Type))
-        {
-            if (!data.Capacity.HasValue || !data.PerNightPrice.HasValue || !data.Fees.HasValue)
-            {
-                return NotAcceptable(
-                    "El costo por noche, el impuesto y la capacidad son obligatorios para el tipo de alojamiento especificado.");
-            }
-
-            decimal perNightPrice = data.PerNightPrice.Value,
-                    fees = data.Fees.Value;
-            int capacity = data.Capacity.Value;
-            
-            roomTypes = new List<RoomType>
-            {
-                new RoomType
-                {
-                    Capacity = capacity,
-                    Fees = fees,
-                    Name = "Alojamiento",
-                    PerNightPrice = perNightPrice,
-                }
-            };
-            rooms = new List<Room>
-            {
-                new Room(roomTypes[0])
-                {
-                    Number = 0
-                }
-            };
-        }
-
-        Lodging lodging = new Lodging(rooms, roomTypes)
+        Lodging lodging = new Lodging
         {
             Name = data.Name,
             Address = data.Address,
@@ -371,29 +338,48 @@ public class LodgingController : BaseController
             EmailAddress = data.EmailAddress,
             OwnerId = data.OwnerId
         };
+        int returnCode;
+        if (!Lodging.TypeOffersRooms(data.Type))
+        {
+            if (!data.Capacity.HasValue || !data.PerNightPrice.HasValue || !data.Fees.HasValue)
+            {
+                return NotAcceptable(
+                    "El costo por noche, el impuesto y la capacidad son obligatorios para el tipo de alojamiento especificado.");
+            }
+            
+            decimal perNightPrice = data.PerNightPrice.Value,
+                    fees = data.Fees.Value;
+            int capacity = data.Capacity.Value;
 
-        _context.Lodging.Add(lodging);
-        _context.SaveChanges();
+            returnCode = await _context.InsertLodgingWithoutRooms(lodging, perNightPrice, fees, capacity);
+        }
+        else
+        {
+            returnCode = await _context.InsertLodging(lodging);
+        }
+
+        if (returnCode != 0)
+        {
+            return BadRequest("Ha ocurrido un error al registrar el alojamiento.");
+        }
 
         return Created(lodging);
 
     }
 
     [HttpDelete("{lodgingId}")]
-    public ObjectResult Delete(int lodgingId)
+    public async Task<ObjectResult> Delete(int lodgingId)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
 
         if (lodging != null)
         {
-            _context.Entry(lodging).Collection(l => l.Rooms).Load();
-            _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
-            
-            lodging.Rooms.Clear();
-            lodging.RoomTypes.Clear();
-            
-            _context.Remove(lodging);
-            _context.SaveChanges();
+            int returnCode = await _context.DeleteLodging(lodging.Id);
+
+            if (returnCode != 0)
+            {
+                return BadRequest("Ha ocurrido un error al eliminar el alojamiento");
+            }
                 
             return Ok("El alojamiento ha sido eliminado con éxito.");
         }

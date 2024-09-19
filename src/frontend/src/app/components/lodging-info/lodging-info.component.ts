@@ -366,6 +366,7 @@ export class LodgingInfoComponent implements OnInit
       const saveLodgingResponse = await firstValueFrom(this._lodgingService.saveLodging(newLodging));
       if (saveLodgingResponse.ok) {
         if (this.create) {
+          newLodging.id = saveLodgingResponse.body.id;
           await Swal.fire({
             icon: "success",
             title: "El alojamiento ha sido creado con éxito."

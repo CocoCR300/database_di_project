@@ -1,7 +1,7 @@
 import { RoomRequest } from "./room-request";
 
 export interface BookingRequestData {
-    customerId: number;
+    userName: string;
     lodgingId: number;
     rooms: RoomRequest[];
 }
