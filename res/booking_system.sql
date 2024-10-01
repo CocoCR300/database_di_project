@@ -17,7 +17,8 @@ IF DB_ID('restify') IS NULL
             FILENAME = N'C:\Microsoft SQL Server Database Files\Logs\restify_LOG.ldf',
             SIZE = 200MB,
             FILEGROWTH = 50MB,
-            MAXSIZE = 1GB)
+            MAXSIZE = 1GB
+		)
 	COLLATE Modern_Spanish_CI_AS;
 
 GO
@@ -29,11 +30,14 @@ GO
 -- Tabla "Rol de usuario"
 IF OBJECT_ID('UserRole') IS NULL
 	CREATE TABLE UserRole (
-	  userRoleId	INT 					NOT NULL IDENTITY(1,1),
-	  type			VARCHAR(50)				NOT NULL,
+		userRoleId	INT 		NOT NULL IDENTITY(1,1),
+		type		VARCHAR(50)	NOT NULL,
+
+		PRIMARY KEY (userRoleId),
+
+		CONSTRAINT CK_UserRole_notEmpty CHECK (LEN(type) > 0),
   
-	  CONSTRAINT UNIQUE_UserRole_type UNIQUE (type), -- New convension to name CONSTRAINTS UNIQUE_table_row
-	  PRIMARY KEY (userRoleId)
+		CONSTRAINT UNIQUE_UserRole_type UNIQUE (type)
 	);
 
 GO
@@ -42,17 +46,22 @@ GO
 -- Tabla "Usuario"
 IF OBJECT_ID('User') IS NULL
 	CREATE TABLE [User] (
-	  userName		VARCHAR(50) 			NOT NULL,
-	  userRoleId	INT 					NOT NULL,
-	  password 		VARCHAR(100) 			NOT NULL,
+		userName	VARCHAR(50)		NOT NULL,
+		userRoleId	INT 			NOT NULL,
+		password	VARCHAR(100)	NOT NULL,
   
-	  PRIMARY KEY (userName),
+		PRIMARY KEY (userName),
+
+		CONSTRAINT CK_User_notEmpty CHECK
+		(
+			LEN(userName) > 0 AND LEN(password) > 0
+		),
   
-	  CONSTRAINT UNIQUE_User_userName UNIQUE (userName),
+		CONSTRAINT UNIQUE_User_userName UNIQUE (userName),
   
-	  CONSTRAINT FK_USER_USER_ROLE FOREIGN KEY (userRoleId) REFERENCES UserRole (userRoleId)
-		ON DELETE NO ACTION
-		ON UPDATE CASCADE
+		CONSTRAINT FK_USER_USER_ROLE FOREIGN KEY (userRoleId) REFERENCES UserRole (userRoleId)
+			ON DELETE NO ACTION
+			ON UPDATE CASCADE
 	);
 
 GO
@@ -61,19 +70,27 @@ GO
 -- Tabla "Persona"
 IF OBJECT_ID('Person') IS NULL
 	CREATE TABLE Person (
-	  personId		INT 					NOT NULL    IDENTITY,
-	  userName 		VARCHAR(50) 			NOT NULL,
-	  firstName 	VARCHAR(50) 			NOT NULL,
-	  lastName 		VARCHAR(100) 			NOT NULL,
-	  emailAddress 	VARCHAR(200) 			NOT NULL,
+		personId		INT 			NOT NULL    IDENTITY,
+		userName 		VARCHAR(50)		NOT NULL,
+		firstName 		VARCHAR(50) 	NOT NULL,
+		lastName 		VARCHAR(100) 	NOT NULL,
+		emailAddress 	VARCHAR(200) 	NOT NULL,
   
-	  PRIMARY KEY (personId),
+		PRIMARY KEY (personId),
+
+		CONSTRAINT CK_Person_notEmpty CHECK
+		(
+			LEN(userName)		> 0 AND
+			LEN(firstName)		> 0 AND
+			LEN(lastName)		> 0 AND
+			LEN(emailAddress)	> 0
+		),
   
-	  CONSTRAINT UNIQUE_Person_userName UNIQUE (userName),
+		CONSTRAINT UNIQUE_Person_userName UNIQUE (userName),
   
-	  CONSTRAINT FK_PERSON_USER FOREIGN KEY (userName) REFERENCES [User] (userName)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
+		CONSTRAINT FK_PERSON_USER FOREIGN KEY (userName) REFERENCES [User] (userName)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
 	);
 
 GO
@@ -81,14 +98,16 @@ GO
 -- Tabla "Número de telefono de persona"
 IF OBJECT_ID('PersonPhoneNumber') IS NULL
 	CREATE TABLE PersonPhoneNumber (
-	  personId 		INT 					NOT NULL,
-	  phoneNumber 	CHAR(30) 				NOT NULL,
+		personId 	INT 		NOT NULL,
+		phoneNumber CHAR(30)	NOT NULL,
   
-	  INDEX FK_INDEX_PERSON_PHONE_NUMBER (personId),
+		INDEX FK_INDEX_PERSON_PHONE_NUMBER (personId),
+
+		CONSTRAINT CK_PersonPhoneNumber_notEmpty CHECK (LEN(phoneNumber) > 0),
   
-	  CONSTRAINT FK_PERSON_PHONE_NUMBER FOREIGN KEY (personId) REFERENCES Person (personId)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
+		CONSTRAINT FK_PERSON_PHONE_NUMBER	FOREIGN KEY (personId) REFERENCES Person (personId)
+			ON DELETE CASCADE
+			ON UPDATE CASCADE
 	);
 
 GO
@@ -96,21 +115,30 @@ GO
 -- Tabla "Alojamiento"
 IF OBJECT_ID('Lodging') IS NULL
 	CREATE TABLE Lodging (
-	  lodgingId 	INT 					NOT NULL      IDENTITY,
-	  ownerPersonId INT 					NOT NULL,
-	  lodgingType 	CHAR(50) 				NOT NULL,
-	  name 			VARCHAR(100) 			NOT NULL,
-	  address 		VARCHAR(300) 			NOT NULL,
-	  description 	VARCHAR(1000) 			NOT NULL,
-	  emailAddress	VARCHAR(200)			NOT NULL,	
+		lodgingId 		INT 			NOT NULL IDENTITY,
+		ownerPersonId	INT 			NOT NULL,
+		lodgingType 	CHAR(50) 		NOT NULL,
+		name 			VARCHAR(100)	NOT NULL,
+		address 		VARCHAR(300)	NOT NULL,
+		description 	VARCHAR(1000)	NOT NULL,
+		emailAddress	VARCHAR(200)	NOT NULL,
   
-	  PRIMARY KEY (lodgingId),
+		PRIMARY KEY (lodgingId),
   
-	  INDEX FK_INDEX_LODGING_PERSON (ownerPersonId),
+		INDEX FK_INDEX_LODGING_PERSON (ownerPersonId),
+
+		CONSTRAINT CK_Lodging_notEmpty CHECK
+		(
+			LEN(lodgingType)	> 0 AND
+			LEN(name)			> 0 AND
+			LEN(address)		> 0 AND
+			LEN(description)	> 0 AND
+			LEN(emailAddress)	> 0
+		),
   
-	  CONSTRAINT FK_LODGING_PERSON FOREIGN KEY (ownerPersonId) REFERENCES Person (personId)
-		ON DELETE NO ACTION
-		ON UPDATE CASCADE
+		CONSTRAINT FK_LODGING_PERSON FOREIGN KEY (ownerPersonId) REFERENCES Person (personId)
+			ON DELETE NO ACTION
+			ON UPDATE CASCADE
 	);
 
 GO
@@ -118,10 +146,12 @@ GO
 -- Tabla "Número de telefono de alojamiento"
 IF OBJECT_ID('LodgingPhoneNumber') IS NULL
 	CREATE TABLE LodgingPhoneNumber (
-	  lodgingId 		INT 				NOT NULL,
-	  phoneNumber 		CHAR(30) 			NOT NULL,
+	  lodgingId		INT 		NOT NULL,
+	  phoneNumber	CHAR(30)	NOT NULL,
   
 	  INDEX FK_INDEX_LODGING_PHONE_NUMBER (lodgingId),
+
+	  CONSTRAINT CK_LodgingPhoneNumber_notEmpty CHECK (LEN(phoneNumber) > 0),
   
 	  CONSTRAINT FK_LODGING_PHONE_NUMBER FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
 		ON DELETE CASCADE
@@ -133,11 +163,14 @@ GO
 -- Tabla "Foto de alojamiento"
 IF OBJECT_ID('LodgingPhoto') IS NULL
 	CREATE TABLE LodgingPhoto (
-		lodgingId	INT						NOT NULL,
-		fileName	VARCHAR(75)				NOT NULL,
-		ordering	TINYINT					NOT NULL,
+		lodgingId	INT			NOT NULL,
+		fileName	VARCHAR(75)	NOT NULL,
+		ordering	TINYINT		NOT NULL,
 	
 		INDEX FK_INDEX_LODGING_LODGING_PHOTO (lodgingId),
+
+		CONSTRAINT CK_LodgingPhoto_notEmpty CHECK (LEN(fileName) > 0),
+
 		CONSTRAINT UNIQUE_LodgingPhoto_fileName UNIQUE (fileName),
 	
 		CONSTRAINT FK_LODGING_LODGING_PHOTO	FOREIGN KEY (lodgingId)	REFERENCES Lodging (lodgingId)
@@ -150,10 +183,12 @@ GO
 -- Tabla "Beneficio adicional"
 IF OBJECT_ID('Perk') IS NULL
 	CREATE TABLE Perk (
-		perkId	INT							NOT NULL	IDENTITY,
-		name	VARCHAR(50)					NOT NULL,
+		perkId	INT			NOT NULL	IDENTITY,
+		name	VARCHAR(50)	NOT NULL,
 	
 		PRIMARY KEY (perkId),
+
+		CONSTRAINT CK_Perk_notEmpty CHECK (LEN(name) > 0),
 	
 		CONSTRAINT UNIQUE_Perk_name UNIQUE (name),
 	);
@@ -163,8 +198,8 @@ GO
 -- Tabla "Alojamiento beneficio adicional"
 IF OBJECT_ID('LodgingPerk') IS NULL
 	CREATE TABLE LodgingPerk (
-		lodgingId	INT						NOT NULL,
-		perkId		INT						NOT NULL,
+		lodgingId	INT	NOT NULL,
+		perkId		INT	NOT NULL,
 	
 		INDEX FK_INDEX_LODGING_LODGING_PERK	(lodgingId),
 		INDEX FK_INDEX_PERK_LODGING_PERK	(perkId),
@@ -182,9 +217,9 @@ GO
 -- Tabla "Reservación"
 IF OBJECT_ID('Booking') IS NULL
 	CREATE TABLE Booking (
-	  bookingId 		INT 				NOT NULL	IDENTITY,
-	  customerPersonId 	INT 				NOT NULL,
-	  lodgingId 		INT 				NOT NULL,
+	  bookingId 		INT NOT NULL IDENTITY,
+	  customerPersonId 	INT NOT NULL,
+	  lodgingId 		INT NOT NULL,
   
 	  PRIMARY KEY (bookingId),
   
@@ -215,6 +250,14 @@ IF OBJECT_ID('PaymentInformation') IS NULL
 
 		INDEX FK_INDEX_PAYMENT_INFORMATION_PERSON (personId),
 
+		CONSTRAINT CK_PaymentInformation_validCardDetails CHECK
+		(
+			LEN(cardNumber)			> 0 AND cardNumber			NOT LIKE '%[^0-9]%' AND
+			LEN(cardSecurityCode)	> 0 AND cardSecurityCode	NOT LIKE '%[^0-9]%' AND
+			LEN(cardHolderName)		> 0 AND
+			ABS(DATEDIFF(day, GETDATE(), cardExpiryDate)) >= 0
+		),
+
 		CONSTRAINT FK_PAYMENT_INFORMATION_PERSON FOREIGN KEY (personId)
 			REFERENCES Person (personId)
 			ON DELETE CASCADE
@@ -226,16 +269,18 @@ GO
 -- Tabla "Pago"
 IF OBJECT_ID('Payment') IS NULL
 	CREATE TABLE Payment (
-		paymentId 				INT 			NOT NULL	IDENTITY(1, 1),
+		paymentId 				INT 		NOT NULL IDENTITY(1, 1),
 		bookingId 				INT,
 		paymentInformationId	INT,
-		amount					DECIMAL			NOT NULL,
-		dateAndTime 			DATETIME 		NOT NULL,
+		amount					DECIMAL		NOT NULL,
+		dateAndTime 			DATETIME	NOT NULL,
   
 		PRIMARY KEY (paymentId),
 
 		INDEX FK_INDEX_PAYMENT_BOOKING (bookingId),
 		INDEX FK_INDEX_PAYMENT_PAYMENT_INFORMATION (paymentInformationId),
+
+		CONSTRAINT CK_Payment_amountMoreEqualZero CHECK (amount >= 0),
   
 		CONSTRAINT FK_PAYMENT_BOOKING FOREIGN KEY (bookingId) REFERENCES Booking (bookingId)
 			ON DELETE SET NULL
@@ -262,6 +307,14 @@ IF OBJECT_ID('RoomType') IS NULL
 		PRIMARY KEY (roomTypeId),
 	
 		INDEX FK_INDEX_LODGING_ROOM_TYPE (lodgingId),
+
+		CONSTRAINT CK_RoomType_notEmpty CHECK (LEN(name) > 0),
+		CONSTRAINT CK_RoomType_amountsGreaterEqualZero CHECK
+		(
+			perNightPrice	>	0	AND
+			fees			>=	0	AND
+			capacity		>	0
+		),
   
 		CONSTRAINT FK_LODGING_ROOM_TYPE FOREIGN KEY (lodgingId) REFERENCES Lodging (lodgingId)
 			ON DELETE CASCADE
@@ -273,11 +326,14 @@ GO
 -- Tabla "Foto de tipo de habitación"
 IF OBJECT_ID('RoomTypePhoto') IS NULL
 	CREATE TABLE RoomTypePhoto (
-		roomTypeId	INT						NOT NULL,
-		fileName	CHAR(75)				NOT NULL,
-		ordering	TINYINT					NOT NULL,
+		roomTypeId	INT		 NOT NULL,
+		fileName	CHAR(75) NOT NULL,
+		ordering	TINYINT	 NOT NULL,
 	
 		INDEX FK_INDEX_ROOM_TYPE_ROOM_TYPE_PHOTO (roomTypeId),
+
+		CONSTRAINT CK_RoomTypePhoto_notEmpty CHECK (LEN(fileName) > 0),
+
 		CONSTRAINT UNIQUE_RoomTypePhoto_fileName UNIQUE (fileName),
   
 		CONSTRAINT FK_ROOM_TYPE_ROOM_TYPE_PHOTO FOREIGN KEY (roomTypeId) REFERENCES RoomType (roomTypeId)
@@ -290,9 +346,9 @@ GO
 -- Tabla "Habitación"
 IF OBJECT_ID('Room') IS NULL
 	CREATE TABLE Room (
-	  roomNumber   	INT 					NOT NULL,
-	  lodgingId   	INT 					NOT NULL,
-	  roomTypeId	INT						NOT NULL,
+	  roomNumber	INT NOT NULL,
+	  lodgingId		INT NOT NULL,
+	  roomTypeId	INT	NOT NULL,
   
 	  PRIMARY KEY (lodgingId, roomNumber),
   
@@ -312,32 +368,45 @@ GO
 -- Tabla "Reservación de habitación"
 IF OBJECT_ID('RoomBooking') IS NULL
 	CREATE TABLE RoomBooking (
-	  roomBookingId INT 					NOT NULL IDENTITY,
-	  bookingId 	INT 					NOT NULL,
-	  lodgingId 	INT 					NOT NULL,
-	  roomNumber 	INT 					NOT NULL,
-	  cost			DECIMAL 				NOT NULL,
-	  fees			DECIMAL 				NOT NULL,
-	  discount		DECIMAL					NOT NULL,
-	  status		CHAR(50)				NOT NULL,
-	  startDate 	DATE					NOT NULL,
-	  endDate 		DATE 					NOT NULL,
+		roomBookingId	INT 		NOT NULL IDENTITY,
+		bookingId 		INT 		NOT NULL,
+		lodgingId 		INT 		NOT NULL,
+		roomNumber 		INT 		NOT NULL,
+		cost			DECIMAL 	NOT NULL,
+		fees			DECIMAL 	NOT NULL,
+		discount		DECIMAL		NOT NULL,
+		status			CHAR(50)	NOT NULL,
+		startDate 		DATE		NOT NULL,
+		endDate 		DATE 		NOT NULL,
   
-	  PRIMARY KEY (roomBookingId),
+		PRIMARY KEY (roomBookingId),
   
-	  INDEX FK_INDEX_ROOM_ROOM_BOOKING (roomNumber),
-	  INDEX FK_INDEX_BOOKING_ROOM_BOOKING (bookingId),
-	  INDEX FK_INDEX_LODGING_ROOM_BOOKING (lodgingId),
+		INDEX FK_INDEX_ROOM_ROOM_BOOKING (roomNumber),
+		INDEX FK_INDEX_BOOKING_ROOM_BOOKING (bookingId),
+		INDEX FK_INDEX_LODGING_ROOM_BOOKING (lodgingId),
+
+		CONSTRAINT CK_RoomBooking_amountsGreaterEqualZero CHECK
+		(
+			cost		>= 0 AND
+			fees		>= 0 AND
+			discount	>= 0
+		),
+		CONSTRAINT CK_RoomBooking_notEmpty	CHECK (LEN(status) > 0),
+		CONSTRAINT CK_RoomBookng_validDates CHECK
+		(
+			DATEDIFF(day, GETDATE(), startDate) <= 0 AND
+			DATEDIFF(day, startDate, endDate)	<= 0
+		),
   
-	  CONSTRAINT FK_ROOM_ROOM_BOOKING		FOREIGN KEY (lodgingId, roomNumber)	REFERENCES Room (lodgingId, roomNumber)
-		ON DELETE NO ACTION
-		ON UPDATE CASCADE,
-	  CONSTRAINT FK_BOOKING_ROOM_BOOKING 	FOREIGN KEY (bookingId)				REFERENCES Booking (bookingId)
-		ON DELETE NO ACTION  -- Cycles or multiple cascade paths if CASCADE
-		ON UPDATE NO ACTION, -- Cycles or multiple cascade paths if CASCADE
-	  CONSTRAINT FK_LODGING_ROOM_BOOKING 	FOREIGN KEY (lodgingId)				REFERENCES Lodging (lodgingId)
-		ON DELETE NO ACTION
-		ON UPDATE NO ACTION -- Cycles or multiple cascade paths if CASCADE
+		CONSTRAINT FK_ROOM_ROOM_BOOKING		FOREIGN KEY (lodgingId, roomNumber)	REFERENCES Room (lodgingId, roomNumber)
+			ON DELETE NO ACTION
+			ON UPDATE CASCADE,
+		CONSTRAINT FK_BOOKING_ROOM_BOOKING 	FOREIGN KEY (bookingId)				REFERENCES Booking (bookingId)
+			ON DELETE NO ACTION  -- Cycles or multiple cascade paths if CASCADE
+			ON UPDATE NO ACTION, -- Cycles or multiple cascade paths if CASCADE
+		CONSTRAINT FK_LODGING_ROOM_BOOKING 	FOREIGN KEY (lodgingId)				REFERENCES Lodging (lodgingId)
+			ON DELETE NO ACTION
+			ON UPDATE NO ACTION -- Cycles or multiple cascade paths if CASCADE
 	);
 
 GO
