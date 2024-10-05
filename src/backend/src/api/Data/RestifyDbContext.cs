@@ -8,6 +8,8 @@ namespace Restify.API.Data
 {
 	public class RestifyDbContext : DbContext
 	{
+		public const string SERVER_WIDE_SERVICE_NAME = "ServerWideRestifyDbContext";
+		public const string DATABASE_NAME = "restify";
 		public const string DATE_FORMAT = "yyyy-MM-dd";
 		
 		public DbSet<Booking> Booking { get; set; }
@@ -17,7 +19,7 @@ namespace Restify.API.Data
 		public DbSet<Room> Room { get; set; }
 		public DbSet<RoomBooking> RoomBooking { get; set; }
 		public DbSet<User> User { get; set; }
-		
+
 		public RestifyDbContext() { }
 		public RestifyDbContext(DbContextOptions<RestifyDbContext> options) : base(options) { }
 

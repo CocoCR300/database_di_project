@@ -5,6 +5,8 @@ import { AppState } from './models/app_state';
 import { NotificationComponent } from './components/notification/notification.component';
 import { UserService } from './services/user.service';
 import { UserRoleEnum } from './models/user';
+import { firstValueFrom } from 'rxjs';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-root',
@@ -51,5 +53,55 @@ export class AppComponent {
 
   public async editUser(userName: string) {
     this.router.navigate(["user/settings", userName]);
+  }
+
+  public async createDatabase() {
+    const response = await firstValueFrom(this.userService.post("database/create", false, null));
+
+    if (response.ok) {
+      Swal.fire({
+          icon: "success",
+          title: "La base de datos ha sido con exito."
+      });
+    }
+    else if (response.status === 409) {
+      Swal.fire({
+          icon: "info",
+          title: "La base de datos ya existe."
+      });
+    }
+    else {
+      Swal.fire({
+          icon: "error",
+          title: "Ha ocurrido un error."
+      });
+    }
+  }
+
+  public async dropDatabase() {
+    const response = await firstValueFrom(this.userService.post("database/drop", false, null));
+
+    if (response.ok) {
+      Swal.fire({
+        icon: "success",
+        title: "La base de datos ha sido eliminada con exito."
+      });
+    }
+    else if (response.status === 404) {
+      Swal.fire({
+        icon: "info",
+        title: "La base de datos no existe."
+      });
+    }
+    else {
+      Swal.fire({
+        icon: "error",
+        title: "Ha ocurrido un error."
+      });
+    }
+  }
+
+  public deleteDatabase() {
+
   }
 }

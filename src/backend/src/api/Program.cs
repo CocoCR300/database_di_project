@@ -14,22 +14,25 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddTransient<AuthenticationUtil>();
+builder.Services.AddKeyedScoped(RestifyDbContext.SERVER_WIDE_SERVICE_NAME,
+	(_, _) =>
+	{
+		DbContextOptionsBuilder<RestifyDbContext> dbContextBuilder = new DbContextOptionsBuilder<RestifyDbContext>();
+		dbContextBuilder.UseSqlServer(builder.Configuration.GetConnectionString("ServerWide"));
+		
+		return new RestifyDbContext(dbContextBuilder.Options);
+	});
+
 builder.Services.AddDbContext<RestifyDbContext>(
 	options =>
 	{
-		string connectionString;
+		string connectionString = builder.Configuration.GetConnectionString("Default");
+		options.UseSqlServer(connectionString);
 		if (builder.Environment.IsDevelopment())
 		{
-			connectionString = builder.Configuration.GetConnectionString("Local");
-			options.UseSqlServer(connectionString)
-				.LogTo(Console.WriteLine, LogLevel.Information)
+				options.LogTo(Console.WriteLine)
 				.EnableSensitiveDataLogging()
 				.EnableDetailedErrors();
-		}
-		else
-		{
-			connectionString = builder.Configuration.GetConnectionString("Remote");
-			options.UseSqlServer(connectionString);
 		}
 	});
 

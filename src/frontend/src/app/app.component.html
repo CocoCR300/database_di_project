@@ -19,6 +19,8 @@
     <div class="dropdown right">
       <a class="dropbtn"><i class="fas fa-cog"></i> Configuración</a>
       <div class="dropdown-content">
+        <a (click)="createDatabase()"><i class="fas fa-database-alt"></i> Crear base de datos</a>
+        <a (click)="dropDatabase()"><i class="fas fa-database-alt"></i> Eliminar base de datos</a>
         @if (isUserLogged) {
           <a (click)="editUser(userName!)"> <i class="fas fa-user-alt"></i> Configuracion </a>
           <a (click)="logOut()"><i class="fas fa-sign-out-alt"></i> Cerrar Sesion </a>

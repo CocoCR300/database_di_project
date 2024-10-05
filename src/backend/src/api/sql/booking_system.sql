@@ -6,7 +6,7 @@ IF DB_ID('restify') IS NULL
 	    ON
         (
             NAME = N'restify',
-            FILENAME = N'C:\Microsoft SQL Server Database Files\Data\restify.mdf',
+            FILENAME = N'A:\Microsoft SQL Server Database Files\Data\restify.mdf',
             SIZE = 1GB,
             FILEGROWTH = 256MB,
             MAXSIZE = UNLIMITED
@@ -14,7 +14,7 @@ IF DB_ID('restify') IS NULL
         LOG ON
         (
             NAME = N'restify_log',
-            FILENAME = N'C:\Microsoft SQL Server Database Files\Logs\restify_LOG.ldf',
+            FILENAME = N'A:\Microsoft SQL Server Database Files\Logs\restify_LOG.ldf',
             SIZE = 200MB,
             FILEGROWTH = 50MB,
             MAXSIZE = 1GB
@@ -415,14 +415,6 @@ GO
 --
 -- Procedimientos almacenados
 --
-
-
-EXEC sp_addmessage 50001, 16, N'El usuario con el nombre especificado no existe.', @lang = N'us_english';
-EXEC sp_addmessage 50002, 16, N'Ya existe un usuario con el nombre especificado.', @lang = N'us_english';
-
-EXEC sp_addmessage 50100, 16, N'No existe una persona asociada al nombre de usuario especificado.', @lang = N'us_english';
-EXEC sp_addmessage 50101, 16, N'Ya existe una persona asociada al nombre de usuario especificado.', @lang = N'us_english';
-GO
 
 IF OBJECT_ID('paCrearReservacion') IS NOT NULL
     DROP PROCEDURE paCrearReservacion; 
