@@ -1230,7 +1230,12 @@ IF OBJECT_ID('LogonAuditInfo') IS NULL
 
 		PRIMARY KEY (auditInfoId),
 
-		CONSTRAINT CK_LogonAuditInfo_validAuditData CHECK (LEN(databaseUserName) > 0)
+		CONSTRAINT CK_LogonAuditInfo_validAuditData CHECK
+		(
+			LEN(databaseUserName) > 0 AND
+			LEN(loginType) > 0 AND
+			LEN(clientHost) > 0
+		)
 	);
 
 IF OBJECT_ID('DatabaseAuditInfo') IS NULL
@@ -1272,21 +1277,17 @@ IF OBJECT_ID('TableAuditInfo') IS NULL
 
 		CONSTRAINT CK_TableAuditInfo_validAuditData CHECK
 		(
+			LEN(databaseUserName) > 0 AND
+			LEN(rowId) > 0 AND
 			LEN(tableName) > 0 AND 
 			(
 				(
-					eventType = 'INSERT' AND
-					newValue IS NOT NULL
+					eventType IN ('INSERT', 'DELETE')
 				)
 				OR
 				(
 					eventType = 'UPDATE' AND
-					columnName IS NOT NULL AND
-					oldValue IS NOT NULL AND newValue IS NOT NULL
-				)
-				OR
-				(
-					eventType = 'DELETE'
+					columnName IS NOT NULL
 				)
 			)
 		)
