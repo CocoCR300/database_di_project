@@ -6,7 +6,7 @@ IF DB_ID('restify') IS NULL
 	    ON
         (
             NAME = N'restify',
-            FILENAME = N'A:\Microsoft SQL Server Database Files\Data\restify.mdf',
+            FILENAME = N'C:\Microsoft SQL Server Database Files\Data\restify.mdf',
             SIZE = 1GB,
             FILEGROWTH = 256MB,
             MAXSIZE = UNLIMITED
@@ -14,7 +14,7 @@ IF DB_ID('restify') IS NULL
         LOG ON
         (
             NAME = N'restify_log',
-            FILENAME = N'A:\Microsoft SQL Server Database Files\Logs\restify_LOG.ldf',
+            FILENAME = N'C:\Microsoft SQL Server Database Files\Logs\restify_LOG.ldf',
             SIZE = 200MB,
             FILEGROWTH = 50MB,
             MAXSIZE = 1GB
@@ -24,8 +24,65 @@ IF DB_ID('restify') IS NULL
 GO
 
 USE restify;
+GO
+
+--
+-- USUARIOS
+--
+DROP LOGIN restify_administrator;
+DROP LOGIN restify_employee;
+DROP LOGIN restify_user;
+GO
+
+CREATE LOGIN restify_administrator
+    WITH    PASSWORD = 'SuperSecretAdministratorPasswordThatShouldNotBePushedToGitHub',
+            DEFAULT_DATABASE = restify,
+            CHECK_POLICY = OFF;
+GO
+
+CREATE LOGIN restify_employee
+    WITH    PASSWORD = 'SuperSecretEmployeePasswordThatShouldNotBePushedToGitHub',
+            DEFAULT_DATABASE = restify,
+            CHECK_POLICY = OFF;
+GO
+
+CREATE LOGIN restify_user
+    WITH    PASSWORD = 'SuperSecretUserPasswordThatShouldNotBePushedToGitHub',
+            DEFAULT_DATABASE = restify,
+            CHECK_POLICY = OFF;
+GO
+
+USE restify;
+
+DROP USER restify_administrator;
+DROP USER restify_employee;
+DROP USER restify_user;
+GO
+
+CREATE USER restify_administrator
+    FOR LOGIN restify_administrator;
+
+CREATE USER restify_employee
+    FOR LOGIN restify_employee;
+
+CREATE USER restify_user
+    FOR LOGIN restify_user;
 
 GO
+
+ALTER ROLE db_owner ADD MEMBER restify_administrator;
+
+ALTER ROLE db_datareader ADD MEMBER restify_employee;
+
+ALTER ROLE db_datareader ADD MEMBER restify_user;
+ALTER ROLE db_datawriter ADD MEMBER restify_user;
+
+GO
+
+
+--
+-- TABLAS
+--
 
 -- Tabla "Rol de usuario"
 IF OBJECT_ID('UserRole') IS NULL
@@ -411,9 +468,282 @@ IF OBJECT_ID('RoomBooking') IS NULL
 
 GO
 
+IF OBJECT_ID('AuditInfo') IS NULL
+	CREATE TABLE AuditInfo
+	(
+		auditInfoId			INT			    NOT NULL    IDENTITY(1, 1),
+		logDateTime			DATETIME	    NOT NULL,
+		eventType			CHAR(30)	    NOT NULL,
+		databaseUserName	VARCHAR(50)     NOT NULL,
+		tableName			VARCHAR(50),
+		rowId				VARCHAR(100),
+		columnName			VARCHAR(50),
+		oldValue			VARCHAR(MAX),
+		newValue			VARCHAR(MAX),
+        executedCommand     VARCHAR(MAX)
+
+		PRIMARY KEY (auditInfoId),
+
+		CONSTRAINT CK_AuditInfo_validDataForEvent CHECK
+		(
+            LEN(eventType) > 0 AND
+			(
+                (
+                    eventType IN ('INSERT', 'DELETE', 'UPDATE') AND
+                    tableName IS NOT NULL AND LEN(tableName) > 0 AND
+                    rowId IS NOT NULL
+                )
+                OR
+                (
+                    eventType IN
+						('CREATE_USER', 'DROP_USER', 'ALTER_USER',
+						 'CREATE_TABLE', 'DROP_TABLE', 'ALTER_TABLE'
+						) AND
+                    executedCommand IS NOT NULL AND LEN(executedCommand) > 0
+                )
+                OR
+                (
+                    eventType IN ('LOGIN')
+                )
+            )
+		)
+	);
+
+GO
 
 --
--- Procedimientos almacenados
+-- DESENCADENADORES
+--
+CREATE OR ALTER TRIGGER disProhibirBorradoPago ON Payment
+	FOR DELETE
+AS BEGIN
+	RAISERROR ('No se permite borrar registros de pagos.', 16, -1);
+	ROLLBACK;
+END
+GO
+
+CREATE OR ALTER TRIGGER disActualizacionTipoAlojamiento ON Lodging
+	FOR UPDATE
+AS BEGIN
+	DECLARE @newLodgingsWithoutRoomIds TABLE (id INT);
+	INSERT INTO @newLodgingsWithoutRoomIds
+		SELECT i.lodgingId FROM INSERTED AS i
+			JOIN DELETED AS d ON d.lodgingId = i.lodgingId
+			WHERE 	(d.lodgingType <> 'Apartment' AND d.lodgingType <> 'VacationRental') AND
+					(i.lodgingType = 'Apartment' OR i.lodgingType = 'VacationRental');
+	
+	DELETE r FROM Room AS r
+		JOIN @newLodgingsWithoutRoomIds AS l ON l.id = r.lodgingId;
+	DELETE rt FROM RoomType AS rt
+		JOIN @newLodgingsWithoutRoomIds AS l ON l.id = rt.lodgingId;
+END
+GO
+
+CREATE OR ALTER TRIGGER disConfirmarReservaAlRegistrarPago ON Payment
+	AFTER INSERT
+AS BEGIN
+	UPDATE rb SET rb.status = 'Confirmed' FROM RoomBooking AS rb
+		JOIN INSERTED AS i ON i.bookingId = rb.bookingId;
+END
+GO
+
+CREATE OR ALTER TRIGGER disTiposHabitacionesEnAlojamientosQueAdmiten ON RoomType
+	FOR INSERT
+AS BEGIN
+	DECLARE @lodgingId INT;
+	DECLARE @lodgingType CHAR(50);
+
+	SELECT TOP(1) @lodgingId = lodgingId FROM INSERTED;
+	SELECT @lodgingType = lodgingType FROM Lodging
+		WHERE lodgingId = @lodgingId;
+
+	IF @lodgingType = 'Apartment' OR @lodgingType = 'VacationRental'
+	BEGIN
+		DECLARE @roomsToInsertCount INT;
+		DECLARE @existingRoomsCount INT;
+
+		
+		SELECT TOP(1) @existingRoomsCount = COUNT(*) FROM RoomType
+			WHERE lodgingId = @lodgingId;
+		SELECT TOP(2) @roomsToInsertCount = COUNT(*) FROM INSERTED;
+
+		IF @existingRoomsCount = 1 OR @roomsToInsertCount > 1
+			RAISERROR ('No se puede insertar más de un tipo de habitación en este tipo de alojamiento.', 16, -1);
+			ROLLBACK;
+			RETURN;
+	END
+END
+GO
+
+CREATE OR ALTER TRIGGER disHabitacionesEnAlojamientosQueAdmiten ON Room
+	FOR INSERT
+AS BEGIN
+	DECLARE @lodgingId INT;
+	DECLARE @lodgingType CHAR(50);
+
+	SELECT TOP(1) @lodgingId = lodgingId FROM INSERTED;
+	SELECT @lodgingType = lodgingType FROM Lodging
+		WHERE lodgingId = @lodgingId;
+
+	IF @lodgingType = 'Apartment' OR @lodgingType = 'VacationRental'
+	BEGIN
+		DECLARE @roomsToInsertCount INT;
+		DECLARE @existingRoomsCount INT;
+
+		
+		SELECT TOP(1) @existingRoomsCount = COUNT(*) FROM Room
+			WHERE lodgingId = @lodgingId;
+		SELECT TOP(2) @roomsToInsertCount = COUNT(*) FROM INSERTED;
+
+		IF @existingRoomsCount = 1 OR @roomsToInsertCount > 1
+			RAISERROR ('No se puede insertar más de una habitación en este tipo de alojamiento.', 16, -1);
+			ROLLBACK;
+			RETURN;
+	END
+END
+GO
+
+--
+-- FUNCIONES
+--
+IF OBJECT_ID('dbo.fnIdPersonaUsuario') IS NOT NULL
+    DROP FUNCTION dbo.fnIdPersonaUsuario;
+GO
+
+CREATE FUNCTION fnIdPersonaUsuario
+    (@userName VARCHAR(50))
+	RETURNS INT
+AS BEGIN
+	DECLARE @personId INT;
+    SELECT @personId = personId FROM Person WHERE userName = @userName;
+
+	RETURN @personId;
+END
+GO
+
+
+IF OBJECT_ID('dbo.fnCalcularPagoTotalReserva') IS NOT NULL
+    DROP FUNCTION dbo.fnCalcularPagoTotalReserva;
+GO
+
+CREATE FUNCTION fnCalcularPagoTotalReserva
+(
+	@bookingId INT
+)
+RETURNS DECIMAL(18, 2)
+AS BEGIN
+	DECLARE @totalAmount DECIMAL(18, 0);
+	SELECT @totalAmount = SUM(cost - discount + fees) FROM RoomBooking
+		WHERE bookingId = @bookingId;
+
+	RETURN @totalAmount;
+END
+GO
+
+
+IF OBJECT_ID('dbo.fnHabitacionesDisponiblesAlojamiento') IS NOT NULL
+    DROP FUNCTION dbo.fnHabitacionesDisponiblesAlojamiento;
+GO
+
+-- Obtiene los números de habitación de un alojamiento y tipo especifico de
+-- habitación, que no estén reservados en un periodo de tiempo determinado 
+CREATE FUNCTION fnHabitacionesDisponiblesAlojamiento
+(
+	@lodgingId  INT,
+	@roomTypeId INT,
+	@startDate  DATE,
+	@endDate    DATE
+)
+RETURNS @HabitacionesPorAlojamiento TABLE
+(
+	RoomNumber INT
+)
+AS BEGIN
+	INSERT @HabitacionesPorAlojamiento
+		SELECT DISTINCT r.roomNumber FROM Room AS r
+			LEFT JOIN RoomBooking AS rb
+				ON  rb.roomNumber = r.roomNumber
+				AND r.lodgingId  = @lodgingId
+				AND (rb.status = 'Created' OR rb.status = 'Confirmed')
+				AND (rb.startDate < @endDate AND rb.endDate > @startDate)
+			WHERE   r.lodgingId = @lodgingId
+					AND r.roomTypeId = @roomTypeId
+					AND rb.roomBookingId IS NULL;
+	RETURN
+END
+GO
+
+
+IF OBJECT_ID('dbo.fnReservacionesPorEstado') IS NOT NULL
+    DROP FUNCTION dbo.fnReservacionesPorEstado;
+GO
+
+CREATE FUNCTION fnReservacionesPorEstado
+(
+	@status  char(50)
+)
+RETURNS @ReservacionesPorEstado TABLE
+(
+	roomBookingId	INT 		NOT NULL,
+	bookingId 		INT 		NOT NULL,
+	lodgingId 		INT 		NOT NULL,
+	roomNumber 		INT 		NOT NULL,
+	cost			DECIMAL 	NOT NULL,
+	fees			DECIMAL 	NOT NULL,
+	discount		DECIMAL		NOT NULL,
+	status			CHAR(50)	NOT NULL,
+	startDate 		DATE		NOT NULL,
+	endDate 		DATE 		NOT NULL
+)
+AS BEGIN
+	INSERT @ReservacionesPorEstado
+		SELECT * FROM RoomBooking WHERE status = @status
+
+	RETURN
+END
+GO
+
+
+IF OBJECT_ID('dbo.fnReservacionesUsuario') IS NOT NULL
+	DROP FUNCTION dbo.fnReservacionesUsuario;
+GO
+
+CREATE OR ALTER FUNCTION fnReservacionesUsuario
+(
+    @userName VARCHAR(50),
+    @status CHAR(50) = NULL
+)
+RETURNS TABLE
+AS RETURN
+(
+    SELECT 
+		rb.*
+    	FROM RoomBooking AS rb
+			JOIN Booking AS b ON b.bookingId = rb.bookingId
+			JOIN Person	 AS p ON p.personId = b.customerPersonId
+			WHERE p.userName = @userName
+			AND (@status IS NULL OR rb.status = @status)
+);
+GO
+
+
+IF OBJECT_ID('dbo.fnObtenerInformacionPagoUsuario') IS NOT NULL
+	DROP FUNCTION dbo.fnObtenerInformacionPagoUsuario;
+GO
+
+CREATE FUNCTION fnObtenerInformacionPagoUsuario
+	(@userName VARCHAR(50))
+	RETURNS TABLE
+AS RETURN
+(
+	SELECT * FROM PaymentInformation
+		WHERE personId = dbo.fnIdPersonaUsuario(@userName)
+);
+GO
+
+
+--
+-- PROCEDIMIENTOS ALMACENADOS
 --
 
 IF OBJECT_ID('paCrearReservacion') IS NOT NULL
@@ -427,20 +757,12 @@ GO
 IF TYPE_ID('IdList') IS NOT NULL
     DROP TYPE IdList;
 
-IF TYPE_ID('PhoneNumberList') IS NOT NULL
-    DROP TYPE PhoneNumberList;
-
 IF TYPE_ID('PhotoList') IS NOT NULL
     DROP TYPE PhotoList;
 
 IF TYPE_ID('RoomBookingList') IS NOT NULL
     DROP TYPE RoomBookingList;
 
-IF TYPE_ID('RoomTypeList') IS NOT NULL
-    DROP TYPE RoomTypeList;
-
-IF TYPE_ID('RoomList') IS NOT NULL
-    DROP TYPE RoomList;
 GO
 
 -- https://stackoverflow.com/a/42451702
@@ -448,11 +770,6 @@ GO
 CREATE TYPE IdList AS TABLE
 (
     id INT NOT NULL
-);
-
-CREATE TYPE PhoneNumberList AS TABLE
-(
-    phoneNumber CHAR(30) NOT NULL
 );
 
 CREATE TYPE PhotoList AS TABLE
@@ -471,35 +788,6 @@ CREATE TYPE RoomBookingList AS TABLE
     endDate     DATE    NOT NULL
 );
 
-CREATE TYPE RoomTypeList AS TABLE
-(
-    name            VARCHAR(75) NOT NULL,
-    perNightPrice   DECIMAL     NOT NULL,
-    fees            DECIMAL     NOT NULL,
-    capacity        INT         NOT NULL
-);
-
-CREATE TYPE RoomList AS TABLE
-(
-    roomNumber INT NOT NULL,
-    roomTypeId INT NOT NULL
-);
-GO
-
---
--- Procedimientos almacenados de Usuario
---
-
-IF OBJECT_ID('paIdPersonaUsuario') IS NOT NULL
-    DROP PROCEDURE paIdPersonaUsuario;
-GO
-
-CREATE PROCEDURE paIdPersonaUsuario
-    @userName VARCHAR(50),
-    @personId INT OUTPUT
-AS BEGIN
-    SELECT @personId = personId FROM Person WHERE userName = @userName;
-END
 GO
 
 --
@@ -516,7 +804,8 @@ CREATE PROCEDURE paCrearReservacion
 AS BEGIN
     DECLARE @customerId INT;
 	DECLARE @result TABLE (id INT);
-    EXECUTE paIdPersonaUsuario @userName, @personId = @customerId OUTPUT;
+	
+	SELECT @customerId = dbo.fnIdPersonaUsuario(@userName);
 	
     BEGIN TRY
         BEGIN TRANSACTION;
@@ -541,26 +830,6 @@ AS BEGIN
 END
 GO
 
-IF OBJECT_ID('paReservacionesUsuario') IS NOT NULL
-    DROP PROCEDURE paReservacionesUsuario;
-GO
-
-CREATE PROCEDURE paReservacionesUsuario
-    @userName VARCHAR(50),
-    @status CHAR(50) = NULL
-AS BEGIN
-    IF @status IS NULL
-        SELECT * FROM RoomBooking AS rb
-            JOIN Booking AS b ON b.bookingId = rb.bookingId 
-            JOIN Person AS p ON p.personId = b.customerPersonId
-            WHERE p.userName = @userName;
-    ELSE
-        SELECT * FROM RoomBooking AS rb
-            JOIN Booking AS b ON b.bookingId = rb.bookingId 
-            JOIN Person AS p ON p.personId = b.customerPersonId
-            WHERE p.userName = @userName AND rb.status = @status;
-END
-GO
 
 IF OBJECT_ID('paEliminarReservacionesCanceladasUsuario') IS NOT NULL
     DROP PROCEDURE paEliminarReservacionesCanceladasUsuario;
@@ -570,7 +839,7 @@ CREATE PROCEDURE paEliminarReservacionesCanceladasUsuario
     @userName VARCHAR(50)
 AS BEGIN
     DECLARE @personId INT;
-    EXECUTE paIdPersonaUsuario @userName, @personId = @personId OUTPUT;
+	SELECT @personId = dbo.fnIdPersonaUsuario(@userName);
     
     BEGIN TRY
         BEGIN TRANSACTION;
@@ -698,29 +967,6 @@ AS BEGIN
 END
 GO
 
-IF OBJECT_ID('paHabitacionesDisponiblesAlojamiento') IS NOT NULL
-    DROP PROCEDURE paHabitacionesDisponiblesAlojamiento;
-GO
-
--- Obtiene los números de habitación de un alojamiento y tipo especifico de
--- habitación, que no estén reservados en un periodo de tiempo determinado 
-CREATE PROCEDURE paHabitacionesDisponiblesAlojamiento
-    @lodgingId  INT,
-    @roomTypeId INT,
-    @startDate  DATE,
-    @endDate    DATE
-AS BEGIN
-    SELECT DISTINCT r.roomNumber FROM Room AS r
-        LEFT JOIN RoomBooking AS rb
-            ON  rb.roomNumber = r.roomNumber
-            AND r.lodgingId  = @lodgingId
-            AND (rb.status = 'Created' OR rb.status = 'Confirmed')
-            AND (rb.startDate < @endDate AND rb.endDate > @startDate)
-        WHERE   r.lodgingId = @lodgingId
-                AND r.roomTypeId = @roomTypeId
-                AND rb.roomBookingId IS NULL;
-END
-GO
 
 IF OBJECT_ID('paEliminarAlojamiento') IS NOT NULL
     DROP PROCEDURE paEliminarAlojamiento;
@@ -776,22 +1022,6 @@ GO
 -- Procedimientos almacenados de PaymentInformation
 --
 
-IF OBJECT_ID('paObtenerInformacionPagoUsuario') IS NOT NULL
-	DROP PROCEDURE paObtenerInformacionPagoUsuario;
-GO
-
-CREATE PROCEDURE paObtenerInformacionPagoUsuario
-	@userName VARCHAR(50)
-AS BEGIN
-	DECLARE @personId INT;
-	EXEC paIdPersonaUsuario @userName, @personId OUTPUT;
-	
-	SELECT * FROM PaymentInformation
-		WHERE personId = @personId;
-END
-
-GO
-
 IF OBJECT_ID('paInsertarInformacionPago') IS NOT NULL
 	DROP PROCEDURE paInsertarInformacionPago;
 GO
@@ -806,8 +1036,8 @@ CREATE PROCEDURE paInsertarInformacionPago
 AS BEGIN
 	DECLARE @existingPaymentInformationId INT;
 	DECLARE @personId INT;
-
-	EXEC paIdPersonaUsuario @userName, @personId OUTPUT;
+	
+	SELECT @personId = dbo.fnIdPersonaUsuario(@userName);
 
 	SELECT @existingPaymentInformationId = paymentInformationId
 		FROM PaymentInformation
@@ -838,7 +1068,7 @@ IF OBJECT_ID('paRealizarPago') IS NOT NULL
 GO
 
 -- Realiza el pago, y modifica el estado de la reserva
-CREATE PROCEDURE paRealizarPago
+CREATE OR ALTER PROCEDURE paRealizarPago
 	@bookingId				INT,
 	@paymentInformationId	INT,
 	@paymentId				INT			OUTPUT,
@@ -851,8 +1081,7 @@ AS BEGIN
 	DECLARE @personId INT;
 
 	SELECT @personId = customerPersonId FROM Booking WHERE bookingId = @bookingId;
-	SELECT @amount = SUM(cost - discount + fees) FROM RoomBooking
-		WHERE bookingId = @bookingId;
+	SELECT @amount = dbo.fnCalcularTotalPagoReserva(@bookingId);
 	SELECT @paymentInformationPersonId = personId FROM PaymentInformation
 		WHERE paymentInformationId = @paymentInformationId;
 
@@ -939,7 +1168,7 @@ END;
 GO
 
 
---Actualizar el usuario
+--Actualiza un usuario
 IF OBJECT_ID('paActualizarUsuarioYPersona') IS NOT NULL
     DROP PROCEDURE paActualizarUsuarioYPersona;
 GO
@@ -983,7 +1212,7 @@ END;
 GO
 
 
---Eliminar un usuario
+-- Elimina un usuario
 IF OBJECT_ID('paEliminarUsuarioYPersona') IS NOT NULL
     DROP PROCEDURE paEliminarUsuarioYPersona;
 GO
@@ -1000,7 +1229,7 @@ BEGIN
     END
 
 	DECLARE @personId INT;
-	EXECUTE paIdPersonaUsuario @userName, @personId OUTPUT;
+	SELECT @personId = dbo.fnIdPersonaUsuario(@userName);
 
     IF @personId IS NULL
     BEGIN
@@ -1027,4 +1256,63 @@ BEGIN
         THROW;
     END CATCH
 END;
+GO
+
+--
+-- AUDITORÍAS
+--
+CREATE OR ALTER TRIGGER disRegistrarEventoTablaOUsuarioBaseDeDatos ON DATABASE
+	AFTER DDL_TABLE_EVENTS, DDL_USER_EVENTS
+AS BEGIN
+	DECLARE @eventType CHAR(30) = EVENTDATA().value('(/EVENT_INSTANCE/EventType)[1]', 'CHAR(30)');
+	DECLARE @command VARCHAR(MAX) = EVENTDATA().value('(/EVENT_INSTANCE/TSQLCommand/CommandText)[1]', 'VARCHAR(MAX)');
+	DECLARE @now DATETIME = GETDATE();
+	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
+
+	INSERT INTO AuditInfo (logDateTime, eventType, databaseUserName, executedCommand)
+		VALUES (@now, @eventType, @databaseUserName, @command);
+END
+GO
+
+CREATE OR ALTER TRIGGER disRegistrarInsercionUsuarioAdministrador ON [User]
+	AFTER INSERT
+AS BEGIN
+	DECLARE @now DATETIME = GETDATE();
+	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
+
+	INSERT INTO AuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
+		SELECT @now, 'INSERT', @databaseUserName, 'User', i.userName
+			FROM INSERTED AS i
+			JOIN UserRole AS ur ON ur.userRoleId = i.userRoleId
+			WHERE ur.type = 'Administrator';
+END
+GO
+
+CREATE OR ALTER TRIGGER disRegistrarInsercionPago ON Payment
+	AFTER INSERT
+AS BEGIN
+	DECLARE @now DATETIME = GETDATE();
+	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
+
+	
+	INSERT INTO AuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
+		SELECT @now, 'INSERT', @databaseUserName, 'Payment', i.paymentId
+			FROM INSERTED AS i;
+END
+GO
+
+CREATE OR ALTER TRIGGER disRegistrarActualizacionCantidadPago ON Payment
+	AFTER UPDATE
+AS BEGIN
+	IF UPDATE(amount)
+	BEGIN
+		DECLARE @now DATETIME = GETDATE();
+		DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
+		
+		INSERT INTO AuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId, columnName, oldValue, newValue)
+			SELECT @now, 'UPDATE', @databaseUserName, 'Payment', i.paymentId, 'amount', d.amount, i.amount
+				FROM INSERTED AS i
+				JOIN DELETED AS d ON d.paymentId = i.paymentId;
+	END
+END
 GO
