@@ -468,44 +468,76 @@ IF OBJECT_ID('RoomBooking') IS NULL
 
 GO
 
-IF OBJECT_ID('AuditInfo') IS NULL
-	CREATE TABLE AuditInfo
+IF OBJECT_ID('LogonAuditInfo') IS NULL
+	CREATE TABLE LogonAuditInfo
+	(
+		auditInfoId			INT			    NOT NULL    IDENTITY(1, 1),
+		logDateTime			DATETIME	    NOT NULL,
+		databaseUserName	VARCHAR(50)     NOT NULL,
+		loginType			CHAR(30)		NOT NULL,
+		clientHost			CHAR(30)		NOT NULL
+
+		PRIMARY KEY (auditInfoId),
+
+		CONSTRAINT CK_LogonAuditInfo_validAuditData CHECK (LEN(databaseUserName) > 0)
+	);
+
+IF OBJECT_ID('DatabaseAuditInfo') IS NULL
+	CREATE TABLE DatabaseAuditInfo
 	(
 		auditInfoId			INT			    NOT NULL    IDENTITY(1, 1),
 		logDateTime			DATETIME	    NOT NULL,
 		eventType			CHAR(30)	    NOT NULL,
 		databaseUserName	VARCHAR(50)     NOT NULL,
-		tableName			VARCHAR(50),
-		rowId				VARCHAR(100),
-		columnName			VARCHAR(50),
-		oldValue			VARCHAR(MAX),
-		newValue			VARCHAR(MAX),
-        executedCommand     VARCHAR(MAX)
+        executedCommand     VARCHAR(MAX)	NOT NULL
 
 		PRIMARY KEY (auditInfoId),
 
-		CONSTRAINT CK_AuditInfo_validDataForEvent CHECK
+		CONSTRAINT CK_DatabaseAuditInfo_validData CHECK
 		(
-            LEN(eventType) > 0 AND
+			LEN(databaseUserName) > 0 AND
+            eventType IN
+				('CREATE_USER', 'DROP_USER', 'ALTER_USER',
+				 'CREATE_TABLE', 'DROP_TABLE', 'ALTER_TABLE'
+				) AND
+			LEN(executedCommand) > 0
+		)
+	);
+
+IF OBJECT_ID('TableAuditInfo') IS NULL
+	CREATE TABLE TableAuditInfo
+	(
+		auditInfoId			INT			    NOT NULL    IDENTITY(1, 1),
+		logDateTime			DATETIME	    NOT NULL,
+		eventType			CHAR(30)	    NOT NULL,
+		databaseUserName	VARCHAR(50)     NOT NULL,
+		tableName			VARCHAR(50)		NOT NULL,
+		rowId				VARCHAR(100)	NOT NULL,
+		columnName			VARCHAR(50),
+		oldValue			VARCHAR(MAX),
+		newValue			VARCHAR(MAX)
+
+		PRIMARY KEY (auditInfoId),
+
+		CONSTRAINT CK_TableAuditInfo_validAuditData CHECK
+		(
+			LEN(tableName) > 0 AND 
 			(
-                (
-                    eventType IN ('INSERT', 'DELETE', 'UPDATE') AND
-                    tableName IS NOT NULL AND LEN(tableName) > 0 AND
-                    rowId IS NOT NULL
-                )
-                OR
-                (
-                    eventType IN
-						('CREATE_USER', 'DROP_USER', 'ALTER_USER',
-						 'CREATE_TABLE', 'DROP_TABLE', 'ALTER_TABLE'
-						) AND
-                    executedCommand IS NOT NULL AND LEN(executedCommand) > 0
-                )
-                OR
-                (
-                    eventType IN ('LOGIN')
-                )
-            )
+				(
+					eventType = 'INSERT' AND
+					newValue IS NOT NULL
+				)
+				OR
+				(
+					eventType = 'UPDATE' AND
+					columnName IS NOT NULL AND
+					oldValue IS NOT NULL AND newValue IS NOT NULL
+				)
+				OR
+				(
+					eventType = 'DELETE'
+				)
+			)
 		)
 	);
 
@@ -1261,6 +1293,23 @@ GO
 --
 -- AUDITORÍAS
 --
+CREATE OR ALTER TRIGGER disInicioSesionServidor ON ALL SERVER
+	FOR LOGON
+AS BEGIN
+	DECLARE @now DATETIME = GETDATE();
+	DECLARE @loginType CHAR(30) = EVENTDATA().value('(/EVENT_INSTANCE/LoginType)[1]', 'CHAR(30)');
+	DECLARE @clientHost CHAR(30) = EVENTDATA().value('(/EVENT_INSTANCE/ClientHost)[1]', 'CHAR(30)');
+
+	-- https://stackoverflow.com/a/40552077
+	IF EXISTS (SELECT service_account FROM sys.dm_server_services WHERE service_account = SUSER_SNAME())
+		RETURN;
+
+    IF SUSER_SNAME() <> 'sa'
+		INSERT INTO Restify.dbo.LogonAuditInfo (logDateTime, databaseUserName, loginType, clientHost) 
+				VALUES (@now, SUSER_NAME(), @loginType, @clientHost);
+END
+GO
+
 CREATE OR ALTER TRIGGER disRegistrarEventoTablaOUsuarioBaseDeDatos ON DATABASE
 	AFTER DDL_TABLE_EVENTS, DDL_USER_EVENTS
 AS BEGIN
@@ -1269,7 +1318,7 @@ AS BEGIN
 	DECLARE @now DATETIME = GETDATE();
 	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 
-	INSERT INTO AuditInfo (logDateTime, eventType, databaseUserName, executedCommand)
+	INSERT INTO DatabaseAuditInfo (logDateTime, eventType, databaseUserName, executedCommand)
 		VALUES (@now, @eventType, @databaseUserName, @command);
 END
 GO
@@ -1280,7 +1329,7 @@ AS BEGIN
 	DECLARE @now DATETIME = GETDATE();
 	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 
-	INSERT INTO AuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
+	INSERT INTO TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
 		SELECT @now, 'INSERT', @databaseUserName, 'User', i.userName
 			FROM INSERTED AS i
 			JOIN UserRole AS ur ON ur.userRoleId = i.userRoleId
@@ -1295,7 +1344,7 @@ AS BEGIN
 	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 
 	
-	INSERT INTO AuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
+	INSERT INTO TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
 		SELECT @now, 'INSERT', @databaseUserName, 'Payment', i.paymentId
 			FROM INSERTED AS i;
 END
@@ -1309,7 +1358,7 @@ AS BEGIN
 		DECLARE @now DATETIME = GETDATE();
 		DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 		
-		INSERT INTO AuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId, columnName, oldValue, newValue)
+		INSERT INTO TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId, columnName, oldValue, newValue)
 			SELECT @now, 'UPDATE', @databaseUserName, 'Payment', i.paymentId, 'amount', d.amount, i.amount
 				FROM INSERTED AS i
 				JOIN DELETED AS d ON d.paymentId = i.paymentId;
