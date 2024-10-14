@@ -468,81 +468,6 @@ IF OBJECT_ID('RoomBooking') IS NULL
 
 GO
 
-IF OBJECT_ID('LogonAuditInfo') IS NULL
-	CREATE TABLE LogonAuditInfo
-	(
-		auditInfoId			INT			    NOT NULL    IDENTITY(1, 1),
-		logDateTime			DATETIME	    NOT NULL,
-		databaseUserName	VARCHAR(50)     NOT NULL,
-		loginType			CHAR(30)		NOT NULL,
-		clientHost			CHAR(30)		NOT NULL
-
-		PRIMARY KEY (auditInfoId),
-
-		CONSTRAINT CK_LogonAuditInfo_validAuditData CHECK (LEN(databaseUserName) > 0)
-	);
-
-IF OBJECT_ID('DatabaseAuditInfo') IS NULL
-	CREATE TABLE DatabaseAuditInfo
-	(
-		auditInfoId			INT			    NOT NULL    IDENTITY(1, 1),
-		logDateTime			DATETIME	    NOT NULL,
-		eventType			CHAR(30)	    NOT NULL,
-		databaseUserName	VARCHAR(50)     NOT NULL,
-        executedCommand     VARCHAR(MAX)	NOT NULL
-
-		PRIMARY KEY (auditInfoId),
-
-		CONSTRAINT CK_DatabaseAuditInfo_validData CHECK
-		(
-			LEN(databaseUserName) > 0 AND
-            eventType IN
-				('CREATE_USER', 'DROP_USER', 'ALTER_USER',
-				 'CREATE_TABLE', 'DROP_TABLE', 'ALTER_TABLE'
-				) AND
-			LEN(executedCommand) > 0
-		)
-	);
-
-IF OBJECT_ID('TableAuditInfo') IS NULL
-	CREATE TABLE TableAuditInfo
-	(
-		auditInfoId			INT			    NOT NULL    IDENTITY(1, 1),
-		logDateTime			DATETIME	    NOT NULL,
-		eventType			CHAR(30)	    NOT NULL,
-		databaseUserName	VARCHAR(50)     NOT NULL,
-		tableName			VARCHAR(50)		NOT NULL,
-		rowId				VARCHAR(100)	NOT NULL,
-		columnName			VARCHAR(50),
-		oldValue			VARCHAR(MAX),
-		newValue			VARCHAR(MAX)
-
-		PRIMARY KEY (auditInfoId),
-
-		CONSTRAINT CK_TableAuditInfo_validAuditData CHECK
-		(
-			LEN(tableName) > 0 AND 
-			(
-				(
-					eventType = 'INSERT' AND
-					newValue IS NOT NULL
-				)
-				OR
-				(
-					eventType = 'UPDATE' AND
-					columnName IS NOT NULL AND
-					oldValue IS NOT NULL AND newValue IS NOT NULL
-				)
-				OR
-				(
-					eventType = 'DELETE'
-				)
-			)
-		)
-	);
-
-GO
-
 --
 -- DESENCADENADORES
 --
@@ -1291,12 +1216,90 @@ END;
 GO
 
 --
--- AUDITORÍAS
+-- AUDITORÍA
 --
+
+IF OBJECT_ID('LogonAuditInfo') IS NULL
+	CREATE TABLE LogonAuditInfo
+	(
+		auditInfoId			INT			    NOT NULL    IDENTITY(1, 1),
+		logDateTime			DATETIME	    NOT NULL,
+		databaseUserName	VARCHAR(50)     NOT NULL,
+		loginType			CHAR(30)		NOT NULL,
+		clientHost			CHAR(30)		NOT NULL
+
+		PRIMARY KEY (auditInfoId),
+
+		CONSTRAINT CK_LogonAuditInfo_validAuditData CHECK (LEN(databaseUserName) > 0)
+	);
+
+IF OBJECT_ID('DatabaseAuditInfo') IS NULL
+	CREATE TABLE DatabaseAuditInfo
+	(
+		auditInfoId			INT			    NOT NULL    IDENTITY(1, 1),
+		logDateTime			DATETIME	    NOT NULL,
+		eventType			CHAR(30)	    NOT NULL,
+		databaseUserName	VARCHAR(50)     NOT NULL,
+        executedCommand     VARCHAR(MAX)	NOT NULL
+
+		PRIMARY KEY (auditInfoId),
+
+		CONSTRAINT CK_DatabaseAuditInfo_validData CHECK
+		(
+			LEN(databaseUserName) > 0 AND
+            eventType IN
+				('CREATE_USER', 'DROP_USER', 'ALTER_USER',
+				 'CREATE_TABLE', 'DROP_TABLE', 'ALTER_TABLE'
+				) AND
+			LEN(executedCommand) > 0
+		)
+	);
+
+IF OBJECT_ID('TableAuditInfo') IS NULL
+	CREATE TABLE TableAuditInfo
+	(
+		auditInfoId			INT			    NOT NULL    IDENTITY(1, 1),
+		logDateTime			DATETIME	    NOT NULL,
+		eventType			CHAR(30)	    NOT NULL,
+		databaseUserName	VARCHAR(50)     NOT NULL,
+		tableName			VARCHAR(50)		NOT NULL,
+		rowId				VARCHAR(100)	NOT NULL,
+		columnName			VARCHAR(50),
+		oldValue			VARCHAR(MAX),
+		newValue			VARCHAR(MAX)
+
+		PRIMARY KEY (auditInfoId),
+
+		CONSTRAINT CK_TableAuditInfo_validAuditData CHECK
+		(
+			LEN(tableName) > 0 AND 
+			(
+				(
+					eventType = 'INSERT' AND
+					newValue IS NOT NULL
+				)
+				OR
+				(
+					eventType = 'UPDATE' AND
+					columnName IS NOT NULL AND
+					oldValue IS NOT NULL AND newValue IS NOT NULL
+				)
+				OR
+				(
+					eventType = 'DELETE'
+				)
+			)
+		)
+	);
+
+GO
+
 CREATE OR ALTER TRIGGER disInicioSesionServidor ON ALL SERVER
 	FOR LOGON
 AS BEGIN
 	DECLARE @now DATETIME = GETDATE();
+
+	-- https://learn.microsoft.com/en-us/sql/relational-databases/triggers/capture-logon-trigger-event-data?view=sql-server-ver16
 	DECLARE @loginType CHAR(30) = EVENTDATA().value('(/EVENT_INSTANCE/LoginType)[1]', 'CHAR(30)');
 	DECLARE @clientHost CHAR(30) = EVENTDATA().value('(/EVENT_INSTANCE/ClientHost)[1]', 'CHAR(30)');
 
@@ -1311,7 +1314,7 @@ END
 GO
 
 CREATE OR ALTER TRIGGER disRegistrarEventoTablaOUsuarioBaseDeDatos ON DATABASE
-	AFTER DDL_TABLE_EVENTS, DDL_USER_EVENTS
+	AFTER DDL_TABLE_EVENTS, DDL_USER_EVENTS -- CREATE_TABLE, DROP_TABLE, ALTER_TABLE, CREATE_USER, DROP_USER, ALTER_USER
 AS BEGIN
 	DECLARE @eventType CHAR(30) = EVENTDATA().value('(/EVENT_INSTANCE/EventType)[1]', 'CHAR(30)');
 	DECLARE @command VARCHAR(MAX) = EVENTDATA().value('(/EVENT_INSTANCE/TSQLCommand/CommandText)[1]', 'VARCHAR(MAX)');
