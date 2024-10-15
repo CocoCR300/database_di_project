@@ -21,43 +21,34 @@ IF DB_ID('restify') IS NULL
 		)
 	COLLATE Modern_Spanish_CI_AS;
 
-GO
+GO --
 
 USE restify;
-GO
+GO --
 
 --
 -- USUARIOS
 --
-DROP LOGIN restify_administrator;
-DROP LOGIN restify_employee;
-DROP LOGIN restify_user;
-GO
 
 CREATE LOGIN restify_administrator
     WITH    PASSWORD = 'SuperSecretAdministratorPasswordThatShouldNotBePushedToGitHub',
             DEFAULT_DATABASE = restify,
             CHECK_POLICY = OFF;
-GO
+GO --
 
 CREATE LOGIN restify_employee
     WITH    PASSWORD = 'SuperSecretEmployeePasswordThatShouldNotBePushedToGitHub',
             DEFAULT_DATABASE = restify,
             CHECK_POLICY = OFF;
-GO
+GO --
 
 CREATE LOGIN restify_user
     WITH    PASSWORD = 'SuperSecretUserPasswordThatShouldNotBePushedToGitHub',
             DEFAULT_DATABASE = restify,
             CHECK_POLICY = OFF;
-GO
+GO --
 
 USE restify;
-
-DROP USER restify_administrator;
-DROP USER restify_employee;
-DROP USER restify_user;
-GO
 
 CREATE USER restify_administrator
     FOR LOGIN restify_administrator;
@@ -68,7 +59,7 @@ CREATE USER restify_employee
 CREATE USER restify_user
     FOR LOGIN restify_user;
 
-GO
+GO --
 
 ALTER ROLE db_owner ADD MEMBER restify_administrator;
 
@@ -79,7 +70,7 @@ ALTER ROLE db_datawriter ADD MEMBER restify_user;
 
 GRANT EXECUTE ON DATABASE::restify TO restify_user;
 
-GO
+GO --
 
 
 --
@@ -99,7 +90,7 @@ IF OBJECT_ID('UserRole') IS NULL
 		CONSTRAINT UNIQUE_UserRole_type UNIQUE (type)
 	);
 
-GO
+GO --
 
 
 -- Tabla "Usuario"
@@ -123,7 +114,7 @@ IF OBJECT_ID('User') IS NULL
 			ON UPDATE CASCADE
 	);
 
-GO
+GO --
 
 
 -- Tabla "Persona"
@@ -152,7 +143,7 @@ IF OBJECT_ID('Person') IS NULL
 			ON UPDATE CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Número de telefono de persona"
 IF OBJECT_ID('PersonPhoneNumber') IS NULL
@@ -169,7 +160,7 @@ IF OBJECT_ID('PersonPhoneNumber') IS NULL
 			ON UPDATE CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Alojamiento"
 IF OBJECT_ID('Lodging') IS NULL
@@ -200,7 +191,7 @@ IF OBJECT_ID('Lodging') IS NULL
 			ON UPDATE CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Número de telefono de alojamiento"
 IF OBJECT_ID('LodgingPhoneNumber') IS NULL
@@ -217,7 +208,7 @@ IF OBJECT_ID('LodgingPhoneNumber') IS NULL
 		ON UPDATE CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Foto de alojamiento"
 IF OBJECT_ID('LodgingPhoto') IS NULL
@@ -237,7 +228,7 @@ IF OBJECT_ID('LodgingPhoto') IS NULL
 			ON UPDATE CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Beneficio adicional"
 IF OBJECT_ID('Perk') IS NULL
@@ -252,7 +243,7 @@ IF OBJECT_ID('Perk') IS NULL
 		CONSTRAINT UNIQUE_Perk_name UNIQUE (name),
 	);
 
-GO
+GO --
 
 -- Tabla "Alojamiento beneficio adicional"
 IF OBJECT_ID('LodgingPerk') IS NULL
@@ -271,7 +262,7 @@ IF OBJECT_ID('LodgingPerk') IS NULL
 			ON UPDATE CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Reservación"
 IF OBJECT_ID('Booking') IS NULL
@@ -293,7 +284,7 @@ IF OBJECT_ID('Booking') IS NULL
 		ON UPDATE NO ACTION -- Cycles or multiple cascade paths if CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Información de pago"
 IF OBJECT_ID('PaymentInformation') IS NULL
@@ -323,7 +314,7 @@ IF OBJECT_ID('PaymentInformation') IS NULL
 			ON UPDATE CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Pago"
 IF OBJECT_ID('Payment') IS NULL
@@ -351,7 +342,7 @@ IF OBJECT_ID('Payment') IS NULL
 			ON UPDATE NO ACTION -- Cycles or multiple cascade paths if CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Tipo de habitación"
 IF OBJECT_ID('RoomType') IS NULL
@@ -380,7 +371,7 @@ IF OBJECT_ID('RoomType') IS NULL
 			ON UPDATE CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Foto de tipo de habitación"
 IF OBJECT_ID('RoomTypePhoto') IS NULL
@@ -400,7 +391,7 @@ IF OBJECT_ID('RoomTypePhoto') IS NULL
 			ON UPDATE CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Habitación"
 IF OBJECT_ID('Room') IS NULL
@@ -422,7 +413,7 @@ IF OBJECT_ID('Room') IS NULL
 		ON UPDATE NO ACTION	-- Cycles or multiple cascade paths if CASCADE
 	);
 
-GO
+GO --
 
 -- Tabla "Reservación de habitación"
 IF OBJECT_ID('RoomBooking') IS NULL
@@ -468,7 +459,7 @@ IF OBJECT_ID('RoomBooking') IS NULL
 			ON UPDATE NO ACTION -- Cycles or multiple cascade paths if CASCADE
 	);
 
-GO
+GO --
 
 --
 -- DESENCADENADORES
@@ -479,7 +470,7 @@ AS BEGIN
 	RAISERROR ('No se permite borrar registros de pagos.', 16, -1);
 	ROLLBACK;
 END
-GO
+GO --
 
 CREATE OR ALTER TRIGGER disActualizacionTipoAlojamiento ON Lodging
 	FOR UPDATE
@@ -496,7 +487,7 @@ AS BEGIN
 	DELETE rt FROM RoomType AS rt
 		JOIN @newLodgingsWithoutRoomIds AS l ON l.id = rt.lodgingId;
 END
-GO
+GO --
 
 CREATE OR ALTER TRIGGER disConfirmarReservaAlRegistrarPago ON Payment
 	AFTER INSERT
@@ -504,7 +495,7 @@ AS BEGIN
 	UPDATE rb SET rb.status = 'Confirmed' FROM RoomBooking AS rb
 		JOIN INSERTED AS i ON i.bookingId = rb.bookingId;
 END
-GO
+GO --
 
 CREATE OR ALTER TRIGGER disTiposHabitacionesEnAlojamientosQueAdmiten ON RoomType
 	FOR INSERT
@@ -532,7 +523,7 @@ AS BEGIN
 			RETURN;
 	END
 END
-GO
+GO --
 
 CREATE OR ALTER TRIGGER disHabitacionesEnAlojamientosQueAdmiten ON Room
 	FOR INSERT
@@ -560,14 +551,14 @@ AS BEGIN
 			RETURN;
 	END
 END
-GO
+GO --
 
 --
 -- FUNCIONES
 --
 IF OBJECT_ID('dbo.fnIdPersonaUsuario') IS NOT NULL
     DROP FUNCTION dbo.fnIdPersonaUsuario;
-GO
+GO --
 
 CREATE FUNCTION fnIdPersonaUsuario
     (@userName VARCHAR(50))
@@ -578,12 +569,12 @@ AS BEGIN
 
 	RETURN @personId;
 END
-GO
+GO --
 
 
 IF OBJECT_ID('dbo.fnCalcularPagoTotalReserva') IS NOT NULL
     DROP FUNCTION dbo.fnCalcularPagoTotalReserva;
-GO
+GO --
 
 CREATE FUNCTION fnCalcularPagoTotalReserva
 (
@@ -597,12 +588,12 @@ AS BEGIN
 
 	RETURN @totalAmount;
 END
-GO
+GO --
 
 
 IF OBJECT_ID('dbo.fnHabitacionesDisponiblesAlojamiento') IS NOT NULL
     DROP FUNCTION dbo.fnHabitacionesDisponiblesAlojamiento;
-GO
+GO --
 
 -- Obtiene los números de habitación de un alojamiento y tipo especifico de
 -- habitación, que no estén reservados en un periodo de tiempo determinado 
@@ -630,12 +621,12 @@ AS BEGIN
 					AND rb.roomBookingId IS NULL;
 	RETURN
 END
-GO
+GO --
 
 
 IF OBJECT_ID('dbo.fnReservacionesPorEstado') IS NOT NULL
     DROP FUNCTION dbo.fnReservacionesPorEstado;
-GO
+GO --
 
 CREATE FUNCTION fnReservacionesPorEstado
 (
@@ -660,12 +651,12 @@ AS BEGIN
 
 	RETURN
 END
-GO
+GO --
 
 
 IF OBJECT_ID('dbo.fnReservacionesUsuario') IS NOT NULL
 	DROP FUNCTION dbo.fnReservacionesUsuario;
-GO
+GO --
 
 CREATE OR ALTER FUNCTION fnReservacionesUsuario
 (
@@ -683,12 +674,12 @@ AS RETURN
 			WHERE p.userName = @userName
 			AND (@status IS NULL OR rb.status = @status)
 );
-GO
+GO --
 
 
 IF OBJECT_ID('dbo.fnObtenerInformacionPagoUsuario') IS NOT NULL
 	DROP FUNCTION dbo.fnObtenerInformacionPagoUsuario;
-GO
+GO --
 
 CREATE FUNCTION fnObtenerInformacionPagoUsuario
 	(@userName VARCHAR(50))
@@ -698,7 +689,7 @@ AS RETURN
 	SELECT * FROM PaymentInformation
 		WHERE personId = dbo.fnIdPersonaUsuario(@userName)
 );
-GO
+GO --
 
 
 --
@@ -707,11 +698,11 @@ GO
 
 IF OBJECT_ID('paCrearReservacion') IS NOT NULL
     DROP PROCEDURE paCrearReservacion; 
-GO
+GO --
 
 IF OBJECT_ID('paActualizarOrdenFotos') IS NOT NULL
     DROP PROCEDURE paActualizarOrdenFotos;
-GO
+GO --
 
 IF TYPE_ID('IdList') IS NOT NULL
     DROP TYPE IdList;
@@ -722,7 +713,7 @@ IF TYPE_ID('PhotoList') IS NOT NULL
 IF TYPE_ID('RoomBookingList') IS NOT NULL
     DROP TYPE RoomBookingList;
 
-GO
+GO --
 
 -- https://stackoverflow.com/a/42451702
 -- https://stackoverflow.com/a/33773336
@@ -747,7 +738,7 @@ CREATE TYPE RoomBookingList AS TABLE
     endDate     DATE    NOT NULL
 );
 
-GO
+GO --
 
 --
 -- Procedimientos almacenados de Booking
@@ -787,12 +778,12 @@ AS BEGIN
         THROW;
     END CATCH
 END
-GO
+GO --
 
 
 IF OBJECT_ID('paEliminarReservacionesCanceladasUsuario') IS NOT NULL
     DROP PROCEDURE paEliminarReservacionesCanceladasUsuario;
-GO
+GO --
 
 CREATE PROCEDURE paEliminarReservacionesCanceladasUsuario
     @userName VARCHAR(50)
@@ -818,11 +809,11 @@ AS BEGIN
         THROW;
     END CATCH
 END
-GO
+GO --
 
 IF OBJECT_ID('paCambiarEstadoReservacion') IS NOT NULL
     DROP PROCEDURE paCambiarEstadoReservacion;
-GO
+GO --
 
 CREATE PROCEDURE paCambiarEstadoReservacion
     @bookingId INT,
@@ -831,7 +822,7 @@ AS BEGIN
     UPDATE RoomBooking SET status = @status
         WHERE bookingId = @bookingId;
 END
-GO
+GO --
 
 --
 -- Procedimientos almacenados de Lodging y Room
@@ -839,7 +830,7 @@ GO
 
 IF OBJECT_ID('paCrearAlojamiento') IS NOT NULL
     DROP PROCEDURE paCrearAlojamiento;
-GO
+GO --
 
 CREATE PROCEDURE paCrearAlojamiento
     @ownerId		INT,
@@ -872,12 +863,12 @@ AS BEGIN
         THROW;
     END CATCH
 END
-GO
+GO --
 
 IF OBJECT_ID('paCrearAlojamientoSinHabitaciones') IS NOT NULL
 	DROP PROCEDURE paCrearAlojamientoSinHabitaciones;
 
-GO
+GO --
 
 -- Crea un alojamiento, estableciendo un unico tipo de habitacion y habitacion
 -- en el mismo, que seran usados para las reservaciones hechas en el alojamiento
@@ -924,12 +915,12 @@ AS BEGIN
         THROW;
     END CATCH
 END
-GO
+GO --
 
 
 IF OBJECT_ID('paEliminarAlojamiento') IS NOT NULL
     DROP PROCEDURE paEliminarAlojamiento;
-GO
+GO --
 
 CREATE PROCEDURE paEliminarAlojamiento
     @lodgingId INT
@@ -962,7 +953,7 @@ AS BEGIN
 		THROW
 	END CATCH
 END
-GO
+GO --
 
 -- Actualiza el campo orden de los registros de fotos en los que su nombre de archivo
 -- coincidan con los de la tabla pasada a través del último parámetro
@@ -975,7 +966,7 @@ AS BEGIN
         JOIN @photos AS n ON n.fileName = lp.fileName
         WHERE LodgingPhoto.lodgingId = @lodgingId;
 END
-GO
+GO --
 
 --
 -- Procedimientos almacenados de PaymentInformation
@@ -983,7 +974,7 @@ GO
 
 IF OBJECT_ID('paInsertarInformacionPago') IS NOT NULL
 	DROP PROCEDURE paInsertarInformacionPago;
-GO
+GO --
 
 CREATE PROCEDURE paInsertarInformacionPago
 	@userName				VARCHAR(50),
@@ -1016,7 +1007,7 @@ AS BEGIN
 	RETURN 0;
 END
 
-GO
+GO --
 
 ---
 --- Procedimientos almacenados de Payment
@@ -1024,7 +1015,7 @@ GO
 
 IF OBJECT_ID('paRealizarPago') IS NOT NULL
     DROP PROCEDURE paRealizarPago;
-GO
+GO --
 
 -- Realiza el pago, y modifica el estado de la reserva
 CREATE OR ALTER PROCEDURE paRealizarPago
@@ -1076,7 +1067,7 @@ AS BEGIN
 	END CATCH
 END
 
-GO
+GO --
 
 --
 -- Procedimientos almacenados de Usuario y Persona
@@ -1085,7 +1076,7 @@ GO
 -- Ingresar un usuario en el sistema
 IF OBJECT_ID('paInsertarUsuarioYPersona') IS NOT NULL
     DROP PROCEDURE paInsertarUsuarioYPersona;
-GO
+GO --
 
 CREATE PROCEDURE paInsertarUsuarioYPersona
     @userName		VARCHAR(50),
@@ -1124,13 +1115,13 @@ BEGIN
         THROW;
     END CATCH
 END;
-GO
+GO --
 
 
 --Actualiza un usuario
 IF OBJECT_ID('paActualizarUsuarioYPersona') IS NOT NULL
     DROP PROCEDURE paActualizarUsuarioYPersona;
-GO
+GO --
 
 CREATE PROCEDURE paActualizarUsuarioYPersona
     @userName			VARCHAR(50),
@@ -1168,13 +1159,13 @@ AS BEGIN
         THROW;
     END CATCH
 END;
-GO
+GO --
 
 
 -- Elimina un usuario
 IF OBJECT_ID('paEliminarUsuarioYPersona') IS NOT NULL
     DROP PROCEDURE paEliminarUsuarioYPersona;
-GO
+GO --
 
 CREATE PROCEDURE paEliminarUsuarioYPersona
     @userName VARCHAR(50)
@@ -1215,7 +1206,7 @@ BEGIN
         THROW;
     END CATCH
 END;
-GO
+GO --
 
 --
 -- AUDITORÍA
@@ -1295,9 +1286,9 @@ IF OBJECT_ID('TableAuditInfo') IS NULL
 		)
 	);
 
-GO
+GO --
 
-CREATE OR ALTER TRIGGER disInicioSesionServidor ON ALL SERVER
+CREATE OR ALTER TRIGGER restify_disInicioSesionServidor ON ALL SERVER
 	FOR LOGON
 AS BEGIN
 	DECLARE @now DATETIME = GETDATE();
@@ -1314,7 +1305,7 @@ AS BEGIN
 		INSERT INTO Restify.dbo.LogonAuditInfo (logDateTime, databaseUserName, loginType, clientHost) 
 				VALUES (@now, SUSER_NAME(), @loginType, @clientHost);
 END
-GO
+GO --
 
 CREATE OR ALTER TRIGGER disRegistrarEventoTablaOUsuarioBaseDeDatos ON DATABASE
 	AFTER DDL_TABLE_EVENTS, DDL_USER_EVENTS -- CREATE_TABLE, DROP_TABLE, ALTER_TABLE, CREATE_USER, DROP_USER, ALTER_USER
@@ -1327,7 +1318,7 @@ AS BEGIN
 	INSERT INTO DatabaseAuditInfo (logDateTime, eventType, databaseUserName, executedCommand)
 		VALUES (@now, @eventType, @databaseUserName, @command);
 END
-GO
+GO --
 
 CREATE OR ALTER TRIGGER disRegistrarInsercionUsuarioAdministrador ON [User]
 	AFTER INSERT
@@ -1341,7 +1332,7 @@ AS BEGIN
 			JOIN UserRole AS ur ON ur.userRoleId = i.userRoleId
 			WHERE ur.type = 'Administrator';
 END
-GO
+GO --
 
 CREATE OR ALTER TRIGGER disRegistrarInsercionPago ON Payment
 	AFTER INSERT
@@ -1354,7 +1345,7 @@ AS BEGIN
 		SELECT @now, 'INSERT', @databaseUserName, 'Payment', i.paymentId
 			FROM INSERTED AS i;
 END
-GO
+GO --
 
 CREATE OR ALTER TRIGGER disRegistrarActualizacionCantidadPago ON Payment
 	AFTER UPDATE
@@ -1370,4 +1361,12 @@ AS BEGIN
 				JOIN DELETED AS d ON d.paymentId = i.paymentId;
 	END
 END
-GO
+GO --
+
+--
+-- INSERTAR DATOS
+--
+INSERT INTO UserRole VALUES ('Administrator'), ('Customer'), ('Lessor');
+
+INSERT INTO [User] (userRoleId, userName, password) VALUES (1, 'root', 'Wd7bGbRHp775WhxhoWuMijJABrviZHO3TrZWw7epdII=');
+GO --

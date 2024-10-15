@@ -45,8 +45,11 @@ namespace Restify.API.Controllers
             try
             {
                 string databaseCreationScript = System.IO.File.ReadAllText(databaseCreationScriptPath);
+                // Database administrators hate this simple trick
+                // Seriously, why isn't it valid syntax to put a semicolon after a GO statement??
+                // I can't just look for "GO" because it would cut a LOGON trigger in half D:
                 string[] sqlStatementBatches =
-                    databaseCreationScript.Split("GO", StringSplitOptions.RemoveEmptyEntries);
+                    databaseCreationScript.Split("GO --", StringSplitOptions.RemoveEmptyEntries);
 
                 context.Database.ExecuteSqlRaw(sqlStatementBatches[0]);
 
@@ -76,16 +79,35 @@ namespace Restify.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult DropDatabase()
         {
-            RestifyDbContext context = _serviceProvider.GetRequiredService<RestifyDbContext>();
+            RestifyDbContext context = _serviceProvider
+                .GetRequiredKeyedService<RestifyDbContext>(RestifyDbContext.SERVER_WIDE_SERVICE_NAME);
             
-            bool deleted = context.Database.EnsureDeleted();
+            string databaseDropScriptPath = Path.Combine("sql", "booking_system_drop_script.sql");
 
-            if (deleted)
+            IQueryable<string> databaseNameQuery = context.Database.SqlQuery<string>(
+                $"""
+                 SELECT TOP(1) name AS Value FROM sys.databases
+                 WHERE name = {RestifyDbContext.DATABASE_NAME}
+                 """
+            );
+            
+            if (databaseNameQuery.FirstOrDefault() == null)
             {
-                return NoContent();
+                return NotFound();
             }
 
-            return NotFound();
+            string databaseCreationScript = System.IO.File.ReadAllText(databaseDropScriptPath);
+            string[] sqlStatementBatches =
+                databaseCreationScript.Split("GO --", StringSplitOptions.RemoveEmptyEntries);
+
+            context.Database.ExecuteSqlRaw(sqlStatementBatches[0]);
+
+            foreach (string sqlStatementBatch in sqlStatementBatches.Skip(1))
+            {
+                context.Database.ExecuteSqlRaw(sqlStatementBatch);
+            }
+
+            return NoContent();
         }
     }
 }
