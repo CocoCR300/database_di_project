@@ -22,15 +22,15 @@ public class LodgingController : BaseController
         _context = context;
     }
 
-    [HttpGet("{pageSize}/{page}")]
+    [HttpGet]
     public ObjectResult Index(
         [FromQuery] string? lodgingName,
         [FromQuery] string? description,
         [FromQuery] string? address,
         [FromQuery] string? lodgingTypes,
         [FromQuery] string? perkIds,
-        [Range(0, int.MaxValue)] int pageSize = 10,
-        [Range(0, int.MaxValue)] int page = 1)
+        [FromQuery, Range(1, int.MaxValue)] int pageSize = int.MaxValue,
+        [FromQuery, Range(1, int.MaxValue)] int page = 1)
     {
         IQueryable<Lodging> lodgingsQuery = _context.Lodging
             .Include(l => l.Perks)

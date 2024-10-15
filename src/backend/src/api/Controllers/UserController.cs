@@ -24,10 +24,10 @@ namespace Restify.API.Controllers
             _context = context;
         }
 
-        [HttpGet("{pageSize}/{page}")]
-        public ObjectResult Get(int? roleId,
-            [Range(0, int.MaxValue)] int pageSize = 10,
-            [Range(0, int.MaxValue)] int page = 1)
+        [HttpGet]
+        public ObjectResult Get([FromQuery] int? roleId,
+            [FromQuery, Range(1, int.MaxValue)] int pageSize = int.MaxValue,
+            [FromQuery, Range(1, int.MaxValue)] int page = 1)
         {
             IQueryable<User> usersQuery = _context.User
                 .Include(u => u.Person);

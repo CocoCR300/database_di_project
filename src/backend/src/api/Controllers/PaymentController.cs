@@ -21,13 +21,13 @@ public class PaymentController : BaseController
         _context = context;
     }
     
-    [HttpGet("user/{userName}/{pageSize}/{page}")]
+    [HttpGet("user/{userName}")]
     public async Task<ObjectResult> Get(string userName,
         [FromQuery] int? lodgingId,
         [FromQuery] DateOnly? startDate,
         [FromQuery] DateOnly? endDate,
-        [Range(0, int.MaxValue)] int pageSize = 10,
-        [Range(0, int.MaxValue)] int page = 1)
+        [FromQuery, Range(0, int.MaxValue)] int pageSize = int.MaxValue,
+        [FromQuery, Range(0, int.MaxValue)] int page = 1)
     {
         User? user = _context.Find<User>(userName);
 

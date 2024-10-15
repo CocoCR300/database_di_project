@@ -28,12 +28,12 @@ public class BookingController : BaseController
         return Enum.GetNames<BookingStatus>();
     }
     
-    [HttpGet("lodging/{lodgingId}/{pageSize}/{page}")]
+    [HttpGet("lodging/{lodgingId}")]
     public async Task<ObjectResult> GetLodgingBookings(int lodgingId,
         [FromQuery] DateOnly? startDate,
         [FromQuery] DateOnly? endDate,
-        [Range(0, int.MaxValue)] int pageSize = 10,
-        [Range(0, int.MaxValue)] int page = 1)
+        [FromQuery, Range(1, int.MaxValue)] int pageSize = int.MaxValue,
+        [FromQuery, Range(1, int.MaxValue)] int page = 1)
     {
         Lodging? lodging = _context.Find<Lodging>(lodgingId);
         if (lodging != null)
@@ -53,13 +53,13 @@ public class BookingController : BaseController
         return NotFound("No existe ningún alojamiento con el identificador especificado.");
     }
     
-    [HttpGet("user/{userName}/{pageSize}/{page}")]
+    [HttpGet("user/{userName}")]
     public async Task<ObjectResult> GetUserBookings(string userName,
         [FromQuery] int? lodgingId,
         [FromQuery] DateOnly? startDate,
         [FromQuery] DateOnly? endDate,
-        [Range(0, int.MaxValue)] int pageSize = 10,
-        [Range(0, int.MaxValue)] int page = 1)
+        [FromQuery, Range(1, int.MaxValue)] int pageSize = int.MaxValue,
+        [FromQuery, Range(1, int.MaxValue)] int page = 1)
     {
         User? user = _context.Find<User>(userName);
         if (user != null)
