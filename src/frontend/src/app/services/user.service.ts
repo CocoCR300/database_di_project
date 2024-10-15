@@ -16,18 +16,18 @@ export class UserService extends BaseService{
 
 
     getUsers(): Observable<User[]> {
-        return this.get<User[]>("User/1000/1");
+        return this.get<User[]>("User");
     }
 
     getUser(name: string): Observable<User> {
         return this.get(`user/${name}`);
     }
-    
+
     signup(user: User): Observable<any> {
         let headers = new HttpHeaders().set('Content-Type', 'application/json');
         return this._http.post(this.urlAPI + 'User/signup', user, {headers})
       }
-    
+
       uploadProfilePhoto(file: File, userName: string): Observable<any> {
         const formData = new FormData();
         formData.append('file', file);
@@ -38,7 +38,7 @@ export class UserService extends BaseService{
         let headers = new HttpHeaders().set('Content-Type', 'application/json');
         return this._http.post<any>(this.urlAPI + 'User/login', user, { headers });
       }
-      
+
 
       getIdentityFromApi(token: string): Observable<TokenIdentity> {
         let headers = new HttpHeaders().set('Content-Type', 'application/json');
@@ -67,7 +67,7 @@ export class UserService extends BaseService{
     deletePhoneNumbers(username: string, phoneNumbers: string[]) {
         return this.delete(`user/${username}/phone_number`, true, phoneNumbers);
     }
-    
+
     logOut(){
         this.post(`user/${this._appState.userName}/logout`,true,'').subscribe((response : AppResponse) => {
             if(response.ok){

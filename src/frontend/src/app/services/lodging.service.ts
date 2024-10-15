@@ -18,7 +18,7 @@ export class LodgingService extends BaseService
     }
 
     getLodgingBookings(lodgingId: number): Observable<Booking[]> {
-        return this.get(`booking/lodging/${lodgingId}/10000/1`, true);
+        return this.get(`booking/lodging/${lodgingId}`, true);
     }
 
     getLodgingRooms(lodgingId: number): Observable<Room[]> {

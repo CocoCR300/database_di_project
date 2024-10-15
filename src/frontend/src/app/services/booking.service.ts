@@ -16,18 +16,18 @@ export class BookingService extends BaseService
     constructor(protected appState: AppState, protected http: HttpClient) {
         super(appState, http);
       }
-    
+
 
     public postBooking(bookingRequestData: BookingRequestData): Observable<AppResponse> {
         return this.post("Booking", true, bookingRequestData);
     }
-    
+
     public getBookingsByPersonId(userName: string): Observable<Booking[]> {
-        return this.get<Booking[]>(`Booking/user/${userName}/10000/1`, true);
+        return this.get<Booking[]>(`Booking/user/${userName}`, true);
     }
 
     public getLodgingBookings(lodgingId: number): Observable<Booking[]> {
-        return this.get<Booking[]>(`Booking/lodging/${lodgingId}/10000/1`, true);
+        return this.get<Booking[]>(`Booking/lodging/${lodgingId}`, true);
     }
 
     public changeBookingStatus(userName: string, bookingId: number, bookingStatus: BookingStatus) {
