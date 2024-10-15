@@ -77,6 +77,8 @@ ALTER ROLE db_datareader ADD MEMBER restify_employee;
 ALTER ROLE db_datareader ADD MEMBER restify_user;
 ALTER ROLE db_datawriter ADD MEMBER restify_user;
 
+GRANT EXECUTE ON DATABASE::restify TO restify_user;
+
 GO
 
 
@@ -309,10 +311,10 @@ IF OBJECT_ID('PaymentInformation') IS NULL
 
 		CONSTRAINT CK_PaymentInformation_validCardDetails CHECK
 		(
-			LEN(cardNumber)			> 0 AND cardNumber			NOT LIKE '%[^0-9]%' AND
-			LEN(cardSecurityCode)	> 0 AND cardSecurityCode	NOT LIKE '%[^0-9]%' AND
+			LEN(cardNumber)			> 0 AND TRY_CAST(cardNumber AS BIGINT) > 0 AND
+			LEN(cardSecurityCode)	> 0 AND TRY_CAST(cardSecurityCode AS INT) > 0 AND
 			LEN(cardHolderName)		> 0 AND
-			ABS(DATEDIFF(day, GETDATE(), cardExpiryDate)) >= 0
+			DATEDIFF(day, GETDATE(), cardExpiryDate) >= 0
 		),
 
 		CONSTRAINT FK_PAYMENT_INFORMATION_PERSON FOREIGN KEY (personId)

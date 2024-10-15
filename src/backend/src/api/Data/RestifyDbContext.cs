@@ -164,7 +164,7 @@ namespace Restify.API.Data
 
 		public IQueryable<PaymentInformation> GetUserPaymentInformation(string userName)
 		{
-			return PaymentInformation.FromSql($"EXEC paObtenerInformacionPagoUsuario {userName}");
+			return PaymentInformation.FromSql($"SELECT * FROM fnObtenerInformacionPagoUsuario({userName})");
 		}
 
 		public async Task<int> InsertPaymentInformation(string userName, PaymentInformation paymentInformation)
