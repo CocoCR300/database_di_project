@@ -8,9 +8,9 @@ DROP TRIGGER restify_disInicioSesionServidor ON ALL SERVER;
 GO --
 
 DECLARE @kill varchar(8000) = '';  
-SELECT @kill = @kill + 'kill ' + CONVERT(varchar(5), session_id) + ';'  
+SELECT @kill = @kill + 'kill ' + CONVERT(VARCHAR(5), session_id) + ';'  
     FROM sys.dm_exec_sessions
-WHERE database_id  = db_id('restify')
+    WHERE database_id  = DB_ID('restify');
 
 EXEC(@kill);
 GO --
