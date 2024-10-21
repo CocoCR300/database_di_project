@@ -32,6 +32,14 @@ body {
     margin: 0;
 }
 
+@media only screen and (max-width: 425px) {
+    body{
+        background-size: 100% 100%;
+        background-position: center;
+        background-image: url("https://imgur.com/y7aKg7J.jpg");
+    }
+}
+
 #main {
     display: grid;
     grid-template-rows: min-content auto;
