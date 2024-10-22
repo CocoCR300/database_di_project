@@ -15,6 +15,9 @@ SELECT @kill = @kill + 'kill ' + CONVERT(VARCHAR(5), session_id) + ';'
 EXEC(@kill);
 GO --
 
+EXEC msdb.dbo.sp_delete_database_backuphistory @database_name = 'restify'
+GO
+
 DROP DATABASE restify;
 GO --
 

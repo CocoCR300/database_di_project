@@ -9,18 +9,21 @@ namespace Restify.API.Controllers;
 
 [ApiController]
 [ApiVersion(2)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 [Route("v{version:apiVersion}/[controller]")]
 public class DatabaseController : BaseController
 {
     private readonly IServiceProvider _serviceProvider;
-    private const string BACKUP_FOLDER_PATH = "C:/Microsoft SQL Server Database Files/Backup/";
+    private readonly string _backupFolderPath;
 
-    public DatabaseController(IServiceProvider serviceProvider)
+    public DatabaseController(IConfiguration configuration, IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
+        _backupFolderPath = configuration["BackupFolderPath"]!;
     }
 
     [HttpPost("backup")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     public ActionResult BackupDatabase()
     {
         RestifyDbContext context = _serviceProvider
@@ -28,14 +31,13 @@ public class DatabaseController : BaseController
 
         DateTime now = DateTime.Now;
         string backupFileName = string.Format("restify_{0:yyyy_MM_dd}.bak", now);
-        string backupFilePath = Path.Combine(BACKUP_FOLDER_PATH, backupFileName);
+        string backupFilePath = Path.Combine(_backupFolderPath, backupFileName);
         string backupName = string.Format("Restify Full Backup ({0:yyyy/MM/dd})", now);
         
         context.Database.ExecuteSqlRaw(
             $"""
              BACKUP DATABASE restify TO DISK = {backupFilePath}
-             WITH NOFORMAT, NOINIT,
-             NAME = {backupName}, SKIP, NOREWIND, NOUNLOAD, STATS = 10;
+             WITH NAME = {backupName};
              """);
         
         IQueryable<int> backupFilePathQuery = context.Database.SqlQueryRaw<int>(
@@ -47,7 +49,7 @@ public class DatabaseController : BaseController
 
         int databaseBackupId = backupFilePathQuery.Single();
 
-        return Ok(new DatabaseBackup(databaseBackupId, backupName));
+        return Created(new DatabaseBackup(databaseBackupId, backupName, now));
     }
 
     [HttpPost("create")]
@@ -142,20 +144,23 @@ public class DatabaseController : BaseController
     }
 
     [HttpGet("backup")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public ActionResult<List<DatabaseBackup>> GetBackups()
     {
         RestifyDbContext context = _serviceProvider
             .GetRequiredKeyedService<RestifyDbContext>(RestifyDbContext.SERVER_WIDE_SERVICE_NAME);
         IQueryable<DatabaseBackup> backupFilePathQuery = context.Database.SqlQueryRaw<DatabaseBackup>(
             """
-            SELECT backup_set_id AS Id, name AS Name FROM msdb.dbo.backupset
+            SELECT backup_set_id AS Id, name AS Name, backup_start_date AS CreationDateTime FROM msdb.dbo.backupset
             WHERE database_name = 'restify';
             """);
 
         return Ok(backupFilePathQuery.ToList());
     }
         
-    [HttpPost("restore/{databaseBackupId}")]
+    [HttpPost("backup/{databaseBackupId}/restore")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult RestoreDatabase(int databaseBackupId)
     {
         RestifyDbContext context = _serviceProvider
@@ -165,22 +170,31 @@ public class DatabaseController : BaseController
             $"""
             SELECT bmf.physical_device_name FROM msdb.dbo.backupset
             INNER JOIN msdb.dbo.backupmediafamily AS bmf ON backupset.media_set_id = bmf.media_set_id
-            WHERE backupset.backup_set_id = {databaseBackupId};
+            WHERE backupset.database_name = 'restify' AND backupset.backup_set_id = {databaseBackupId};
             """);
 
-        string backupFilePath = backupFilePathQuery.Single();
+        string? backupFilePath = backupFilePathQuery.FirstOrDefault();
+        if (backupFilePath == null)
+        {
+            return NotFound();
+        }
         
         context.Database.ExecuteSqlRaw(
             $"""
+            ALTER DATABASE restify SET OFFLINE WITH ROLLBACK IMMEDIATE;
+                  
             RESTORE DATABASE restify FROM DISK = {backupFilePath}
-            WITH FILE = {backupFilePath}, NOUNLOAD, STATS = 5;
+            WITH REPLACE, FILE = {backupFilePath};
+            
+            ALTER DATABASE restify SET ONLINE;
             """);
         
         return NoContent();
     }
 
     public record DatabaseBackup(
-        int Id,
-        string Name
+        int                    Id,
+        string               Name,
+        DateTime CreationDateTime
     );
 }
