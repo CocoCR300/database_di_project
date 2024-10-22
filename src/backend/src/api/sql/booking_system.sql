@@ -1301,7 +1301,7 @@ AS BEGIN
 	IF EXISTS (SELECT service_account FROM sys.dm_server_services WHERE service_account = SUSER_SNAME())
 		RETURN;
 
-    IF SUSER_SNAME() <> 'sa'
+    IF SUSER_SNAME() IN ('restify_user', 'restify_employee', 'restify_administrator')
 		INSERT INTO Restify.dbo.LogonAuditInfo (logDateTime, databaseUserName, loginType, clientHost) 
 				VALUES (@now, SUSER_NAME(), @loginType, @clientHost);
 END
