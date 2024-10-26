@@ -30,21 +30,21 @@ public class DatabaseController : BaseController
             .GetRequiredKeyedService<RestifyDbContext>(RestifyDbContext.SERVER_WIDE_SERVICE_NAME);
 
         DateTime now = DateTime.Now;
-        string backupFileName = string.Format("restify_{0:yyyy_MM_dd}.bak", now);
+        string backupFileName = string.Format("restify_{0:yyyy_MM_dd_HH_mm_ss}.bak", now);
         string backupFilePath = Path.Combine(_backupFolderPath, backupFileName);
-        string backupName = string.Format("Restify Full Backup ({0:yyyy/MM/dd})", now);
+        string backupName = string.Format("Restify Full Backup ({0:yyyy/MM/dd - HH:mm:ss})", now);
         
-        context.Database.ExecuteSqlRaw(
+        context.Database.ExecuteSql(
             $"""
              BACKUP DATABASE restify TO DISK = {backupFilePath}
              WITH NAME = {backupName};
              """);
         
-        IQueryable<int> backupFilePathQuery = context.Database.SqlQueryRaw<int>(
+        IQueryable<int> backupFilePathQuery = context.Database.SqlQuery<int>(
             $"""
-            SELECT backupset.backup_set_id FROM msdb.dbo.backupset
+            SELECT backupset.backup_set_id AS Value FROM msdb.dbo.backupset
             INNER JOIN msdb.dbo.backupmediafamily AS bmf ON backupset.media_set_id = bmf.media_set_id
-            WHERE bmf.physical_device_name = {backupFilePath};
+            WHERE bmf.physical_device_name = {backupFilePath}
             """);
 
         int databaseBackupId = backupFilePathQuery.Single();
@@ -179,7 +179,7 @@ public class DatabaseController : BaseController
             return NotFound();
         }
         
-        context.Database.ExecuteSqlRaw(
+        context.Database.ExecuteSql(
             $"""
             ALTER DATABASE restify SET OFFLINE WITH ROLLBACK IMMEDIATE;
                   

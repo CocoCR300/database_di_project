@@ -1315,7 +1315,7 @@ AS BEGIN
 	DECLARE @now DATETIME = GETDATE();
 	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 
-	INSERT INTO DatabaseAuditInfo (logDateTime, eventType, databaseUserName, executedCommand)
+	INSERT INTO Restify.dbo.DatabaseAuditInfo (logDateTime, eventType, databaseUserName, executedCommand)
 		VALUES (@now, @eventType, @databaseUserName, @command);
 END
 GO --
@@ -1326,7 +1326,7 @@ AS BEGIN
 	DECLARE @now DATETIME = GETDATE();
 	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 
-	INSERT INTO TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
+	INSERT INTO Restify.dbo.TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
 		SELECT @now, 'INSERT', @databaseUserName, 'User', i.userName
 			FROM INSERTED AS i
 			JOIN UserRole AS ur ON ur.userRoleId = i.userRoleId
@@ -1341,7 +1341,7 @@ AS BEGIN
 	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 
 	
-	INSERT INTO TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
+	INSERT INTO Restify.dbo.TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
 		SELECT @now, 'INSERT', @databaseUserName, 'Payment', i.paymentId
 			FROM INSERTED AS i;
 END
@@ -1355,7 +1355,7 @@ AS BEGIN
 		DECLARE @now DATETIME = GETDATE();
 		DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 		
-		INSERT INTO TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId, columnName, oldValue, newValue)
+		INSERT INTO Restify.dbo.TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId, columnName, oldValue, newValue)
 			SELECT @now, 'UPDATE', @databaseUserName, 'Payment', i.paymentId, 'amount', d.amount, i.amount
 				FROM INSERTED AS i
 				JOIN DELETED AS d ON d.paymentId = i.paymentId;
@@ -1368,5 +1368,8 @@ GO --
 --
 INSERT INTO UserRole VALUES ('Administrator'), ('Customer'), ('Lessor');
 
+-- Password is "1234"
 INSERT INTO [User] (userRoleId, userName, password) VALUES (1, 'root', 'Wd7bGbRHp775WhxhoWuMijJABrviZHO3TrZWw7epdII=');
+INSERT INTO Person (userName, emailAddress, firstName, lastName) VALUES ('root', 'root@mail.com', 'Root', 'Root');
+
 GO --
