@@ -272,6 +272,8 @@ namespace Restify.API.Data
 
 				user.HasOne(u => u.Role).WithMany().OnDelete(DeleteBehavior.Restrict);
 				user.Navigation(u => u.Person).AutoInclude();
+
+				user.ToTable(tb => tb.HasTrigger("disRegistrarInsercionUsuarioAdministrador"));
 			});
 
 			modelBuilder.Entity<PhoneNumber>(phoneNumber =>
@@ -441,6 +443,8 @@ namespace Restify.API.Data
 					.WithMany()
 					.HasForeignKey(l => l.OwnerId)
 					.OnDelete(DeleteBehavior.Restrict);
+
+				lodging.ToTable(tb => tb.HasTrigger("disActualizacionTipoAlojamiento"));
 			});
 
 			modelBuilder.Entity<Booking>(booking =>
@@ -533,6 +537,14 @@ namespace Restify.API.Data
 					.WithOne(b => b.Payment)
 					.HasForeignKey<Payment>(p => p.BookingId)
 					.IsRequired(false);
+
+				payment.ToTable(tb =>
+				{
+					tb.HasTrigger("disProhibirBorradoPago");
+					tb.HasTrigger("disConfirmarReservaAlRegistrarPago");
+					tb.HasTrigger("disRegistrarInsercionPago");
+					tb.HasTrigger("disRegistrarActualizacionCantidadPago");
+				});
 			});
 
 			modelBuilder.Entity<RoomType>(roomType =>
@@ -568,6 +580,8 @@ namespace Restify.API.Data
 						photo.Property(p => p.RoomTypeId)
 							.IsRequired();
 					});
+
+				roomType.ToTable(tb => tb.HasTrigger("disTiposHabitacionesEnAlojamientosQueAdmiten"));
 			});
 			
 			modelBuilder.Entity<Room>(room =>
@@ -588,6 +602,8 @@ namespace Restify.API.Data
 				room.HasOne(r => r.Type)
 					.WithMany()
 					.HasForeignKey(r => r.TypeId);
+
+				room.ToTable(tb => tb.HasTrigger("disHabitacionesEnAlojamientosQueAdmiten"));
 			});
 
 			modelBuilder.Entity<RoomBooking>(roomBooking =>

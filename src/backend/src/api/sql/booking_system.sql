@@ -504,23 +504,20 @@ AS BEGIN
 	DECLARE @lodgingType CHAR(50);
 
 	SELECT TOP(1) @lodgingId = lodgingId FROM INSERTED;
-	SELECT @lodgingType = lodgingType FROM Lodging
+	SELECT TOP(1) @lodgingType = lodgingType FROM Lodging
 		WHERE lodgingId = @lodgingId;
 
 	IF @lodgingType = 'Apartment' OR @lodgingType = 'VacationRental'
 	BEGIN
 		DECLARE @roomsToInsertCount INT;
-		DECLARE @existingRoomsCount INT;
-
-		
-		SELECT TOP(1) @existingRoomsCount = COUNT(*) FROM RoomType
-			WHERE lodgingId = @lodgingId;
 		SELECT TOP(2) @roomsToInsertCount = COUNT(*) FROM INSERTED;
 
-		IF @existingRoomsCount = 1 OR @roomsToInsertCount > 1
+		IF @roomsToInsertCount > 1
+		BEGIN
 			RAISERROR ('No se puede insertar más de un tipo de habitación en este tipo de alojamiento.', 16, -1);
 			ROLLBACK;
 			RETURN;
+		END
 	END
 END
 GO --
@@ -532,23 +529,20 @@ AS BEGIN
 	DECLARE @lodgingType CHAR(50);
 
 	SELECT TOP(1) @lodgingId = lodgingId FROM INSERTED;
-	SELECT @lodgingType = lodgingType FROM Lodging
+	SELECT TOP(1) @lodgingType = lodgingType FROM Lodging
 		WHERE lodgingId = @lodgingId;
 
 	IF @lodgingType = 'Apartment' OR @lodgingType = 'VacationRental'
 	BEGIN
 		DECLARE @roomsToInsertCount INT;
-		DECLARE @existingRoomsCount INT;
-
-		
-		SELECT TOP(1) @existingRoomsCount = COUNT(*) FROM Room
-			WHERE lodgingId = @lodgingId;
 		SELECT TOP(2) @roomsToInsertCount = COUNT(*) FROM INSERTED;
 
-		IF @existingRoomsCount = 1 OR @roomsToInsertCount > 1
+		IF @roomsToInsertCount > 1
+		BEGIN
 			RAISERROR ('No se puede insertar más de una habitación en este tipo de alojamiento.', 16, -1);
 			ROLLBACK;
 			RETURN;
+		END
 	END
 END
 GO --
