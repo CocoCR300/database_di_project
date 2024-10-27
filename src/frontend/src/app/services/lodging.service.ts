@@ -42,7 +42,7 @@ export class LodgingService extends BaseService
     }
 
     getLodgings(pageSize: number, pageNumber: number): Observable<Lodging[]> {
-        return this.get<Lodging[]>(`lodging/${pageSize}/${pageNumber}`);
+        return this.get<Lodging[]>(`lodging`);
     }
 
     deleteLodging(lodgingId: number): Observable<AppResponse> {
@@ -50,7 +50,6 @@ export class LodgingService extends BaseService
     }
 
     saveLodging(lodging: Lodging): Observable<AppResponse> {
-        // TODO
         const lodgingTrimmed = {
             ownerId: lodging.ownerId,
             address: lodging.address,
@@ -67,14 +66,16 @@ export class LodgingService extends BaseService
     }
 
     updateLodging(lodging: Lodging): Observable<AppResponse> {
-        // TODO
         const lodgingTrimmed = {
             id: lodging.id,
             address: lodging.address,
             name: lodging.name,
             description: lodging.description,
             type: lodging.type,
-            emailAddress: lodging.emailAddress
+            emailAddress: lodging.emailAddress,
+            perNightPrice: lodging.perNightPrice,
+            fees: lodging.fees,
+            capacity: lodging.capacity
         };
 
         return this.patch(`lodging/${lodging.id}`, true, lodgingTrimmed);

@@ -442,10 +442,10 @@ IF OBJECT_ID('RoomBooking') IS NULL
 			discount	>= 0
 		),
 		CONSTRAINT CK_RoomBooking_notEmpty	CHECK (LEN(status) > 0),
-		CONSTRAINT CK_RoomBookng_validDates CHECK
+		CONSTRAINT CK_RoomBooking_validDates CHECK
 		(
-			DATEDIFF(day, GETDATE(), startDate) <= 0 AND
-			DATEDIFF(day, startDate, endDate)	<= 0
+			DATEDIFF(day, GETDATE(), startDate) >= 0 AND
+			DATEDIFF(day, startDate, endDate)	>= 0
 		),
   
 		CONSTRAINT FK_ROOM_ROOM_BOOKING		FOREIGN KEY (lodgingId, roomNumber)	REFERENCES Room (lodgingId, roomNumber)
