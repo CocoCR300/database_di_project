@@ -78,6 +78,7 @@ export class BookingComponent implements AfterViewInit, OnInit {
   showActionsForBooking(booking: any): boolean {
     return booking.status != BookingStatus.Confirmed;
   }
+
   async loadBookings() {
     const userName = this.appState.userName!;
     let bookingsResponse: Booking[] = [];
