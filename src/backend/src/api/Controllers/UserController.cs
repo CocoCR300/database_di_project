@@ -101,6 +101,7 @@ namespace Restify.API.Controllers
                 return Unauthorized("Nombre de usuario o contraseña incorrectos.");
             }
 
+            _context.Entry(user).Reference(u => u.Person).Load();
             _context.Entry(user).Reference(u => u.Role).Load();
             var token = _authenticationUtil.GenerateJwtToken(user);
             return Ok(token);
@@ -133,6 +134,7 @@ namespace Restify.API.Controllers
                 return BadRequest("Ya existe un usuario con el nombre especificado.");
             }
             
+            _context.Attach(user).Reference(u => u.Person).Load();
             _context.Attach(user).Reference(u => u.Role).Load();
             var token = _authenticationUtil.GenerateJwtToken(user);
             return Ok(token);

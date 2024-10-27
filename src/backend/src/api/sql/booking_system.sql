@@ -442,10 +442,10 @@ IF OBJECT_ID('RoomBooking') IS NULL
 			discount	>= 0
 		),
 		CONSTRAINT CK_RoomBooking_notEmpty	CHECK (LEN(status) > 0),
-		CONSTRAINT CK_RoomBookng_validDates CHECK
+		CONSTRAINT CK_RoomBooking_validDates CHECK
 		(
-			DATEDIFF(day, GETDATE(), startDate) <= 0 AND
-			DATEDIFF(day, startDate, endDate)	<= 0
+			DATEDIFF(day, GETDATE(), startDate) >= 0 AND
+			DATEDIFF(day, startDate, endDate)	>= 0
 		),
   
 		CONSTRAINT FK_ROOM_ROOM_BOOKING		FOREIGN KEY (lodgingId, roomNumber)	REFERENCES Room (lodgingId, roomNumber)
@@ -504,23 +504,20 @@ AS BEGIN
 	DECLARE @lodgingType CHAR(50);
 
 	SELECT TOP(1) @lodgingId = lodgingId FROM INSERTED;
-	SELECT @lodgingType = lodgingType FROM Lodging
+	SELECT TOP(1) @lodgingType = lodgingType FROM Lodging
 		WHERE lodgingId = @lodgingId;
 
 	IF @lodgingType = 'Apartment' OR @lodgingType = 'VacationRental'
 	BEGIN
 		DECLARE @roomsToInsertCount INT;
-		DECLARE @existingRoomsCount INT;
-
-		
-		SELECT TOP(1) @existingRoomsCount = COUNT(*) FROM RoomType
-			WHERE lodgingId = @lodgingId;
 		SELECT TOP(2) @roomsToInsertCount = COUNT(*) FROM INSERTED;
 
-		IF @existingRoomsCount = 1 OR @roomsToInsertCount > 1
+		IF @roomsToInsertCount > 1
+		BEGIN
 			RAISERROR ('No se puede insertar más de un tipo de habitación en este tipo de alojamiento.', 16, -1);
 			ROLLBACK;
 			RETURN;
+		END
 	END
 END
 GO --
@@ -532,23 +529,20 @@ AS BEGIN
 	DECLARE @lodgingType CHAR(50);
 
 	SELECT TOP(1) @lodgingId = lodgingId FROM INSERTED;
-	SELECT @lodgingType = lodgingType FROM Lodging
+	SELECT TOP(1) @lodgingType = lodgingType FROM Lodging
 		WHERE lodgingId = @lodgingId;
 
 	IF @lodgingType = 'Apartment' OR @lodgingType = 'VacationRental'
 	BEGIN
 		DECLARE @roomsToInsertCount INT;
-		DECLARE @existingRoomsCount INT;
-
-		
-		SELECT TOP(1) @existingRoomsCount = COUNT(*) FROM Room
-			WHERE lodgingId = @lodgingId;
 		SELECT TOP(2) @roomsToInsertCount = COUNT(*) FROM INSERTED;
 
-		IF @existingRoomsCount = 1 OR @roomsToInsertCount > 1
+		IF @roomsToInsertCount > 1
+		BEGIN
 			RAISERROR ('No se puede insertar más de una habitación en este tipo de alojamiento.', 16, -1);
 			ROLLBACK;
 			RETURN;
+		END
 	END
 END
 GO --
@@ -1315,7 +1309,7 @@ AS BEGIN
 	DECLARE @now DATETIME = GETDATE();
 	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 
-	INSERT INTO DatabaseAuditInfo (logDateTime, eventType, databaseUserName, executedCommand)
+	INSERT INTO Restify.dbo.DatabaseAuditInfo (logDateTime, eventType, databaseUserName, executedCommand)
 		VALUES (@now, @eventType, @databaseUserName, @command);
 END
 GO --
@@ -1326,7 +1320,7 @@ AS BEGIN
 	DECLARE @now DATETIME = GETDATE();
 	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 
-	INSERT INTO TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
+	INSERT INTO Restify.dbo.TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
 		SELECT @now, 'INSERT', @databaseUserName, 'User', i.userName
 			FROM INSERTED AS i
 			JOIN UserRole AS ur ON ur.userRoleId = i.userRoleId
@@ -1341,7 +1335,7 @@ AS BEGIN
 	DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 
 	
-	INSERT INTO TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
+	INSERT INTO Restify.dbo.TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId)
 		SELECT @now, 'INSERT', @databaseUserName, 'Payment', i.paymentId
 			FROM INSERTED AS i;
 END
@@ -1355,7 +1349,7 @@ AS BEGIN
 		DECLARE @now DATETIME = GETDATE();
 		DECLARE @databaseUserName sysname = ORIGINAL_LOGIN();
 		
-		INSERT INTO TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId, columnName, oldValue, newValue)
+		INSERT INTO Restify.dbo.TableAuditInfo (logDateTime, eventType, databaseUserName, tableName, rowId, columnName, oldValue, newValue)
 			SELECT @now, 'UPDATE', @databaseUserName, 'Payment', i.paymentId, 'amount', d.amount, i.amount
 				FROM INSERTED AS i
 				JOIN DELETED AS d ON d.paymentId = i.paymentId;
@@ -1368,5 +1362,8 @@ GO --
 --
 INSERT INTO UserRole VALUES ('Administrator'), ('Customer'), ('Lessor');
 
+-- Password is "1234"
 INSERT INTO [User] (userRoleId, userName, password) VALUES (1, 'root', 'Wd7bGbRHp775WhxhoWuMijJABrviZHO3TrZWw7epdII=');
+INSERT INTO Person (userName, emailAddress, firstName, lastName) VALUES ('root', 'root@mail.com', 'Root', 'Root');
+
 GO --

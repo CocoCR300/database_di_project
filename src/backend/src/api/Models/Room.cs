@@ -7,7 +7,7 @@ public class Room
 	public int	TypeId { get; set; }
 
 	public Lodging	Lodging { get; }
-	public RoomType	Type { get; }
+	public RoomType	Type { get; set; }
 	
 	public Room() {}
 

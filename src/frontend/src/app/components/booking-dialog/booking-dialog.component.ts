@@ -1,10 +1,11 @@
 import { Component,Inject, OnInit} from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
 import { Booking, BookingStatus } from '../../models/booking';
 import { MatCardModule } from '@angular/material/card';
 import { NgIf } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { NotificationService } from '../../services/notification.service';
+import { NewPaymentInformationComponent } from '../new-payment-information/new-payment-information.component';
 
 @Component({
   selector: 'app-booking-dialog',
@@ -25,6 +26,7 @@ export class BookingDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<BookingDialogComponent>,
+    public dialog: MatDialog,
     public notificationService: NotificationService,
     @Inject(MAT_DIALOG_DATA) public data: { booking: any }
   ) {
@@ -42,11 +44,10 @@ export class BookingDialogComponent {
   }
   
   confirmBooking() {
+    // const dialogRef = this.dialog.open(NewPaymentInformationComponent);
+
     this.title = "Proceso de pago";
     this.paymentProcess = true;
-
-    console.log('Realizar Pago');
-
   }
 
   submitImageFile(event: any) {

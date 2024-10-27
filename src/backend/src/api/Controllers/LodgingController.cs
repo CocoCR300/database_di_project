@@ -671,33 +671,51 @@ public class LodgingController : BaseController
             lodging.Description = data.Description;
         if (data.Address != null)
             lodging.Address = data.Address;
-        if (data.Type != null)
-        {
-            if (!Lodging.OffersRooms(lodging) && Lodging.TypeOffersRooms(data.Type.Value))
-            {
-                _context.Entry(lodging).Collection(l => l.Rooms).Load();
-                _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
-                
-                lodging.Rooms.RemoveAt(0);
-                lodging.RoomTypes.RemoveAt(0);
-            }
-            
-            lodging.Type = data.Type.Value;
-        }
         if (data.EmailAddress != null)
             lodging.EmailAddress = data.EmailAddress;
 
-        if (!Lodging.OffersRooms(lodging))
+        if (data.Type != null)
         {
+            _context.Entry(lodging).Collection(l => l.Rooms).Load();
             _context.Entry(lodging).Collection(l => l.RoomTypes).Load();
-            RoomType roomType = lodging.RoomTypes[0];
 
-            if (data.Capacity.HasValue)
-                roomType.Capacity = data.Capacity.Value;
-            if (data.Fees.HasValue)
-                roomType.Fees = data.Fees.Value;
-            if (data.PerNightPrice.HasValue)
-                roomType.PerNightPrice = data.PerNightPrice.Value;
+            if (!Lodging.OffersRooms(lodging) && Lodging.TypeOffersRooms(data.Type.Value))
+            {
+                lodging.Rooms.Clear();
+                lodging.RoomTypes.Clear();
+            }
+            if (Lodging.OffersRooms(lodging) && !Lodging.TypeOffersRooms(data.Type.Value))
+            {
+                if (!data.Capacity.HasValue || !data.PerNightPrice.HasValue || !data.Fees.HasValue)
+                {
+                    return NotAcceptable(
+                        "El costo por noche, el impuesto y la capacidad son obligatorios para el tipo de alojamiento especificado.");
+                }
+                
+                lodging.Rooms.Clear();
+                lodging.RoomTypes.Clear();
+                
+                decimal perNightPrice = data.PerNightPrice.Value,
+                        fees = data.Fees.Value;
+                int capacity = data.Capacity.Value;
+
+                lodging.RoomTypes.Add(new RoomType
+                {
+                    Capacity = capacity,
+                    Fees = fees,
+                    LodgingId = lodging.Id,
+                    PerNightPrice = perNightPrice,
+                    Name = lodging.Name
+                });
+                lodging.Rooms.Add(new Room
+                {
+                    LodgingId = lodging.Id,
+                    Number = 0,
+                    Type = lodging.RoomTypes[0]
+                });
+            }
+            
+            lodging.Type = data.Type.Value;
         }
 
         _context.SaveChanges();
