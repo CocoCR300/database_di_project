@@ -1,24 +1,26 @@
-<div id="home_main">
-    <div id="left_side_container">
-        <div>
-            <p class="text_align_start title">¡Reserve ya!</p>
-            <p class="text_align_start subtitle">En los mejores alojamientos</p>
-            <button class="display_block" mat-stroked-button (click)="lodgingsButtonClicked()">{{ isLessor ? "Ver mis alojamientos" : "Ver todos los alojamientos" }}</button>
+<div class="container h-100">
+    <div class="row h-100">
+        <div class="col-12 col-md-6 col-sm-12 h-100 d-flex align-items-center">
+            <div class="text-center w-100">
+                <p class="text_align_start title text-center">¡Reserve ya!</p>
+                <p class="text_align_start subtitle text-center">En los mejores alojamientos</p>
+                <button class="display_block mx-auto" mat-stroked-button (click)="lodgingsButtonClicked()">{{ isLessor ? "Ver mis alojamientos" : "Ver todos los alojamientos" }}</button>
+            </div>
         </div>
-    </div>
-    <div id="right_side_container">
-        <c-carousel>
-            <c-carousel-inner *ngIf="lodgings != null">
-                <c-carousel-item *ngFor="let lodging of lodgings">
-                    <img class="lodging_image" alt="{{lodging.name}}" loading="lazy" src="{{prependImagesRoute(lodging)}}">
-                    <c-carousel-caption>
-                        <h3>{{lodging.name}}</h3>
-                        <p>{{lodging.description}}</p>
-                    </c-carousel-caption>
-                </c-carousel-item>
-            </c-carousel-inner>
-            <c-carousel-control [routerLink] caption=" " direction="prev"></c-carousel-control>
-            <c-carousel-control [routerLink] caption=" " direction="next"></c-carousel-control>
-        </c-carousel>
+        <div class="col-12 col-md-6">
+            <c-carousel>
+                <c-carousel-inner *ngIf="lodgings != null">
+                    <c-carousel-item *ngFor="let lodging of lodgings">
+                        <img class="lodging_image" alt="{{lodging.name}}" loading="lazy" src="{{prependImagesRoute(lodging)}}">
+                        <c-carousel-caption>
+                            <h3>{{lodging.name}}</h3>
+                            <p>{{lodging.description}}</p>
+                        </c-carousel-caption>
+                    </c-carousel-item>
+                </c-carousel-inner>
+                <c-carousel-control [routerLink] caption=" " direction="prev"></c-carousel-control>
+                <c-carousel-control [routerLink] caption=" " direction="next"></c-carousel-control>
+            </c-carousel>
+        </div>
     </div>
 </div>

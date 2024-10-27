@@ -11,27 +11,52 @@
 
 <body>
 @if (showNavbar) {
-  <div class="navbar">
-    <a [routerLink]="['/home']" class="bold">Restify</a>
-    <a *ngIf="isAdmin" [routerLink]="['/user']"><i class="fas fa-users"></i> Usuarios</a>
-    <a [routerLink]="['/lodging']"><i class="fas fa-building"></i> Alojamientos</a>
-    <a *ngIf="!isAdmin" [routerLink]="['/booking']"><i class="fas fa-calendar-alt"></i> Reservas</a>
-    <div class="dropdown right">
-      <a class="dropbtn"><i class="fas fa-cog"></i> Configuración</a>
-      <div class="dropdown-content">
-        <a (click)="createDatabase()"><i class="fas fa-database-alt"></i> Crear base de datos</a>
-        <a (click)="dropDatabase()"><i class="fas fa-database-alt"></i> Eliminar base de datos</a>
-        @if (isUserLogged) {
-          <a (click)="editUser(userName!)"> <i class="fas fa-user-alt"></i> Configuracion </a>
-          <a (click)="logOut()"><i class="fas fa-sign-out-alt"></i> Cerrar Sesion </a>
-        }
-        @if (!isUserLogged) {
-          <a [routerLink]="['/login']"><i class="fas fa-sign-in-alt"></i> Inicio de Sesion</a>
-          <a [routerLink]="['/register']"><i class="fas fa-user-plus"></i> Registrarse</a>
-        }
+  <nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Restify</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" 
+      aria-controls="offcanvasDarkNavbar" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">Menú</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" [routerLink]="['/home']"><i class="fas fa-home"></i> Inicio</a>
+            </li>
+            <li class="nav-item" [routerLink]="['/lodging']">
+              <a class="nav-link"><i class="fas fa-building"></i> Alojamientos</a>
+            </li>
+            <li class="nav-item" [routerLink]="['/booking']">
+              <a class="nav-link"><i class="fas fa-calendar-alt"></i> Reservas</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-cog"></i> Configuracion
+              </a>
+              <ul class="dropdown-menu dropdown-menu-dark">
+                <li><a class="dropdown-item" (click)="createDatabase()"><i class="fas fa-database"></i> Crear base de datos</a></li>
+                <li><a class="dropdown-item" (click)="dropDatabase()"><i class="fas fa-database"></i> Eliminar base de datos</a></li>
+                @if (isUserLogged) {
+                  <li><a class="dropdown-item" (click)="editUser(userName!)"> <i class="fas fa-user-alt"></i> Configuracion</a></li>
+                  <li><a class="dropdown-item" (click)="logOut()"><i class="fas fa-sign-out-alt"></i> Cerrar sesion</a></li>
+                }
+                @if (!isUserLogged) {
+                  <li><a class="dropdown-item" [routerLink]="['/login']"><i class="fas fa-sign-in-alt"></i> Inicio de Sesión</a></li>
+                  <li><a class="dropdown-item" [routerLink]="['/register']"> Registrarse</a></li>
+                }
+              </ul>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
-  </div>
+  </nav>
+  
 }
 
 <app-notification></app-notification>
