@@ -1,50 +1,63 @@
-<div id="title_container">
-    <h1>Configuración</h1>
-    <button *ngIf="isRootUser" class="delete_button" mat-flat-button (click)="deleteUser()" type="button">Eliminar cuenta</button>
-</div>
-<div class="user-settings_container">
-    <form class="modify-user" #userModifyForm="ngForm" [formGroup]="userModifyFormGroup" (ngSubmit)="onSubmitUserSettings()">
-        <mat-form-field class="input">
-            <mat-label>Usuario</mat-label>
-            <input type="text" matInput disabled="true" [value]="user.userName">
-        </mat-form-field>
-        <mat-form-field class="input">
-            <mat-label>Nombre</mat-label>
-            <input type="text" formControlName="first_name" matInput [value]="user.firstName">
-        </mat-form-field>
-        <mat-form-field class="input">
-            <mat-label>Apellido</mat-label>
-            <input type="text" required="true" formControlName="last_name" matInput [value]="user.lastName">
-        </mat-form-field>
-        <mat-form-field class="input">
-            <mat-label>Correo</mat-label>
-            <input matInput formControlName="email_address" type="email" required="true" [value]="user.emailAddress">
-        </mat-form-field>
-        <mat-form-field id="phoneNumbers">
-            <mat-label>Telefonos</mat-label>
-            <mat-chip-grid #chipGrid aria-label="Ingresar numeros">
-                @for (phoneNumber of phoneNumbers; track phoneNumber) {
-                    <mat-chip-row
-                        (removed)="removePhoneNumber(phoneNumber)">
-                        {{ phoneNumber }}
-                        <button matChipRemove [attr.aria-label]="'remove ' + phoneNumber">
-                            <mat-icon>cancel</mat-icon>
-                        </button>
-                    </mat-chip-row>
-                }
-                <input
-                    #phoneNumberInput
-                    formControlName="phone_number"
-                    placeholder="Numeros de telefono..."
-                    [matChipInputFor]="chipGrid"
-                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-                    [matChipInputAddOnBlur]="addOnBlur"
-                    (matChipInputTokenEnd)="addPhoneNumber($event)"/>
-            </mat-chip-grid>
-        </mat-form-field>
-        <div class="buttons">
-            <button class="button" mat-stroked-button type="submit">Guardar Cambios</button>
-            <button [routerLink]="['/home']" class="button" mat-stroked-button type="button">Salir</button>
-        </div>
-    </form>
+<div class="container">
+    <div id="title_container">
+        <h1 class="mt-3">Configuración</h1>
+        <button *ngIf="isRootUser" class="delete_button" mat-flat-button (click)="deleteUser()" type="button">Eliminar cuenta</button>
+    </div>
+    <div class="">
+        <form class="row" #userModifyForm="ngForm" [formGroup]="userModifyFormGroup" (ngSubmit)="onSubmitUserSettings()">
+            <div class="col-sm-12 col-md-6 mt-3">
+                <mat-form-field class="input">
+                    <mat-label>Usuario</mat-label>
+                    <input type="text" matInput disabled="true" [value]="user.userName">
+                </mat-form-field>
+            </div>
+            <div class="col-sm-12 col-md-6 mt-3">
+                <mat-form-field class="input">
+                    <mat-label>Nombre</mat-label>
+                    <input type="text" formControlName="first_name" matInput [value]="user.firstName">
+                </mat-form-field>
+            </div>
+            <div class="col-sm-12 col-md-6 mt-3">
+                <mat-form-field class="input">
+                    <mat-label>Apellido</mat-label>
+                    <input type="text" required="true" formControlName="last_name" matInput [value]="user.lastName">
+                </mat-form-field>
+            </div>
+            <div class="col-sm-12 col-md-6 mt-3">
+                <mat-form-field class="input">
+                    <mat-label>Correo</mat-label>
+                    <input matInput formControlName="email_address" type="email" required="true" [value]="user.emailAddress">
+                </mat-form-field>
+            </div>
+            <div class="col-12 mt-3 mb-3">
+                <mat-form-field id="phoneNumbers" class=" col-sm-12 col-md-6">
+                    <mat-label>Telefonos</mat-label>
+                    <mat-chip-grid #chipGrid aria-label="Ingresar numeros">
+                        @for (phoneNumber of phoneNumbers; track phoneNumber) {
+                            <mat-chip-row
+                                (removed)="removePhoneNumber(phoneNumber)">
+                                {{ phoneNumber }}
+                                <button matChipRemove [attr.aria-label]="'remove ' + phoneNumber">
+                                    <mat-icon>cancel</mat-icon>
+                                </button>
+                            </mat-chip-row>
+                        }
+                        <input
+                            #phoneNumberInput
+                            formControlName="phone_number"
+                            placeholder="Numeros de telefono..."
+                            [matChipInputFor]="chipGrid"
+                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                            [matChipInputAddOnBlur]="addOnBlur"
+                            (matChipInputTokenEnd)="addPhoneNumber($event)"/>
+                    </mat-chip-grid>
+                </mat-form-field>
+            </div>
+            <div class="buttons col-12 pb-3">
+                <button class="button" mat-stroked-button type="submit">Guardar Cambios</button>
+                <button [routerLink]="['/home']" class="button" mat-stroked-button type="button">Salir</button>
+            </div>
+        </form>
+    </div>
+    
 </div>

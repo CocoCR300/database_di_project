@@ -7,7 +7,7 @@
                 <button class="display_block mx-auto" mat-stroked-button (click)="lodgingsButtonClicked()">{{ isLessor ? "Ver mis alojamientos" : "Ver todos los alojamientos" }}</button>
             </div>
         </div>
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-6 h-100 d-flex align-items-center">
             <c-carousel>
                 <c-carousel-inner *ngIf="lodgings != null">
                     <c-carousel-item *ngFor="let lodging of lodgings">

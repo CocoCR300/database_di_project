@@ -22,6 +22,7 @@ export const routes: Routes = [
     {path: 'lodging/view/:id', component: LodgingViewComponent},
     {path: 'lodging/create', component: LodgingInfoComponent, canActivate: [LogInGuard, LessorGuard]},
     {path: 'lodging/edit/:id', component: LodgingInfoComponent, canActivate: [LogInGuard, LessorGuard]},
+    {path: 'lodging/:id', component: LodgingInfoComponent, canActivate: [LogInGuard]},
     {path: 'lodging/:id/rooms', component: LodgingRoomsComponent, canActivate: [LogInGuard, LessorGuard]},
     {path: 'login', component: LoginComponent, canActivate: [AlreadyLoggedInGuard]},
     {path: 'register', component: RegisterComponent, canActivate: [AlreadyLoggedInGuard]},
