@@ -483,4 +483,8 @@ export class LodgingRoomsComponent implements OnInit
 
     this.roomTypeFormGroup = this.buildFormGroup();
   }
+
+  goToInformation(view: HTMLElement) {
+    view.scrollIntoView();
+  }
 }

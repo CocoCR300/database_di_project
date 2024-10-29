@@ -1,76 +1,86 @@
-<div>
-    <h1 id="lodging_title">{{ lodging!.name }}</h1>
-    <div id="lodging_info_main">
-        <div id="lodging_info_left_section">
+<div class="container">
+    <h1 class="mt-3">{{ lodging!.name }}</h1>
+    <div class="row h-100">
+        <div class="col-sm-12 col-md-6">
             <h3>Habitaciones</h3>
-            <button mat-flat-button (click)="createRoomType()">Agregar</button>
+            <button class="mb-3" mat-flat-button (click)="[createRoomType(), goToInformation(informationRoom)]">Agregar</button>
             <div id="room_types_container">
-                <div class="room_type_item" *ngFor="let roomType of roomTypes">
+                <div class="d-block" *ngFor="let roomType of roomTypes">
                     <img class="room_type_item_image" *ngIf="hasPhotos(roomType)" src="{{ prependImagesRoute(roomType.photos[0]) }}">
-                    <div class="flex_grow">
-                        <h4 class="text_align_start">{{ roomType.name }}</h4>
-                        <p class="text_align_start">Precio por noche: {{ roomType.perNightPrice | currency }}</p>
-                        <p class="text_align_start">Capacidad: {{ roomType.capacity }} personas</p>
+                    <div class="mt-1">
+                        <h4 class="text-sm-center">{{ roomType.name }}</h4>
+                        <p class="text-sm-center">Precio por noche: {{ roomType.perNightPrice | currency }}</p>
+                        <p class="text-sm-center">Capacidad: {{ roomType.capacity }} personas</p>
                     </div>
-                    <div class="room_type_item_buttons">
-                        <button mat-flat-button (click)="editRoomType(roomType)">Editar</button>
-                        <button mat-flat-button (click)="deleteRoomType(roomType)">Eliminar</button>
+                    <div class="d-block">
+                        <button class="w-75 my-2" mat-flat-button (click)="[editRoomType(roomType), goToInformation(informationRoom)]">Editar</button>
+                        <button class="w-75 my-2" mat-flat-button (click)="deleteRoomType(roomType)">Eliminar</button>
                     </div>
                 </div>
             </div>
         </div>
-        <div id="lodging_info_right_section">
+        <div #informationRoom class="col-sm-12 col-md-6">
             <h3>Información de la habitación</h3>
-            <div class="buttons_container">
+            <div class="">
                 <button mat-flat-button class="button" [disabled]="inputDisabled" (click)="openImagesDialog()">Editar fotos</button>
             </div>
             <div id="room_type_image_container">
-                <img *ngIf="selectedRoomTypeHasPhotos" class="room_type_image" loading="lazy" src="{{prepareImageForDisplay(selectedRoomTypePhotos[0])}}">
+                <img *ngIf="selectedRoomTypeHasPhotos" class="room_type_image mx-auto w-sm-75" loading="lazy" src="{{prepareImageForDisplay(selectedRoomTypePhotos[0])}}">
             </div>
             <form id="room_type_form" #roomTypeForm [formGroup]="roomTypeFormGroup">
-                <div id="room_type_input_container">
-                    <mat-form-field>
-                        <mat-label>Nombre de la habitación</mat-label>
-                        <input matInput formControlName="roomTypeName">
-                    </mat-form-field>
-                    <mat-form-field>
-                        <mat-label>Precio por noche</mat-label>
-                        <input matInput formControlName="perNightPrice">
-                        <span matTextPrefix>$&nbsp;</span>
-                        <span matTextSuffix>.00</span>
-                    </mat-form-field>
-                    <mat-form-field>
-                        <mat-label>Impuesto aplicado</mat-label>
-                        <input matInput formControlName="fees">
-                        <span matTextPrefix>$&nbsp;</span>
-                        <span matTextSuffix>.00</span>
-                    </mat-form-field>
-                    <mat-form-field>
-                        <mat-label>Capacidad</mat-label>
-                        <input matInput formControlName="capacity">
-                        <span matTextSuffix>personas</span>
-                    </mat-form-field>
-                    <mat-form-field id="room_numbers_field" class="lodging_form_first_column">
-                        <mat-label>Números de habitación</mat-label>
-                        <mat-chip-grid #roomNumbersGrid aria-label="Habitaciones del alojamiento">
-                        @for (roomNumber of roomNumbers; track roomNumber) {
-                            <mat-chip-row (removed)="removeRoom(roomNumber)">
-                                {{ roomNumber }}
-                                <button matChipRemove [attr.aria-label]="'remove ' + roomNumber">
-                                    <mat-icon>cancel</mat-icon>
-                                </button>
-                            </mat-chip-row>
-                        }
-                        </mat-chip-grid>
-                        <input placeholder="Números de habitación..." #roomNumberInput formControlName="roomNumber"
-                            [matChipInputFor]="roomNumbersGrid"
-                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-                            (matChipInputTokenEnd)="addRoom($event)"/>
-                    </mat-form-field>
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field>
+                            <mat-label>Nombre de la habitación</mat-label>
+                            <input matInput formControlName="roomTypeName">
+                        </mat-form-field>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field>
+                            <mat-label>Precio por noche</mat-label>
+                            <input matInput formControlName="perNightPrice">
+                            <span matTextPrefix>$&nbsp;</span>
+                            <span matTextSuffix>.00</span>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field>
+                            <mat-label>Impuesto aplicado</mat-label>
+                            <input matInput formControlName="fees">
+                            <span matTextPrefix>$&nbsp;</span>
+                            <span matTextSuffix>.00</span>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field>
+                            <mat-label>Capacidad</mat-label>
+                            <input matInput formControlName="capacity">
+                            <span matTextSuffix>personas</span>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-12 w-100 mx-auto">
+                        <mat-form-field id="room_numbers_field" class="lodging_form_first_column">
+                            <mat-label>Números de habitación</mat-label>
+                            <mat-chip-grid #roomNumbersGrid aria-label="Habitaciones del alojamiento">
+                            @for (roomNumber of roomNumbers; track roomNumber) {
+                                <mat-chip-row (removed)="removeRoom(roomNumber)">
+                                    {{ roomNumber }}
+                                    <button matChipRemove [attr.aria-label]="'remove ' + roomNumber">
+                                        <mat-icon>cancel</mat-icon>
+                                    </button>
+                                </mat-chip-row>
+                            }
+                            </mat-chip-grid>
+                            <input placeholder="Números de habitación..." #roomNumberInput formControlName="roomNumber"
+                                [matChipInputFor]="roomNumbersGrid"
+                                [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                (matChipInputTokenEnd)="addRoom($event)"/>
+                        </mat-form-field>
+                    </div>
                 </div>
-                <div class="buttons_container">
-                    <button mat-flat-button [disabled]="inputDisabled" (click)="saveRoomType()">Guardar</button>
-                    <button mat-flat-button [disabled]="inputDisabled" (click)="cancelEdit()">Cancelar</button>
+                <div class="d-block mb-3">
+                    <button class="w-75 my-2" mat-flat-button [disabled]="inputDisabled" (click)="saveRoomType()">Guardar</button>
+                    <button class="w-75 my-2" mat-flat-button [disabled]="inputDisabled" (click)="cancelEdit()">Cancelar</button>
                 </div>
             </form>
         </div>

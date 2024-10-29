@@ -7,30 +7,6 @@ mat-chip-grid {
     overflow: scroll;
 }
 
-#lodging_title {
-    margin: 0.5em 0px 0px 0px;
-}
-
-#lodging_info_main {
-    display: flex;
-    height: 100%;
-}
-
-#lodging_info_left_section {
-    align-items: center;
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    row-gap: 1em;
-}
-
-#lodging_info_right_section {
-    align-items: center;
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-}
-
 #lodging_form {
     align-self: stretch;
 }
@@ -50,7 +26,6 @@ mat-chip-grid {
 #room_type_image_container {
     height: 10em;
     margin: 0.5em 0px;
-    width: 18em;
 }
 
 #perk_chips_field {
@@ -74,25 +49,12 @@ mat-chip-grid {
     grid-row: 3 / span 2;
 }
 
-#room_type_input_container {
-    display: grid;
-    column-gap: 1em;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 3.5em);
-    margin: 0px 2em;
-}
-
 #room_types_container {
-    max-height: 60vh;
     overflow: scroll;
 }
 
 .buttons_container > button {
     margin: 0px 0.3em;
-}
-
-.flex_grow {
-    flex-grow: 1;
 }
 
 .lodging_form_input_shrink {
@@ -102,16 +64,10 @@ mat-chip-grid {
 
 .lodging_form_first_column {
     grid-column: 1;
-    min-width: 16.5em;
 }
 
 .lodging_form_second_column {
     grid-column: 2;
-    min-width: 19em;
-}
-
-.text_align_start {
-    text-align: start;
 }
 
 .room_type_image {
@@ -119,24 +75,26 @@ mat-chip-grid {
     display: block;
     height: 10em;
     object-fit: cover;
-    width: 100%;
-}
-
-.room_type_item {
-    align-items: center;
-    display: flex;
-    column-gap: 1em;
-}
-
-.room_type_item_buttons {
-    display: flex; 
-    flex-direction: column;
-    row-gap: 1em;
+    width: auto;
 }
 
 .room_type_item_image {
     border-radius: var(--border-radius);
     object-fit: cover;
     height: 6em;
-    width: 12em;
+}
+
+.text-sm-center{
+    text-align: start;
+}
+
+@media only screen and (max-width: 425px) {
+    .text-sm-center{
+        text-align: center;
+    }
+
+    .w-sm-75{
+        width: 75%;
+        height: auto;
+    }
 }
