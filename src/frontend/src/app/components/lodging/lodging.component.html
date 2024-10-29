@@ -1,9 +1,9 @@
 <div class="container">
     <mat-drawer-container fullscreen [hasBackdrop]="true">
         <mat-drawer #sidebar mode="push" position="end" (closed)="bookingDrawerClosed()">
-            <h2>Reserva en {{selectedLodging?.name}}</h2>
+            <h2 class="mb-3">Reserva en {{selectedLodging?.name}}</h2>
             <form #bookingForm="ngForm" [formGroup]="bookingFormGroup" (ngSubmit)="isCompleteLodging() ? submitBooking() : addTemporaryBooking()">
-                <mat-form-field>
+                <mat-form-field class="w-sm-100 mb-3">
                     <mat-label>Seleccione las fechas de reserva</mat-label>
                     <mat-date-range-input [rangePicker]="picker">
                         <input matStartDate formControlName="startDate" placeholder="Inicio" required>
@@ -15,7 +15,7 @@
                     <mat-date-range-picker #picker></mat-date-range-picker>
                 </mat-form-field>
     
-                <mat-form-field *ngIf="isLodgingWithMultipleRoomTypes()">
+                <mat-form-field class="w-sm-100 mb-3" *ngIf="isLodgingWithMultipleRoomTypes()">
                     <mat-label>Tipo de habitación</mat-label>
                     <mat-select formControlName="roomTypeId" required>
                         <mat-option *ngIf="!selectedLodging || !selectedLodging.roomTypes || selectedLodging.roomTypes.length === 0" disabled>
@@ -28,20 +28,20 @@
                     <mat-error *ngIf="bookingFormGroup.get('roomTypeId')?.hasError('required')">El tipo de habitación es obligatorio.</mat-error>
                 </mat-form-field>
     
-                <mat-form-field *ngIf="isCompleteLodging()">
+                <mat-form-field class="w-sm-100 mb-3" *ngIf="isCompleteLodging()">
                     <mat-label>Precio por noche</mat-label>
                     <input matInput [value]="selectedLodging?.perNightPrice | currency" readonly>
                 </mat-form-field>
                 
-                <mat-form-field>
+                <mat-form-field class="w-sm-100 mb-3">
                     <mat-label>Descuento</mat-label>
                     <input matInput formControlName="discount" type="number" min="0" placeholder="Descuento (No hay descuentos)" readonly>
                 </mat-form-field>
                
-                <div *ngIf="selectedRoomTypePrice" class="price-info">
+                <div class="w-sm-100 mb-3" *ngIf="selectedRoomTypePrice" class="price-info">
                     <p>Precio por noche: {{ selectedRoomTypePrice | currency }}</p>
                 </div>
-                <div *ngIf="selectedTotalPrice" class="price-info">
+                <div class="w-sm-100 mb-3" *ngIf="selectedTotalPrice" class="price-info">
                     <p>Precio total: {{ selectedTotalPrice | currency }}</p>
                 </div>
     

@@ -1,9 +1,9 @@
-<div>
-    <h1 id="lodging_title">{{ lodgingName }}</h1>
-    <div id="lodging_info_main">
-        <div *ngIf="!create" id="lodging_info_left_section">
-            <div id="lodging_image_container">
-                <c-carousel>
+<div class="container">
+    <h1 class="my-3">{{ lodgingName }}</h1>
+    <div class="row">
+        <div *ngIf="!create" class="col-sm-12 col-md-6 h-100 my-auto">
+            <div>
+                <c-carousel class="w-75 mb-2">
                     <c-carousel-inner *ngIf="hasPhotos">
                         <c-carousel-item *ngFor="let photo of lodging!.photos">
                             <img class="lodging_image" alt="{{lodging!.name}}" loading="lazy" src="{{prependImagesRoute(photo)}}">
@@ -13,101 +13,120 @@
                     <c-carousel-control [routerLink] caption=" " direction="next"></c-carousel-control>
                 </c-carousel>
             </div>
-            <div class="buttons_container">
+            <div class="mb-3">
                 <button mat-flat-button class="button" (click)="openImagesDialog()">Editar fotos</button>
             </div>
         </div>
-        <div id="lodging_info_right_section">
-            <form id="lodging_form" #lodgingForm="ngForm" [formGroup]="lodgingFormGroup" (ngSubmit)="submitLodging()">
-                <div id="lodging_form_input_container">
-                    <mat-form-field class="lodging_form_first_column">
-                        <mat-label>Nombre</mat-label>
-                        <input matInput formControlName="name">
-                    </mat-form-field>
-                    <mat-form-field class="lodging_form_second_column lodging_form_input_shrink">
-                        <mat-label>Tipo de alojamiento</mat-label>
-                        <mat-select [compareWith]="compareLodgingTypes" formControlName="lodgingType">
-                        @for (lodgingType of lodgingTypes; track lodging) {
-                            <mat-option [value]="lodgingType.number">{{ lodgingType.name }}</mat-option>
-                        }
-                        </mat-select>
-                    </mat-form-field>
-                    <mat-form-field id="perk_chips_field">
-                        <mat-label>Beneficios adicionales</mat-label>
-                        <mat-chip-grid #perkChipGrid aria-label="Elige los beneficios adicionales del alojamiento">
-                        @for (perk of selectedPerks; track perk) {
-                            <mat-chip-row (removed)="removePerk(perk)">
-                                {{perk.name}}
-                                <button matChipRemove [attr.aria-label]="'remove ' + perk.name">
-                                    <mat-icon>cancel</mat-icon>
-                                </button>
-                            </mat-chip-row>
-                        }
-                        </mat-chip-grid>
-                        <input placeholder="Beneficio adicional..." #perkInput formControlName="perkName"
-                            [matChipInputFor]="perkChipGrid" [matAutocomplete]="auto"
-                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-                            (matChipInputTokenEnd)="addPerk($event)"/>
-                        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="perkAutoCompleteSelected($event)">
-                        @for (perk of filteredPerks | async; track perk) {
-                            <mat-option [value]="perk">{{perk.name}}</mat-option>
-                        }
-                        </mat-autocomplete>
-                    </mat-form-field>
-                    <mat-form-field id="address_field" class="lodging_form_second_column textarea_field">
-                        <mat-label>Dirección</mat-label>
-                        <textarea matInput formControlName="address"></textarea>
-                    </mat-form-field>
-                    <mat-form-field id="phone_numbers_field" class="lodging_form_first_column">
-                        <mat-label>Números de teléfono</mat-label>
-                        <mat-chip-grid #phoneNumberGrid aria-label="Números de teléfono del alojamiento">
-                        @for (phoneNumber of phoneNumbers; track phoneNumber) {
-                            <mat-chip-row (removed)="removePhoneNumber(phoneNumber)">
-                                {{ phoneNumber }}
-                                <button matChipRemove [attr.aria-label]="'remove ' + phoneNumber">
-                                    <mat-icon>cancel</mat-icon>
-                                </button>
-                            </mat-chip-row>
-                        }
-                        </mat-chip-grid>
-                        <input placeholder="Número de teléfono..." #phoneNumberInput formControlName="phoneNumber"
-                            [matChipInputFor]="phoneNumberGrid"
-                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-                            (matChipInputTokenEnd)="addPhoneNumber($event)"/>
-                    </mat-form-field>
-                    <mat-form-field id="description_field" class="lodging_form_second_column textarea_field">
-                        <mat-label>Descripción</mat-label>
-                        <textarea matInput formControlName="description"></textarea>
-                    </mat-form-field>
-                    <mat-form-field class="lodging_form_first_column">
-                        <mat-label>Correo electrónico</mat-label>
-                        <input matInput formControlName="emailAddress">
-                    </mat-form-field>
-                    <mat-form-field *ngIf="!lodgingOffersRooms" class="lodging_form_second_column">
-                        <mat-label>Capacidad</mat-label>
-                        <input matInput formControlName="capacity">
-                        <span matTextSuffix>personas</span>
-                    </mat-form-field>
-                    <mat-form-field *ngIf="!lodgingOffersRooms" class="lodging_form_first_column">
-                        <mat-label>Precio por noche</mat-label>
-                        <input matInput formControlName="perNightPrice">
-                        <span matTextPrefix>$&nbsp;</span>
-                        <span matTextSuffix>.00</span>
-                    </mat-form-field>
-                    <mat-form-field *ngIf="!lodgingOffersRooms" class="lodging_form_second_column">
-                        <mat-label>Impuesto aplicado</mat-label>
-                        <input matInput formControlName="fees">
-                        <span matTextPrefix>$&nbsp;</span>
-                        <span matTextSuffix>.00</span>
-                    </mat-form-field>
-                    <button *ngIf="!create && lodgingOffersRooms" id="rooms_button" mat-stroked-button type="button" (click)="goToRooms()">Habitaciones</button>
+        <div class="col-sm-12 col-md-6 h-100 my-auto">
+            <form #lodgingForm="ngForm" [formGroup]="lodgingFormGroup" (ngSubmit)="submitLodging()">
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field class="w-100">
+                            <mat-label>Nombre</mat-label>
+                            <input matInput formControlName="name">
+                        </mat-form-field>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field class="w-100">
+                            <mat-label>Tipo de alojamiento</mat-label>
+                            <mat-select [compareWith]="compareLodgingTypes" formControlName="lodgingType">
+                            @for (lodgingType of lodgingTypes; track lodging) {
+                                <mat-option [value]="lodgingType.number">{{ lodgingType.name }}</mat-option>
+                            }
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-12">
+                        <mat-form-field class="w-100">
+                            <mat-label>Beneficios adicionales</mat-label>
+                            <mat-chip-grid #perkChipGrid aria-label="Elige los beneficios adicionales del alojamiento">
+                            @for (perk of selectedPerks; track perk) {
+                                <mat-chip-row (removed)="removePerk(perk)">
+                                    {{perk.name}}
+                                    <button matChipRemove [attr.aria-label]="'remove ' + perk.name">
+                                        <mat-icon>cancel</mat-icon>
+                                    </button>
+                                </mat-chip-row>
+                            }
+                            </mat-chip-grid>
+                            <input placeholder="Beneficio adicional..." #perkInput formControlName="perkName"
+                                [matChipInputFor]="perkChipGrid" [matAutocomplete]="auto"
+                                [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                (matChipInputTokenEnd)="addPerk($event)"/>
+                            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="perkAutoCompleteSelected($event)">
+                            @for (perk of filteredPerks | async; track perk) {
+                                <mat-option [value]="perk">{{perk.name}}</mat-option>
+                            }
+                            </mat-autocomplete>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field class="w-100">
+                            <mat-label>Dirección</mat-label>
+                            <textarea matInput formControlName="address"></textarea>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field class="w-100">
+                            <mat-label>Números de teléfono</mat-label>
+                            <mat-chip-grid #phoneNumberGrid aria-label="Números de teléfono del alojamiento">
+                            @for (phoneNumber of phoneNumbers; track phoneNumber) {
+                                <mat-chip-row (removed)="removePhoneNumber(phoneNumber)">
+                                    {{ phoneNumber }}
+                                    <button matChipRemove [attr.aria-label]="'remove ' + phoneNumber">
+                                        <mat-icon>cancel</mat-icon>
+                                    </button>
+                                </mat-chip-row>
+                            }
+                            </mat-chip-grid>
+                            <input placeholder="Número de teléfono..." #phoneNumberInput formControlName="phoneNumber"
+                                [matChipInputFor]="phoneNumberGrid"
+                                [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                                (matChipInputTokenEnd)="addPhoneNumber($event)"/>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field class="w-100">
+                            <mat-label>Correo electrónico</mat-label>
+                            <input matInput formControlName="emailAddress">
+                        </mat-form-field>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field class="w-100" *ngIf="!lodgingOffersRooms">
+                            <mat-label>Capacidad</mat-label>
+                            <input matInput formControlName="capacity">
+                            <span matTextSuffix>personas</span>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field class="w-100" *ngIf="!lodgingOffersRooms">
+                            <mat-label>Precio por noche</mat-label>
+                            <input matInput formControlName="perNightPrice">
+                            <span matTextPrefix>$&nbsp;</span>
+                            <span matTextSuffix>.00</span>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <mat-form-field class="w-100" *ngIf="!lodgingOffersRooms">
+                            <mat-label>Impuesto aplicado</mat-label>
+                            <input matInput formControlName="fees">
+                            <span matTextPrefix>$&nbsp;</span>
+                            <span matTextSuffix>.00</span>
+                        </mat-form-field>
+                    </div>
+                    <div class="col-12">
+                        <mat-form-field class="w-100">
+                            <mat-label>Descripción</mat-label>
+                            <textarea matInput formControlName="description"></textarea>
+                        </mat-form-field>
+                    </div>
+                    <button class="col-12 w-50 mx-auto mb-3" *ngIf="!create && lodgingOffersRooms" mat-stroked-button type="button" (click)="goToRooms()">Habitaciones</button>
                 </div>
 
-                <div class="buttons_container">
-                    <button mat-flat-button type="submit">Guardar cambios</button>
-                    <button *ngIf="!create" [disabled]="!lodgingFormGroup.dirty" mat-flat-button type="button" (click)="resetForm()">Borrar cambios</button>
+                <div class="row">
+                    <button class="col-sm-12 col-md-6 my-1 w-buttons-bottom mx-auto" mat-flat-button type="submit">Guardar cambios</button>
+                    <button class="col-sm-12 col-md-6 mt-1 w-buttons-bottom mb-3 mx-auto" *ngIf="!create" [disabled]="!lodgingFormGroup.dirty" mat-flat-button type="button" (click)="resetForm()">Borrar cambios</button>
                 </div>
-                
             </form>
         </div>
     </div>

@@ -1,7 +1,7 @@
 c-carousel {
     clip-path: rect(0 0 100% 100% round var(--border-radius));
     margin: auto;
-    width: 25em;
+    height: auto;
 }
 
 mat-chip-grid {
@@ -12,31 +12,6 @@ mat-chip-grid {
 mat-drawer[_ngcontent-ng-c1646113714] {
     background-color: var(--color-secondary);
     padding: 7em;
-}
-
-#lodging_title {
-    margin: 0.5em 0px 0px 0px;
-}
-#lodging_info_main {
-    display: flex;
-    height: 100%;
-}
-
-#lodging_info_left_section {
-    align-items: center;
-    display: flex;
-    flex: 2;
-    flex-direction: column;
-    justify-content: center;
-    row-gap: 1em;
-}
-
-#lodging_info_right_section {
-    align-items: center;
-    display: flex;
-    flex: 3;
-    flex-direction: column;
-    justify-content: center;
 }
 
 #lodging_form {
@@ -64,15 +39,6 @@ mat-drawer[_ngcontent-ng-c1646113714] {
     grid-row: 2 / span 2;
 }
 
-#lodging_image_container {
-    height: 15em;
-    width: 100%;
-}
-
-#perk_chips_field {
-    grid-row: 2 / span 2;
-}
-
 #phone_numbers_field {
     grid-row: 4 / span 2;
 }
@@ -92,12 +58,11 @@ mat-drawer[_ngcontent-ng-c1646113714] {
 
 .lodging_form_first_column {
     grid-column: 1;
-    min-width: 16.5em;
+
 }
 
 .lodging_form_second_column {
     grid-column: 2;
-    min-width: 19em;
 }
 
 .lodging_image {
@@ -106,4 +71,14 @@ mat-drawer[_ngcontent-ng-c1646113714] {
     height: 15em;
     object-fit: cover;
     width: 100%;
+}
+
+.w-buttons-bottom{
+    width: 40%;
+}
+
+@media only screen and (max-width: 425px) {
+    .w-buttons-bottom{
+        width: 75%;
+    }
 }

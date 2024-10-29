@@ -314,3 +314,13 @@ mat-paginator {
     margin-top: 1em;
     text-align: center;
 }
+
+@media only screen and (max-width: 425px) {
+    mat-drawer{
+        width: 75%;
+    }
+
+    .w-sm-100{
+        width: 100%;
+    }
+}
