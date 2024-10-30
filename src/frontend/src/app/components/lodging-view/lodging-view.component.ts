@@ -108,6 +108,11 @@ export class LodgingViewComponent implements OnInit
     roomsMain.scrollIntoView({ behavior: "smooth" });
   }
 
+  public scrollToLodging() {
+    const lodgingMain = document.getElementById("loging_main")!;
+    lodgingMain.scrollIntoView({ behavior: "smooth" });
+  }
+
   prependImagesRoute(imageFileName: string | null) {
     let imageSrc = "";
     if (imageFileName) {

@@ -9,7 +9,7 @@
         </mat-select>
     </mat-form-field> 
 
-    <div class="table_container">
+    <div class="table_container overflow-auto">
         <table mat-table [dataSource]="bookingDataSource" class="mat-elevation-z8 custom-table">
             <ng-container matColumnDef="booking_id">
                 <th mat-header-cell *matHeaderCellDef class="header-cell"> ID de la reserva </th>
