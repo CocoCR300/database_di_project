@@ -41,6 +41,8 @@
               <ul class="dropdown-menu dropdown-menu-dark">
                 <li><a class="dropdown-item" (click)="createDatabase()"><i class="fas fa-database"></i> Crear base de datos</a></li>
                 <li><a class="dropdown-item" (click)="dropDatabase()"><i class="fas fa-database"></i> Eliminar base de datos</a></li>
+                <li><a class="dropdown-item" (click)="createBackup()"><i class="fas fa-database"></i> Crear punto de restauración</a></li>
+                <li><a class="dropdown-item" (click)="restoreBackup()"><i class="fas fa-database"></i> Restaurar base de datos</a></li>
                 @if (isUserLogged) {
                   <li><a class="dropdown-item" (click)="editUser(userName!)"> <i class="fas fa-user-alt"></i> Configuracion</a></li>
                   <li><a class="dropdown-item" (click)="logOut()"><i class="fas fa-sign-out-alt"></i> Cerrar sesion</a></li>

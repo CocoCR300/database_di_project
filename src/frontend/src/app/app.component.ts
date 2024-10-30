@@ -101,7 +101,37 @@ export class AppComponent {
     }
   }
 
-  public deleteDatabase() {
+  public async createBackup() {
+    const response = await firstValueFrom(this.userService.post("database/backup", false, null));
 
+    if (response.ok) {
+      Swal.fire({
+        icon: "success",
+        title: "El punto de restauración de la base de datos ha sido creado con éxito."
+      });
+    }
+    else {
+      Swal.fire({
+        icon: "error",
+        title: "Ha ocurrido un error."
+      });
+    }
+  }
+
+  public async restoreBackup() {
+    const response = await firstValueFrom(this.userService.post("database/restore", false, null));
+
+    if (response.ok) {
+      Swal.fire({
+        icon: "success",
+        title: "La base de datos ha sido restaurada con éxito."
+      });
+    }
+    else {
+      Swal.fire({
+        icon: "error",
+        title: "Ha ocurrido un error."
+      });
+    }
   }
 }
