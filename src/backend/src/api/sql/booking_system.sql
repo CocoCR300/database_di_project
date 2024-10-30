@@ -690,6 +690,35 @@ GO --
 -- PROCEDIMIENTOS ALMACENADOS
 --
 
+IF OBJECT_ID('paCrearPuntoRestauracion') IS NOT NULL
+	DROP PROCEDURE paCrearPuntoRestauracion;
+GO --
+
+CREATE PROCEDURE paCrearPuntoRestauracion
+	@backupName VARCHAR(100),
+	@backupFile VARCHAR(MAX)
+AS BEGIN
+	BACKUP DATABASE restify TO DISK = @backupFile
+	WITH FORMAT, NAME = @backupName;
+END
+GO --
+
+IF OBJECT_ID('paRestaurarBaseDatos') IS NOT NULL
+	DROP PROCEDURE paRestaurarBaseDatos;
+GO --
+
+CREATE PROCEDURE paRestaurarBaseDatos
+	@backupFile VARCHAR
+AS BEGIN
+	ALTER DATABASE restify SET OFFLINE WITH ROLLBACK IMMEDIATE;
+			
+	RESTORE DATABASE restify FROM DISK = @backupFile
+	WITH REPLACE, FILE = 1;
+	
+	ALTER DATABASE restify SET ONLINE;
+END
+GO --
+
 IF OBJECT_ID('paCrearReservacion') IS NOT NULL
     DROP PROCEDURE paCrearReservacion; 
 GO --
@@ -740,6 +769,10 @@ GO --
 
 -- Crea una reservación, que puede incluir múltiples habitaciones,
 -- especificadas en una tabla pasada por el último parámetro 
+IF OBJECT_ID('paCrearReservacion') IS NOT NULL
+    DROP PROCEDURE paCrearReservacion;
+GO --
+
 CREATE PROCEDURE paCrearReservacion
     @userName		VARCHAR(50),
     @lodgingId		INT,

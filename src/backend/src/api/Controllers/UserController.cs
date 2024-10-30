@@ -86,8 +86,17 @@ namespace Restify.API.Controllers
             {
                 return BadRequest(ModelState);
             }
+
+            string token;
+            User? user;
+            if (Models.User.DatabaseUsers.TryGetValue(loginRequest.UserName, out user)
+                && Enumerable.SequenceEqual(user.Password, loginRequest.Password))
+            {
+                token = _authenticationUtil.GenerateJwtToken(user);
+                return Ok(token);
+            }
     
-            User? user = _context.Find<User>(loginRequest.UserName);
+            user = _context.Find<User>(loginRequest.UserName);
 
             if (user == null)
             {
@@ -103,7 +112,7 @@ namespace Restify.API.Controllers
 
             _context.Entry(user).Reference(u => u.Person).Load();
             _context.Entry(user).Reference(u => u.Role).Load();
-            var token = _authenticationUtil.GenerateJwtToken(user);
+            token = _authenticationUtil.GenerateJwtToken(user);
             return Ok(token);
         }
         

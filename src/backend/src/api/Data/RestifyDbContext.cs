@@ -23,6 +23,21 @@ namespace Restify.API.Data
 		public RestifyDbContext() { }
 		public RestifyDbContext(DbContextOptions<RestifyDbContext> options) : base(options) { }
 
+		public Task CreateDatabaseBackup(string backupName, string backupFile)
+		{
+			return ExecuteStoredProcedure("Restify.dbo.paCrearPuntoRestauracion",
+				CreateInputSqlParameter("@backupName", backupName),
+				CreateInputSqlParameter("@backupFile", backupFile)
+			);
+		}
+		
+		public Task RestoreDatabase(string backupFile)
+		{
+			return ExecuteStoredProcedure("Restify.dbo.paRestaurarBaseDatos",
+				CreateInputSqlParameter("@backupFile", backupFile)
+			);
+		}
+
 		public async Task<int> InsertBooking(string userName, Booking booking)
 		{
 			SqlMetaData[] tableSchema = new SqlMetaData[]

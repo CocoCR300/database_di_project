@@ -13,6 +13,7 @@ namespace Restify.API.Controllers;
 [Route("v{version:apiVersion}/[controller]")]
 public class DatabaseController : BaseController
 {
+    private const string BackupFileName = "restify_full_backup.bak";
     private readonly IServiceProvider _serviceProvider;
     private readonly string _backupFolderPath;
 
@@ -24,32 +25,17 @@ public class DatabaseController : BaseController
 
     [HttpPost("backup")]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    public ActionResult BackupDatabase()
+    public async Task<ActionResult> BackupDatabase()
     {
         RestifyDbContext context = _serviceProvider
             .GetRequiredKeyedService<RestifyDbContext>(RestifyDbContext.SERVER_WIDE_SERVICE_NAME);
 
         DateTime now = DateTime.Now;
-        string backupFileName = string.Format("restify_{0:yyyy_MM_dd_HH_mm_ss}.bak", now);
-        string backupFilePath = Path.Combine(_backupFolderPath, backupFileName);
+        string backupFilePath = Path.Combine(_backupFolderPath, BackupFileName);
         string backupName = string.Format("Restify Full Backup ({0:yyyy/MM/dd - HH:mm:ss})", now);
-        
-        context.Database.ExecuteSql(
-            $"""
-             BACKUP DATABASE restify TO DISK = {backupFilePath}
-             WITH NAME = {backupName};
-             """);
-        
-        IQueryable<int> backupFilePathQuery = context.Database.SqlQuery<int>(
-            $"""
-            SELECT backupset.backup_set_id AS Value FROM msdb.dbo.backupset
-            INNER JOIN msdb.dbo.backupmediafamily AS bmf ON backupset.media_set_id = bmf.media_set_id
-            WHERE bmf.physical_device_name = {backupFilePath}
-            """);
 
-        int databaseBackupId = backupFilePathQuery.Single();
-
-        return Created(new DatabaseBackup(databaseBackupId, backupName, now));
+        await context.CreateDatabaseBackup(backupName, backupFilePath);
+        return NoContent();
     }
 
     [HttpPost("create")]
@@ -142,39 +128,17 @@ public class DatabaseController : BaseController
 
         return NoContent();
     }
-
-    [HttpGet("backup")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public ActionResult<List<DatabaseBackup>> GetBackups()
-    {
-        RestifyDbContext context = _serviceProvider
-            .GetRequiredKeyedService<RestifyDbContext>(RestifyDbContext.SERVER_WIDE_SERVICE_NAME);
-        IQueryable<DatabaseBackup> backupFilePathQuery = context.Database.SqlQueryRaw<DatabaseBackup>(
-            """
-            SELECT backup_set_id AS Id, name AS Name, backup_start_date AS CreationDateTime FROM msdb.dbo.backupset
-            WHERE database_name = 'restify';
-            """);
-
-        return Ok(backupFilePathQuery.ToList());
-    }
         
-    [HttpPost("backup/{databaseBackupId}/restore")]
+    [HttpPost("restore")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult RestoreDatabase(int databaseBackupId)
+    public ActionResult RestoreDatabase()
     {
         RestifyDbContext context = _serviceProvider
             .GetRequiredKeyedService<RestifyDbContext>(RestifyDbContext.SERVER_WIDE_SERVICE_NAME);
 
-        IQueryable<string> backupFilePathQuery = context.Database.SqlQueryRaw<string>(
-            $"""
-            SELECT bmf.physical_device_name FROM msdb.dbo.backupset
-            INNER JOIN msdb.dbo.backupmediafamily AS bmf ON backupset.media_set_id = bmf.media_set_id
-            WHERE backupset.database_name = 'restify' AND backupset.backup_set_id = {databaseBackupId};
-            """);
-
-        string? backupFilePath = backupFilePathQuery.FirstOrDefault();
-        if (backupFilePath == null)
+        string backupFilePath = Path.Combine(_backupFolderPath, BackupFileName);
+        if (!System.IO.File.Exists(backupFilePath))
         {
             return NotFound();
         }
@@ -191,10 +155,4 @@ public class DatabaseController : BaseController
         
         return NoContent();
     }
-
-    public record DatabaseBackup(
-        int                    Id,
-        string               Name,
-        DateTime CreationDateTime
-    );
 }
