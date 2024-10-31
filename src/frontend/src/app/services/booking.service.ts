@@ -46,12 +46,7 @@ export class BookingService extends BaseService
       return this.delete(`booking/user/${customerUserName}`, true, bookingIds);
     }
 
-    public payBooking(bookingId: number, dateAndTime: string, amount: number, invoiceImageFile: File): Observable<AppResponse> {
-      const form = new FormData();
-      form.append("dateAndTime", dateAndTime);
-      form.append("amount", amount.toFixed(2));
-      form.append("invoiceImageFile", invoiceImageFile);
-
-      return this.post(`payment/${bookingId}`, true, form);
+    public payBooking(bookingId: number, paymentInformationId: number): Observable<AppResponse> {
+      return this.post(`payment/${bookingId}`, true, { paymentInformationId });
     }
 }

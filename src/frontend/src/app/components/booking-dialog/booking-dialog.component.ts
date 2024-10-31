@@ -95,8 +95,14 @@ export class BookingDialogComponent implements OnInit
       return;
     }
 
+    const paymentInformation = this.selectedPaymentInformation.value;
+    if (Date.parse(paymentInformation!.cardExpiryDate as any) < Date.now()) {
+      this.notificationService.show("La tarjeta ya expiró.");
+      return;
+    }
+
     this.dialogRef.close(new BookingDialogResult(BookingDialogResultEnum.Confirm,
-      this.data.booking, this.selectedPaymentInformation.value
+      this.data.booking, this.selectedPaymentInformation.value!.id
     ));
   }
   

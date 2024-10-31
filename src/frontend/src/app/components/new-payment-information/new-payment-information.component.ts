@@ -45,16 +45,6 @@ export class NewPaymentInformationComponent
       if (cardNumber.hasError("required")) {
         this.notificationService.show("Debe ingresar el número de tarjeta.")
       }
-      if (cardNumberText.length >= 12) {
-        this.notificationService.show("El número de tarjeta debe 12 dígitos como mínimo.")
-      }
-      if (cardNumberText.length <= 16) {
-        this.notificationService.show("El número de tarjeta debe tener 16 dígitos como máximo.")
-      }
-      if (!this.isNumber(cardNumberText)) {
-        this.notificationService.show("El número de tarjeta solo puede contener caracteres númericos.")
-      }
-
       if (cardSecurityCode.hasError("required")) {
         this.notificationService.show("Debe ingresar el código de seguridad de la tarjeta.")
       }
@@ -72,6 +62,22 @@ export class NewPaymentInformationComponent
         this.notificationService.show("Debe ingresar la fecha de expiración de la tarjeta.")
       }
 
+      return;
+    }
+    if (cardNumberText.length < 12) {
+      this.notificationService.show("El número de tarjeta debe 12 dígitos como mínimo.")
+      return;
+    }
+    if (cardNumberText.length > 16) {
+      this.notificationService.show("El número de tarjeta debe tener 16 dígitos como máximo.")
+      return;
+    }
+    if (!this.isNumber(cardNumberText)) {
+      this.notificationService.show("El número de tarjeta solo puede contener caracteres númericos.")
+      return;
+    }
+    if (cardExpiryDate.value.getTime() <= Date.now()) {
+      this.notificationService.show("La tarjeta ya expiró.");
       return;
     }
 

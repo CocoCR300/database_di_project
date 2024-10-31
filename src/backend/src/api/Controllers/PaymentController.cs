@@ -72,7 +72,7 @@ public class PaymentController : BaseController
     }
     
     [HttpPost("{bookingId}")]
-    public async Task<ObjectResult> Store(int bookingId, [FromForm] PaymentRequestData data)
+    public async Task<ObjectResult> Store(int bookingId, [FromBody] PaymentRequestData data)
     {
         Booking? booking = _context.Find<Booking>(bookingId);
 

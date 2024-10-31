@@ -134,9 +134,8 @@ export class BookingComponent implements AfterViewInit, OnInit {
           total += roomBooking.cost + roomBooking.fees;
         }
 
-        const paymentAndConfirmationResponse = await firstValueFrom(this.bookingService.payBooking(dialogResult.booking.booking_id,
-          moment.utc().format("YYYY-MM-DD HH:mm"),
-          total,
+        const paymentAndConfirmationResponse = await firstValueFrom(this.bookingService.payBooking(
+          dialogResult.booking.booking_id,
           dialogResult.extraData
         ));
 

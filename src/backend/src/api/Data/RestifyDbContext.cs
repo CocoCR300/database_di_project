@@ -158,7 +158,7 @@ namespace Restify.API.Data
 		{
 			SqlParameter paymentId = CreateOutputSqlParameter("@paymentId", SqlDbType.Int);
 			SqlParameter paymentAmount = CreateOutputSqlParameter("@paymentAmount", SqlDbType.Decimal);
-			SqlParameter dateAndTime = CreateOutputSqlParameter("@dateAndTime", SqlDbType.DateTimeOffset);
+			SqlParameter dateAndTime = CreateOutputSqlParameter("@dateAndTime", SqlDbType.DateTime);
 			int returnCode = await ExecuteStoredProcedure("paRealizarPago",
 				CreateInputSqlParameter("@bookingId", payment.BookingId),
 				CreateInputSqlParameter("@paymentInformationId", payment.PaymentInformationId),
