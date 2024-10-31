@@ -2,8 +2,8 @@ export class PaymentInformation
 {
     constructor(
         public id:                  number,
-        public cardNumber:          number,
-        public cardSecurityCode:    number,
+        public cardNumber:          string,
+        public cardSecurityCode:    string,
         public cardExpiryDate:      Date,
         public cardHolderName:      string
     ) { }

@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BaseService } from '../services/base.service';
-import { AppResponse } from './app_response';
-import { HttpClient } from '@angular/common/http';
 
 @Injectable({
     providedIn: 'root'

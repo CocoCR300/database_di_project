@@ -1,11 +1,17 @@
 <mat-card class="dialog-container">
+  <form>
     <h1 mat-dialog-title> {{ title }}</h1>
     <mat-card-content>
       <p *ngIf="!paymentProcess">¿Qué acción desea realizar?</p>
       @if(paymentProcess) {
-        <p>{{ invoiceFileDisplay }}</p>
-        <input #imageInput hidden="hidden" type="file" (change)="submitImageFile($event)" required>
-        <button mat-flat-button (click)="imageInput.click()">Subir comprobante de pago</button>
+        <div>
+            <mat-form-field class="w-100">
+                <mat-label>Medio de pago</mat-label>
+                <mat-select [formControl]="selectedPaymentInformation" required>
+                  <mat-option *ngFor="let paymentInformation of paymentInformationArray" [value]="paymentInformation.id">{{ paymentInformationDisplay(paymentInformation) }}/mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
       }
     </mat-card-content>
     <mat-card-actions *ngIf="!paymentProcess" class="dialog-actions">
@@ -17,8 +23,10 @@
       <button mat-button class="action-button" (click)="onClose()">Cerrar</button>
     </mat-card-actions>
     <mat-card-actions *ngIf="paymentProcess" class="dialog-actions">
-      <button mat-button (click)="processPayment()">Procesar Pago</button>
+      <button mat-button (click)="processPayment()" type="submit">Procesar Pago</button>
+      <button mat-button (click)="openPaymentInformationDialog()">Agregar información de pago</button>
       <button mat-button (click)="cancelPayment()">Cancelar</button>
     </mat-card-actions>
-  </mat-card>
+  </form>
+</mat-card>
   

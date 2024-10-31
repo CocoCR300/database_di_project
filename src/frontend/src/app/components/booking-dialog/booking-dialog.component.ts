@@ -1,33 +1,42 @@
-import { Component,Inject, OnInit} from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
-import { Booking, BookingStatus } from '../../models/booking';
+import { Component,Inject, OnInit } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+import { BookingStatus } from '../../models/booking';
 import { MatCardModule } from '@angular/material/card';
-import { NgIf } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { NotificationService } from '../../services/notification.service';
 import { NewPaymentInformationComponent } from '../new-payment-information/new-payment-information.component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { PaymentInformation } from '../../models/payment_information';
+import { BaseService } from '../../services/base.service';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import moment from 'moment';
 
 @Component({
   selector: 'app-booking-dialog',
   standalone: true,
-  imports: [MatButtonModule, MatCardModule, NgIf],
+  imports: [FormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatSelectModule, MatOptionModule, NgFor, NgIf, ReactiveFormsModule],
   templateUrl: './booking-dialog.component.html',
   styleUrl: './booking-dialog.component.css'
 })
-export class BookingDialogComponent {
+export class BookingDialogComponent implements OnInit
+{
   public canPay: boolean = false;
   public canCancelOrConfirm: boolean = false;
   public canDelete: boolean = false;
   public paymentProcess: boolean = false;
+  public selectedPaymentInformation: FormControl<PaymentInformation | null> = new FormControl(null);
   public title: string = "Acciones  de reserva";
-  public invoiceFileDisplay: string = "Adjunte el comprobante de pago";
   public booking: any;
-  invoiceFile: File | null = null;
+  public paymentInformationArray: PaymentInformation[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<BookingDialogComponent>,
     public dialog: MatDialog,
     public notificationService: NotificationService,
+    public service: BaseService,
     @Inject(MAT_DIALOG_DATA) public data: { booking: any }
   ) {
     this.booking = data.booking;
@@ -37,6 +46,38 @@ export class BookingDialogComponent {
     this.canDelete = this.booking.status == BookingStatus.Cancelled || this.booking.status == BookingStatus.Finished;
   }
 
+  ngOnInit(): void {
+    this.service.get<PaymentInformation[]>('paymentinformation', true).subscribe(array => {
+      this.paymentInformationArray = array;
+    });
+  }
+
+  paymentInformationDisplay(paymentInformation: PaymentInformation) {
+    let cardNumber = paymentInformation.cardNumber;
+    let cardNumberDisplay = "";
+    for (let i = 0; i < cardNumber.length; i += 4) {
+      const chunk = cardNumber.substring(i, i + 4);
+      cardNumberDisplay += chunk;
+
+      if (chunk.length === 4) {
+        cardNumberDisplay += " ";
+      }
+    }
+
+    return `${cardNumberDisplay} (${moment(paymentInformation.cardExpiryDate).format("DD-MM-YYYY")})`
+  }
+
+  openPaymentInformationDialog(): void {
+    this.dialog
+    .open(NewPaymentInformationComponent)
+    .afterClosed()
+    .subscribe(response => {
+      if (response !== null) {
+        this.paymentInformationArray.push(response);
+      }
+    });
+  }
+
   cancelBooking() {
     this.dialogRef.close(new BookingDialogResult(BookingDialogResultEnum.Cancel,
       this.data.booking, null
@@ -44,38 +85,24 @@ export class BookingDialogComponent {
   }
   
   confirmBooking() {
-    // const dialogRef = this.dialog.open(NewPaymentInformationComponent);
-
     this.title = "Proceso de pago";
     this.paymentProcess = true;
   }
 
-  submitImageFile(event: any) {
-    const files: File[] = event.target.files;
-
-    for (const file of files) {
-      this.invoiceFile = file;
-      this.invoiceFileDisplay = file.name;
-      break;
-    }
-  }
-
   processPayment() {
-    if (!this.invoiceFile) {
-      this.notificationService.show("Debe adjuntar el comprobante.");
+    if (this.selectedPaymentInformation.hasError("required")) {
+      this.notificationService.show("Debe seleccionar un medio de pago.");
       return;
     }
 
     this.dialogRef.close(new BookingDialogResult(BookingDialogResultEnum.Confirm,
-      this.data.booking, this.invoiceFile 
+      this.data.booking, this.selectedPaymentInformation.value
     ));
   }
   
   cancelPayment() {
     this.title = "Acciones de reserva";
     this.paymentProcess = false;
-    this.invoiceFile = null;
-    this.invoiceFileDisplay = "Adjunte el comprobante de pago";
   }
 
   public async onCancel() {
