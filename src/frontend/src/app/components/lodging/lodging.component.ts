@@ -56,6 +56,7 @@ export class LodgingComponent implements OnInit {
     canBook = false;
     canDelete = false;
     isLessor = false;
+    userName!: string;
     isUserLogged!: boolean;
     _filteredLodgings: Lodging[] | null = null;
     pagedLodgings: Lodging[] = [];
@@ -87,6 +88,7 @@ export class LodgingComponent implements OnInit {
         private cdr: ChangeDetectorRef
     ) {
         this.dataSource = new MatTableDataSource(this.temporaryBookings);
+        this.userName = this._appState.userName || "";
     }
 
     hasPhotos(lodging: Lodging) {
@@ -475,15 +477,14 @@ export class LodgingComponent implements OnInit {
             this.canDelete = this._appState.role === UserRoleEnum.Administrator || this.isLessor;
         }
 
-        this.canBook = !this.isUserLogged || this._appState.role === UserRoleEnum.Customer;
+        this.canBook = !this.isUserLogged || this._appState.role === UserRoleEnum.Customer || this._appState.role ===UserRoleEnum.Lessor;
     
         let lodgingsObservable: Observable<Lodging[]>;
         if (this.isLessor) {
             this.title = "Mis alojamientos";
-            lodgingsObservable = this._lodgingService.getLessorLodgings(this._appState.userName!);
-        } else {
-            lodgingsObservable = this._lodgingService.getLodgings(10000, 1);
         }
+        //lodgingsObservable = this._lodgingService.getLessorLodgings(this._appState.userName!);
+        lodgingsObservable = this._lodgingService.getLodgings(10000, 1);
 
         lodgingsObservable.subscribe(lodgings => {
             this.lodgings = lodgings;
@@ -559,5 +560,29 @@ export class LodgingComponent implements OnInit {
             this.selectedRoomTypePrice = 0;
             this.selectedTotalPrice = 0;
         }
+    }
+
+    public lodgingsOwnerToShowOrShowLodgings(): boolean{
+        if(this._appState.role != UserRoleEnum.Lessor){
+            return true;
+        }
+
+        for(let lodging of this.lodgings){
+            if(lodging.owner?.userName == this.userName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public lodgingsToShow(): boolean{
+        for(let lodging of this.lodgings){
+            if(lodging.owner?.userName != this.userName) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
