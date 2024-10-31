@@ -8,7 +8,7 @@
             <mat-form-field class="w-100">
                 <mat-label>Medio de pago</mat-label>
                 <mat-select [formControl]="selectedPaymentInformation" required>
-                  <mat-option *ngFor="let paymentInformation of paymentInformationArray" [value]="paymentInformation.id">{{ paymentInformationDisplay(paymentInformation) }}/mat-option>
+                  <mat-option *ngFor="let paymentInformation of paymentInformationArray" [value]="paymentInformation.id">{{ paymentInformationDisplay(paymentInformation) }}</mat-option>
                 </mat-select>
             </mat-form-field>
         </div>
