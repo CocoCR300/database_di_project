@@ -127,6 +127,12 @@ export class AppComponent {
         title: "La base de datos ha sido restaurada con éxito."
       });
     }
+    else if (response.status == 404) {
+      Swal.fire({
+        icon: "info",
+        title: "No existen puntos de restauración de la base de datos."
+      });
+    }
     else {
       Swal.fire({
         icon: "error",

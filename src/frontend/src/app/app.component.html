@@ -34,22 +34,31 @@
             <li class="nav-item" [routerLink]="['/booking']">
               <a class="nav-link"><i class="fas fa-calendar-alt"></i> Reservas</a>
             </li>
+            @if (userName == 'restify_administrator') {
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="fas fa-database"></i> Base de datos
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark">
+                  <li><a class="dropdown-item" (click)="createDatabase()">Crear base de datos</a></li>
+                  <li><a class="dropdown-item" (click)="dropDatabase()">Eliminar base de datos</a></li>
+                  <li><a class="dropdown-item" (click)="createBackup()">Crear punto de restauración</a></li>
+                  <li><a class="dropdown-item" (click)="restoreBackup()">Restaurar base de datos</a></li>
+                </ul>
+              </li>
+            }
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-cog"></i> Configuracion
               </a>
               <ul class="dropdown-menu dropdown-menu-dark">
-                <li><a class="dropdown-item" (click)="createDatabase()"><i class="fas fa-database"></i> Crear base de datos</a></li>
-                <li><a class="dropdown-item" (click)="dropDatabase()"><i class="fas fa-database"></i> Eliminar base de datos</a></li>
-                <li><a class="dropdown-item" (click)="createBackup()"><i class="fas fa-database"></i> Crear punto de restauración</a></li>
-                <li><a class="dropdown-item" (click)="restoreBackup()"><i class="fas fa-database"></i> Restaurar base de datos</a></li>
                 @if (isUserLogged) {
                   <li><a class="dropdown-item" (click)="editUser(userName!)"> <i class="fas fa-user-alt"></i> Configuracion</a></li>
-                  <li><a class="dropdown-item" (click)="logOut()"><i class="fas fa-sign-out-alt"></i> Cerrar sesion</a></li>
+                  <li><a class="dropdown-item" (click)="logOut()"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
                 }
                 @if (!isUserLogged) {
-                  <li><a class="dropdown-item" [routerLink]="['/login']"><i class="fas fa-sign-in-alt"></i> Inicio de Sesión</a></li>
-                  <li><a class="dropdown-item" [routerLink]="['/register']"> Registrarse</a></li>
+                  <li><a class="dropdown-item" [routerLink]="['/login']"><i class="fas fa-sign-in-alt"></i> Iniciar sesión</a></li>
+                  <li><a class="dropdown-item" [routerLink]="['/register']"><i class="fas fa-user-plus"></i> Registrarse</a></li>
                 }
               </ul>
             </li>

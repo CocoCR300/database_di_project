@@ -148,7 +148,7 @@ public class DatabaseController : BaseController
             ALTER DATABASE restify SET OFFLINE WITH ROLLBACK IMMEDIATE;
                   
             RESTORE DATABASE restify FROM DISK = {backupFilePath}
-            WITH REPLACE, FILE = {backupFilePath};
+            WITH REPLACE, FILE = 1;
             
             ALTER DATABASE restify SET ONLINE;
             """);
