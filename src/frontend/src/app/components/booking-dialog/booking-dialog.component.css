@@ -3,16 +3,8 @@
     padding: 20px;
     border-radius: 8px;
   }
-  
-  .dialog-actions {
-    column-gap: 2em;
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-  }
-  
+
   .action-button {
-    min-width: 100px;
     padding: 10px;
     border-radius: 4px;
   }

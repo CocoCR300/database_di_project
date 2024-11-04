@@ -1,32 +1,42 @@
-<mat-card class="dialog-container">
+<mat-card class="dialog-container w-auto container">
   <form>
-    <h1 mat-dialog-title> {{ title }}</h1>
+    <div class="row">
+      <h1 mat-dialog-title class="col-12"> {{ title }}</h1>
     <mat-card-content>
-      <p *ngIf="!paymentProcess">¿Qué acción desea realizar?</p>
-      @if(paymentProcess) {
-        <div>
-            <mat-form-field class="w-100">
-                <mat-label>Medio de pago</mat-label>
-                <mat-select [formControl]="selectedPaymentInformation" required>
-                  <mat-option *ngFor="let paymentInformation of paymentInformationArray" [value]="paymentInformation">{{ paymentInformationDisplay(paymentInformation) }}</mat-option>
-                </mat-select>
-            </mat-form-field>
-        </div>
-      }
+      <div class="row">
+        <p *ngIf="!paymentProcess" class="col-12">¿Qué acción desea realizar?</p>
+        @if(paymentProcess) {
+          <div>
+              <mat-form-field class="w-auto">
+                  <mat-label class="col-12">Medio de pago</mat-label>
+                  <mat-select [formControl]="selectedPaymentInformation" required>
+                    <mat-option *ngFor="let paymentInformation of paymentInformationArray" [value]="paymentInformation">{{ paymentInformationDisplay(paymentInformation) }}</mat-option>
+                  </mat-select>
+              </mat-form-field>
+          </div>
+        }
+      </div>
     </mat-card-content>
-    <mat-card-actions *ngIf="!paymentProcess" class="dialog-actions">
-    @if (canCancelOrConfirm) {
-      <button mat-button class="action-button" (click)="confirmBooking()">Realizar Pago y Confirmar</button>
-      <button mat-button class="action-button" (click)="cancelBooking()">Cancelar Reserva</button>
-    }
-      <button *ngIf="canDelete" mat-button class="action-button" (click)="onCancel()">Eliminar Reserva</button>
-      <button mat-button class="action-button" (click)="onClose()">Cerrar</button>
-    </mat-card-actions>
-    <mat-card-actions *ngIf="paymentProcess" class="dialog-actions">
-      <button mat-button (click)="processPayment()" type="submit">Procesar Pago</button>
-      <button mat-button (click)="openPaymentInformationDialog()">Agregar información de pago</button>
-      <button mat-button (click)="cancelPayment()">Cancelar</button>
-    </mat-card-actions>
+    </div>
+    <div class="container">
+      <mat-card-actions *ngIf="!paymentProcess" class="dialog-actions">
+        <div class="row mx-auto">
+          @if (canCancelOrConfirm) {
+            <button mat-button class="action-button h-auto col-md-4 col-sm-8" (click)="confirmBooking()">Realizar Pago y Confirmar</button>
+            <button mat-button class="action-button h-auto col-md-4 col-sm-8" (click)="cancelBooking()">Cancelar Reserva</button>
+          }
+          <button *ngIf="canDelete" mat-button class="action-button col-md-4 col-sm-8" (click)="onCancel()">Eliminar Reserva</button>
+          <button mat-button class="action-button col-md-4 col-sm-8" (click)="onClose()">Cerrar</button>
+        </div>
+      </mat-card-actions>
+      <mat-card-actions *ngIf="paymentProcess" class="dialog-actions">
+        <div class="row">
+          <button mat-button (click)="processPayment()" type="submit" class="action-button col-md-4 col-sm-8 h-auto">Procesar Pago</button>
+          <button mat-button (click)="openPaymentInformationDialog()" class="action-button col-md-4 col-sm-8 h-auto">Agregar información de pago</button>
+          <button mat-button (click)="cancelPayment()" class="action-button col-md-4 col-sm-8 h-auto">Cancelar</button>
+        </div>
+      </mat-card-actions>
+    </div>
   </form>
 </mat-card>
   

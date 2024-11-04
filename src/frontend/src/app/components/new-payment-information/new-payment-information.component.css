@@ -3,19 +3,3 @@
     padding: 20px;
     border-radius: 8px;
 }
-
-#card_information_fields_container {
-    display: grid;
-    gap: 1em;
-    grid-template-columns: auto max-content;
-    grid-template-rows: auto auto;
-    margin-top: 1em;
-}
-
-#card_number_field {
-    grid-column: 1 / span 2;
-}
-
-#card_security_code_field {
-    grid-row: 2;
-}

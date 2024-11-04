@@ -1,17 +1,17 @@
-<mat-card class="dialog-container">
+<mat-card class="dialog-container container">
     <h1 mat-dialog-title>Agregar medio de pago</h1>
     <mat-card-content>
         <form id="card_information_form" #lodgingForm="ngForm" [formGroup]="cardInformationFormGroup">
-            <div id="card_information_fields_container">
-                <mat-form-field id="card_number_field">
+            <div class="row">
+                <mat-form-field class="col-12">
                     <mat-label>Número de tarjeta</mat-label>
                     <input matInput formControlName="cardNumber" required>
                 </mat-form-field>
-                <mat-form-field id="card_security_code_field">
+                <mat-form-field class="col-12">
                     <mat-label>CVC/CVV</mat-label>
                     <input matInput formControlName="cardSecurityCode" required>
                 </mat-form-field>
-                <mat-form-field id="card_expiry_date_field">
+                <mat-form-field class="col-12">
                     <mat-label>Fecha de expiración</mat-label>
                     <input matInput [matDatepicker]="cardExpiryDatePicker" formControlName="cardExpiryDate">
                     <mat-hint>DD/MM/YYYY</mat-hint>
@@ -21,9 +21,9 @@
             </div>
         </form>
     </mat-card-content>
-    <mat-card-actions class="dialog-actions">
-        <button mat-button class="action-button" (click)="addPaymentInformation()">Agregar</button>
-        <button mat-button class="action-button" (click)="cancel()">Cancelar</button>
+    <mat-card-actions class="dialog-actions row">
+        <button mat-button class="action-button col-6" (click)="addPaymentInformation()">Agregar</button>
+        <button mat-button class="action-button col-6" (click)="cancel()">Cancelar</button>
     </mat-card-actions>
 </mat-card>
   
