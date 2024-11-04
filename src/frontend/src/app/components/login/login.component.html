@@ -7,7 +7,7 @@
     <form #loginForm="ngForm" (ngSubmit)="onsubmit(loginForm)">
       <i class="fas fa-user"></i>
       <div class="input-field">
-        <input class="form-control" type="text" placeholder="Usuario" name="userName" #name="ngModel" [(ngModel)]="user.userName" required >
+        <input class="form-control" type="text" placeholder="Nombre de usuario" name="userName" #name="ngModel" [(ngModel)]="user.userName" required >
       </div>
 
       <i class="fas fa-lock"></i>
@@ -16,9 +16,9 @@
         <input class="form-control" type="password" placeholder="Contraseña" name="password" #password="ngModel" [(ngModel)]="user.password" required>
       </div>
       <div class="buttons my-4">
-        <button class="w-75" type="submit">Iniciar Sesión</button>
+        <button class="w-50" type="submit">Iniciar sesión</button>
         <p class="mt-1">No tienes una cuenta? Registrate!</p>
-        <button type="button" [routerLink]="['/register']"> Registrarse</button>  
+        <button class="w-50" type="button" [routerLink]="['/register']"> Registrarse</button>  
       </div>
 
       </form>

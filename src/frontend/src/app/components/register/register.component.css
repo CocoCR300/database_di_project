@@ -23,15 +23,13 @@ h2 {
   text-align: center;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
 .input-field i {
   transform: translateY(-50%);
   color: #0D1F23;
+}
+
+form {
+  margin-top: 1em;
 }
 
 input {
@@ -66,6 +64,7 @@ button {
   background-color: #0D1F23;
   color: #AFB2B7;
   cursor: pointer;
+  width: 8em;
 }
 
 button:hover {
