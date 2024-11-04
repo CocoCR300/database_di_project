@@ -477,7 +477,7 @@ export class LodgingComponent implements OnInit {
             this.canDelete = this._appState.role === UserRoleEnum.Administrator || this.isLessor;
         }
 
-        this.canBook = !this.isUserLogged || this._appState.role === UserRoleEnum.Customer || this._appState.role ===UserRoleEnum.Lessor;
+        this.canBook = !this.isUserLogged || this._appState.role === UserRoleEnum.Customer || this._appState.role === UserRoleEnum.Lessor;
     
         let lodgingsObservable: Observable<Lodging[]>;
         if (this.isLessor) {

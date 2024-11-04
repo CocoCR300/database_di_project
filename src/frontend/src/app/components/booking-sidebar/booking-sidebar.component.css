@@ -166,6 +166,10 @@ mat-paginator {
 }
 
 @media only screen and (max-width: 425px) {
+    mat-drawer{
+        width: 80%;
+    }
+
     .w-sm-100{
         width: 100%;
     }

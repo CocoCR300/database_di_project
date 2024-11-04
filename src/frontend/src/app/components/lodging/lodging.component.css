@@ -2,19 +2,10 @@ mat-chip-grid {
     max-height: 4em;
     overflow: scroll;
 }
-mat-drawer {
-    background-color: var(--color-secondary);
-    padding: 2em;
-    width: 40em;
-}
 
 mat-drawer-content {
     display: flex;
     flex-direction: column;
-}
-
-mat-form-field {
-    width: 20em;
 }
 
 mat-paginator {
@@ -118,19 +109,9 @@ mat-paginator {
     justify-content: center;
 }
 
-mat-drawer {
-    background-color: var(--color-secondary);
-    padding: 2em;
-    width: 40em;
-}
-
 mat-drawer-content {
     display: flex;
     flex-direction: column;
-}
-
-mat-form-field {
-    width: 20em;
 }
 
 mat-paginator {
@@ -313,4 +294,10 @@ mat-paginator {
     border-radius: 4px;
     margin-top: 1em;
     text-align: center;
+}
+
+@media only screen and (max-width: 425px) {
+    .w-sm-100{
+        width: 100%;
+    }
 }
