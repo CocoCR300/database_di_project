@@ -1058,7 +1058,7 @@ AS BEGIN
 	DECLARE @personId INT;
 
 	SELECT @personId = customerPersonId FROM Booking WHERE bookingId = @bookingId;
-	SELECT @amount = dbo.fnCalcularTotalPagoReserva(@bookingId);
+	SELECT @amount = dbo.fnCalcularPagoTotalReserva(@bookingId);
 	SELECT @paymentInformationPersonId = personId FROM PaymentInformation
 		WHERE paymentInformationId = @paymentInformationId;
 

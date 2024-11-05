@@ -12,7 +12,7 @@ using Restify.API.Util;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddJsonFile($"user_specific/appsettings.{Environment.MachineName}.json", false);
+builder.Configuration.AddJsonFile($"user_specific/appsettings.{Environment.MachineName}.json", true);
 
 builder.Services.AddTransient<AuthenticationUtil>();
 builder.Services.AddKeyedScoped(RestifyDbContext.SERVER_WIDE_SERVICE_NAME,
