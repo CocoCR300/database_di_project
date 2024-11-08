@@ -54,7 +54,7 @@ export class BaseService {
             catchError(this.handleError)
         );
     }
-    
+
     post(route: string, requiresToken: boolean, body: any): Observable<AppResponse> {
         let headers = new HttpHeaders();
         headers = this.appendTokenIfNeeded(requiresToken, headers);
@@ -85,7 +85,7 @@ export class BaseService {
         headers = this.appendTokenIfNeeded(requiresToken, headers);
 
         const formData: FormData = new FormData();
-        
+
         for (const file of files) {
             formData.append("files", file);
         }
@@ -139,7 +139,7 @@ export class BaseService {
         if (response.ok) {
             return response;
         }
-        
+
         return response.error as T;
     }
 

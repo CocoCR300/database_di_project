@@ -1,3 +1,11 @@
+#booking_form_fields_container {
+    column-gap: 1em;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 1em;
+}
+
 mat-chip-grid {
     max-height: 4em;
     overflow: scroll;

@@ -1,10 +1,14 @@
 USE master;
 GO --
 
-DISABLE TRIGGER restify_disInicioSesionServidor ON ALL SERVER;
+IF OBJECT_ID('restify_disInicioSesionServidor') IS NOT NULL
+    DISABLE TRIGGER restify_disInicioSesionServidor ON ALL SERVER;
+
 GO --
 
-DROP TRIGGER restify_disInicioSesionServidor ON ALL SERVER;
+IF OBJECT_ID('restify_disInicioSesionServidor') IS NOT NULL
+    DROP TRIGGER restify_disInicioSesionServidor ON ALL SERVER;
+
 GO --
 
 DECLARE @kill varchar(8000) = '';  
@@ -16,12 +20,13 @@ EXEC(@kill);
 GO --
 
 EXEC msdb.dbo.sp_delete_database_backuphistory @database_name = 'restify'
-GO
+GO --
 
-DROP DATABASE restify;
+DROP DATABASE IF EXISTS restify;
 GO --
 
 DROP LOGIN restify_administrator;
 DROP LOGIN restify_user;
 DROP LOGIN restify_employee;
+
 GO --

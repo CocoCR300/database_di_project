@@ -17,7 +17,7 @@
             <mat-label>Tipo de habitación</mat-label>
             <mat-select formControlName="roomTypeId" required>
                 <mat-option *ngIf="!selectedLodging || !selectedLodging.roomTypes || selectedLodging.roomTypes.length === 0" disabled>
-                    No hay habitaciones disponibles 
+                    No hay habitaciones disponibles
                 </mat-option>
                 <mat-option *ngFor="let roomType of selectedLodging?.roomTypes" [value]="roomType.id">
                     {{ roomType.name }}
@@ -30,12 +30,7 @@
             <mat-label>Precio por noche</mat-label>
             <input matInput [value]="selectedLodging?.perNightPrice | currency" readonly>
         </mat-form-field>
-        
-        <mat-form-field class="w-sm-100 mb-3">
-            <mat-label>Descuento</mat-label>
-            <input matInput formControlName="discount" type="number" min="0" placeholder="Descuento (No hay descuentos)" readonly>
-        </mat-form-field>
-        
+
         <div class="price-info w-sm-100 mb-3" *ngIf="selectedRoomTypePrice" >
             <p>Precio por noche: {{ selectedRoomTypePrice | currency }}</p>
         </div>
@@ -75,7 +70,7 @@
                         </button>
                     </td>
                 </ng-container>
-    
+
                 <tr mat-header-row *matHeaderRowDef="displayedColumns" class="header-row"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="data-row"></tr>
             </table>

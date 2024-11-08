@@ -35,7 +35,7 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class BookingSidebarComponent implements OnInit
 {
-    displayedColumns: string[] = ['roomTypeId', 'startDate', 'endDate', 'discount', 'actions'];
+    displayedColumns: string[] = ['roomTypeId', 'startDate', 'endDate', 'actions'];
 
     lodgings: Lodging[] = [];
 
@@ -85,8 +85,13 @@ export class BookingSidebarComponent implements OnInit
     }
 
     public async addTemporaryBooking() {
+        const startDate = this.bookingFormGroup.get('startDate')?.value;
+        if (startDate <= Date.now()) {
+            this._notificationService.show("La fecha de inicio de la reservación debe ser posterior a la fecha actual.");
+            return;
+        }
+
         if (this.bookingFormGroup.valid && this.selectedLodging) {
-            const startDate = this.bookingFormGroup.get('startDate')?.value;
             const endDate = this.bookingFormGroup.get('endDate')?.value;
             const roomTypeId = this.bookingFormGroup.get('roomTypeId')?.value;
             const discount = this.bookingFormGroup.get('discount')?.value || 0;
@@ -125,14 +130,14 @@ export class BookingSidebarComponent implements OnInit
 
     public async submitBooking() {
         this.updateValidators();
-    
+
         if (this.bookingFormGroup.valid && this.selectedLodging) {
             const startDate = this.bookingFormGroup.get('startDate')?.value;
             const endDate = this.bookingFormGroup.get('endDate')?.value;
             const discount = this.bookingFormGroup.get('discount')?.value || 0;
-    
+
             const user = await firstValueFrom(this._userService.getUser(this._appState.userName!));
-    
+
             const bookingRequestData: BookingRequestData = {
                 userName: user.userName!,
                 lodgingId: this.selectedLodging!.id,
@@ -143,9 +148,9 @@ export class BookingSidebarComponent implements OnInit
                     discount
                 }]
             };
-    
+
             const response = await firstValueFrom(this._bookingService.postBooking(bookingRequestData));
-    
+
             if (response.ok) {
                 Swal.fire({
                     icon: "success",
@@ -236,18 +241,18 @@ export class BookingSidebarComponent implements OnInit
             roomTypeId: new FormControl<number | null>(null),
             discount: new FormControl<number | null>(null)
         });
-        
+
         this.bookingFormGroup.get('roomTypeId')?.valueChanges.subscribe(() => {
             this.updatePrices();
         });
-    
+
         this.bookingFormGroup.get('startDate')?.valueChanges.subscribe(() => {
             this.updatePrices();
         });
         this.bookingFormGroup.get('endDate')?.valueChanges.subscribe(() => {
             this.updatePrices();
         });
-    
+
         this.isUserLogged = this._appState.isUserLogged;
         if (this.isUserLogged) {
             this.isLessor = this._appState.role === UserRoleEnum.Lessor;
@@ -255,7 +260,7 @@ export class BookingSidebarComponent implements OnInit
 
         this.updateValidators();
     }
-    
+
     private updateValidators() {
         if (this.isCompleteLodging()) {
             this.bookingFormGroup.get('roomTypeId')?.clearValidators();
@@ -264,7 +269,6 @@ export class BookingSidebarComponent implements OnInit
         }
         this.bookingFormGroup.get('roomTypeId')?.updateValueAndValidity();
     }
-    
 
     private updatePrices(): void {
         const roomTypeId = this.bookingFormGroup.get('roomTypeId')?.value;
