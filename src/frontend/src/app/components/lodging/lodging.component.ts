@@ -51,6 +51,8 @@ export class LodgingComponent implements OnInit {
     @ViewChild(MatDrawer)
     sidebar!: MatDrawer;
 
+    showLessorLodgingsButtonText = "Mostrar solo mis alojamientos";
+    showOnlyLessorLodgings: boolean = false;
     bookingFormGroup!: FormGroup;
     perkFormControl = new FormControl<string>("");
     canBook = false;
@@ -77,6 +79,7 @@ export class LodgingComponent implements OnInit {
     public dataSource: MatTableDataSource<BookingRequestData>;
     displayedColumns: string[] = ['roomTypeId', 'startDate', 'endDate', 'discount', 'actions'];
     lodgings: Lodging[] = [];
+    titleText = "Alojamientos";
 
     public constructor(
         private _appState: AppState,
@@ -167,6 +170,53 @@ export class LodgingComponent implements OnInit {
         }
     }
 
+    public toggleShowOnlyLessorLodgings() {
+        this.showOnlyLessorLodgings = !this.showOnlyLessorLodgings;
+
+        let lodgingsObservable;
+        if (this.showOnlyLessorLodgings) {
+            this.titleText = "Mis alojamientos";
+            this.showLessorLodgingsButtonText = "Mostrar todos los alojamientos";
+            lodgingsObservable = this._lodgingService.getLessorLodgings(this._appState.userName!);
+        }
+        else {
+            this.titleText = "Alojamientos";
+            this.showLessorLodgingsButtonText = "Mostrar solo mis alojamientos";
+            lodgingsObservable = this._lodgingService.getLodgings(10000, 1);
+        }
+
+        lodgingsObservable.subscribe(lodgings => {
+            this.lodgings = lodgings;
+
+            if (this._appState.role == UserRoleEnum.Customer) {
+                this.lodgings = this.lodgings
+                    .filter(lodging => !Lodging.offersRooms(lodging) || (lodging.roomTypes != null && lodging.roomTypes.length > 0));
+            }
+
+            this.lodgings.forEach(lodging => {
+                if (lodging.roomTypes) {
+                    let min = Infinity, max = 0;
+
+                    for (const roomType of lodging.roomTypes) {
+                        if (min > roomType.perNightPrice) {
+                            min = roomType.perNightPrice;
+                        }
+
+                        if (max < roomType.perNightPrice) {
+                            max = roomType.perNightPrice;
+                        }
+                    }
+
+                    lodging.roomTypeMaxPrice = max;
+                    lodging.roomTypeMinPrice = min;
+                }
+            });
+            this.updatePagedList(0);
+        });
+
+        this.updateValidators();
+    }
+
     public async addTemporaryBooking() {
         const startDate = this.bookingFormGroup.get('startDate')?.value;
         if (startDate <= Date.now()) {
@@ -213,6 +263,12 @@ export class LodgingComponent implements OnInit {
 
     public async submitBooking() {
         this.updateValidators();
+
+        const startDate = this.bookingFormGroup.get('startDate')?.value;
+        if (startDate <= Date.now()) {
+            this._notificationService.show("La fecha de inicio de la reservación debe ser posterior a la fecha actual.");
+            return;
+        }
 
         if (this.bookingFormGroup.valid && this.selectedLodging) {
             const startDate = this.bookingFormGroup.get('startDate')?.value;

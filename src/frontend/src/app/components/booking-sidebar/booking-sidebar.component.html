@@ -1,35 +1,37 @@
 <div class="container">
     <h2 class="mb-3">Reserva en {{selectedLodging?.name}}</h2>
     <form #bookingForm="ngForm" [formGroup]="bookingFormGroup" (ngSubmit)="isCompleteLodging() ? submitBooking() : addTemporaryBooking()">
-        <mat-form-field class="w-sm-100 mb-3">
-            <mat-label>Seleccione las fechas de reserva</mat-label>
-            <mat-date-range-input [rangePicker]="picker">
-                <input matStartDate formControlName="startDate" placeholder="Inicio" required>
-                <input matEndDate formControlName="endDate" placeholder="Finalización" required>
-            </mat-date-range-input>
-            <mat-error *ngIf="bookingFormGroup.get('startDate')?.hasError('required') || bookingFormGroup.get('endDate')?.hasError('required')">Las fechas son obligatorias.</mat-error>
+        <div id="booking_form_fields_container">
+            <mat-form-field class="w-sm-100 mb-3">
+                <mat-label>Seleccione las fechas de reserva</mat-label>
+                <mat-date-range-input [rangePicker]="picker">
+                    <input matStartDate formControlName="startDate" placeholder="Inicio" required>
+                    <input matEndDate formControlName="endDate" placeholder="Finalización" required>
+                </mat-date-range-input>
+                <mat-error *ngIf="bookingFormGroup.get('startDate')?.hasError('required') || bookingFormGroup.get('endDate')?.hasError('required')">Las fechas son obligatorias.</mat-error>
 
-            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-date-range-picker #picker></mat-date-range-picker>
-        </mat-form-field>
+                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-date-range-picker #picker></mat-date-range-picker>
+            </mat-form-field>
 
-        <mat-form-field class="w-sm-100 mb-3" *ngIf="isLodgingWithMultipleRoomTypes()">
-            <mat-label>Tipo de habitación</mat-label>
-            <mat-select formControlName="roomTypeId" required>
-                <mat-option *ngIf="!selectedLodging || !selectedLodging.roomTypes || selectedLodging.roomTypes.length === 0" disabled>
-                    No hay habitaciones disponibles
-                </mat-option>
-                <mat-option *ngFor="let roomType of selectedLodging?.roomTypes" [value]="roomType.id">
-                    {{ roomType.name }}
-                </mat-option>
-            </mat-select>
-            <mat-error *ngIf="bookingFormGroup.get('roomTypeId')?.hasError('required')">El tipo de habitación es obligatorio.</mat-error>
-        </mat-form-field>
+            <mat-form-field class="w-sm-100 mb-3" *ngIf="isLodgingWithMultipleRoomTypes()">
+                <mat-label>Tipo de habitación</mat-label>
+                <mat-select formControlName="roomTypeId" required>
+                    <mat-option *ngIf="!selectedLodging || !selectedLodging.roomTypes || selectedLodging.roomTypes.length === 0" disabled>
+                        No hay habitaciones disponibles
+                    </mat-option>
+                    <mat-option *ngFor="let roomType of selectedLodging?.roomTypes" [value]="roomType.id">
+                        {{ roomType.name }}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="bookingFormGroup.get('roomTypeId')?.hasError('required')">El tipo de habitación es obligatorio.</mat-error>
+            </mat-form-field>
 
-        <mat-form-field class="w-sm-100 mb-3" *ngIf="isCompleteLodging()">
-            <mat-label>Precio por noche</mat-label>
-            <input matInput [value]="selectedLodging?.perNightPrice | currency" readonly>
-        </mat-form-field>
+            <mat-form-field class="w-sm-100 mb-3" *ngIf="isCompleteLodging()">
+                <mat-label>Precio por noche</mat-label>
+                <input matInput [value]="selectedLodging?.perNightPrice | currency" readonly>
+            </mat-form-field>
+        </div>
 
         <div class="price-info w-sm-100 mb-3" *ngIf="selectedRoomTypePrice" >
             <p>Precio por noche: {{ selectedRoomTypePrice | currency }}</p>
@@ -57,10 +59,6 @@
                 <ng-container matColumnDef="endDate">
                     <th mat-header-cell *matHeaderCellDef class="header-cell"> Fecha de Finalización </th>
                     <td mat-cell *matCellDef="let element" class="data-cell"> {{element.rooms[0].endDate}} </td>
-                </ng-container>
-                <ng-container matColumnDef="discount">
-                    <th mat-header-cell *matHeaderCellDef class="header-cell"> Descuento </th>
-                    <td mat-cell *matCellDef="let element" class="data-cell"> {{element.rooms[0].discount}} </td>
                 </ng-container>
                 <ng-container matColumnDef="actions">
                     <th mat-header-cell *matHeaderCellDef class="header-cell"> Eliminar</th>

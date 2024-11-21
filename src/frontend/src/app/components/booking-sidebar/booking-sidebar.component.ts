@@ -131,6 +131,12 @@ export class BookingSidebarComponent implements OnInit
     public async submitBooking() {
         this.updateValidators();
 
+        const startDate = this.bookingFormGroup.get('startDate')?.value;
+        if (startDate <= Date.now()) {
+            this._notificationService.show("La fecha de inicio de la reservación debe ser posterior a la fecha actual.");
+            return;
+        }
+
         if (this.bookingFormGroup.valid && this.selectedLodging) {
             const startDate = this.bookingFormGroup.get('startDate')?.value;
             const endDate = this.bookingFormGroup.get('endDate')?.value;
