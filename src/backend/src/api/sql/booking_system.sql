@@ -685,6 +685,19 @@ AS RETURN
 );
 GO --
 
+--
+-- VISTAS
+--
+IF OBJECT_ID('vMostrarPagosUsuarios') IS NOT NULL
+	DROP VIEW vMostrarPagosUsuarios;
+GO --
+
+CREATE VIEW vMostrarPagosUsuarios
+AS
+	SELECT ps.firstName, ps.lastName, p.bookingId, p.amount, p.dateAndTime
+	FROM Person ps INNER JOIN PaymentInformation as pi ON ps.personId = pi.personId
+	INNER JOIN Payment as p ON pi.paymentInformationId = p.paymentInformationId;
+GO --
 
 --
 -- PROCEDIMIENTOS ALMACENADOS
@@ -1125,7 +1138,7 @@ BEGIN
     BEGIN
         RETURN 2;
     END
-
+	v
 	BEGIN TRY
         BEGIN TRANSACTION;
 		INSERT INTO [User] (userName, userRoleId, password)
