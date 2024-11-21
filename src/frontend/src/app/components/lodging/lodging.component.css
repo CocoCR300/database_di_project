@@ -63,12 +63,6 @@ mat-paginator {
     width: 20em;
 }
 
-.lodging_image {
-    clip-path: xywh(0px 0px 100% 100% round var(--border-radius));
-    object-fit: cover;
-    height: 12em;
-}
-
 .lodging_info {
     padding: 20px;
     flex: 1;
@@ -163,7 +157,7 @@ mat-paginator {
 }
 
 .normal_anchor {
-    color: var(--color-primary);
+    color: white;
     text-decoration: none;
 }
 
