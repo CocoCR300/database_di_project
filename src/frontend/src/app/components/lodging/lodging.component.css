@@ -64,7 +64,7 @@ mat-paginator {
 }
 
 .lodging_image {
-    clip-path: rect(0px 0px 100% 100% round var(--border-radius));
+    clip-path: xywh(0px 0px 100% 100% round var(--border-radius));
     object-fit: cover;
     height: 12em;
 }
@@ -142,7 +142,7 @@ mat-paginator {
 }
 
 .lodging_image {
-    clip-path: rect(0px 0px 100% 100% round var(--border-radius));
+    clip-path: xywh(0px 0px 100% 100% round var(--border-radius));
     height: 12em;
     object-fit: cover;
     width: 100%

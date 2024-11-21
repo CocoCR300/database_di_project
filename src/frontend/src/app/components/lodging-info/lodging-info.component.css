@@ -1,5 +1,5 @@
 c-carousel {
-    clip-path: rect(0 0 100% 100% round var(--border-radius));
+    clip-path: xywh(0 0 100% 100% round var(--border-radius));
     margin: auto;
     height: auto;
 }
@@ -66,7 +66,7 @@ mat-drawer[_ngcontent-ng-c1646113714] {
 }
 
 .lodging_image {
-    clip-path: rect(0px 0px 100% 100% round var(--border-radius));
+    clip-path: xywh(0px 0px 100% 100% round var(--border-radius));
     display: block;
     height: 15em;
     object-fit: cover;

@@ -51,7 +51,7 @@
 }
 
 #lodging_image {
-    clip-path: rect(0px 0px 100% 100% round 0.5em);
+    clip-path: xywh(0px 0px 100% 100% round 0.5em);
     max-height: 15em;
     object-fit: contain;
     width: 25em;

@@ -1,5 +1,5 @@
 c-carousel {
-    clip-path: rect(0 0 100% 100% round var(--border-radius));
+    clip-path: xywh(0 0 100% 100% round var(--border-radius));
 }
 
 c-carousel-caption {
